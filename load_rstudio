@@ -1,0 +1,3 @@
+source  /project/bbl_projects/apps/default_modules.sh
+conda activate rstudio
+rstudio &

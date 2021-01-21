@@ -1,0 +1,6 @@
+PBP_vertWiseEffect_Erica_Ts('/project/imco/baller/processed_data/regression_matrices_n831/lh_gam_age_t_fdr05.csv','/project/imco/baller/processed_data/regression_matrices_n831/rh_gam_age_t_fdr05.csv','test')
+PBP_vertWiseEffect_Erica_Ts('/project/imco/baller/processed_data/regression_matrices_n831/lh_gam_sex_t_fdr05.csv','/project/imco/baller/processed_data/regression_matrices_n831/rh_gam_sex_t_fdr05.csv','test')
+PBP_vertWiseEffect_Erica_Ts('/project/imco/baller/processed_data/regression_matrices_n831/lh_gam_age_sex_t_fdr05.csv','/project/imco/baller/processed_data/regression_matrices_n831/rh_gam_age_sex_t_fdr05.csv','test')
+PBP_vertWiseEffect_Erica_Ts('/project/imco/baller/processed_data/regression_matrices_n831/lh_gam_mood_t_fdr05.csv','/project/imco/baller/processed_data/regression_matrices_n831/rh_gam_mood_t_fdr05.csv','test')
+PBP_vertWiseEffect_Erica_Ts('/project/imco/baller/processed_data/regression_matrices_n831/lh_gam_accuracy_t_fdr05.csv','/project/imco/baller/processed_data/regression_matrices_n831/rh_gam_accuracy_t_fdr05.csv','test')
+PBP_vertWiseEffect_Erica_Ts('/project/imco/baller/processed_data/regression_matrices_n831/lh_gam_psychopathology_t_fdr05.csv','/project/imco/baller/processed_data/regression_matrices_n831/rh_gam_psychopathology_t_fdr05.csv','test')

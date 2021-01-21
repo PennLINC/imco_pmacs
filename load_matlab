@@ -1,0 +1,1 @@
+bsub -Is -XF -q matlab_interactive 'bash'
