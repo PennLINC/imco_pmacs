@@ -5,3 +5,5 @@ a) do sample construction
 b) read in coupling files, make matrices, and do regressions
 c) make visualizations
 d) load matlab and rstudio
+
+testing 123
