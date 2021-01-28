@@ -62,28 +62,26 @@ names(alffCbf_subjDemos) <- gsub("scanid.x", "scanid", names(alffCbf_subjDemos))
 #make obcp ordered
 alffCbf_subjDemos$obcp <- ordered(alffCbf_subjDemos$bcp)
 
-#make list of bblid/scanid
-#bblid_scanid <- paste0(alffCbf_subjDemos$bblid, "_", alffCbf_subjDemos$datexscanid)
-
 #on bcp subgroup
-alffCbf_subjDemos_onbcp <- alffCbf_subjDemos[which(alffCbf_subjDemos$bcp == 2),]
+alffCbf_subjDemos_onbcp <- alffCbf_subjDemos[which(alffCbf_subjDemos$bcp == 1),]
 
-#make list of bblid/scanid
-#bblid_scanid_bcp <- paste0(alffCbf_subjDemos_onbcp$bblid, "_", alffCbf_subjDemos_onbcp$datexscanid)
+#only keep people who have est doses
+alffCbf_subjDemos_onbcp <- alffCbf_subjDemos_onbcp[!is.na(alffCbf_subjDemos_onbcp$est_dose),]
 
+#left side analysis
 #####################
 ##### Left Side #####
 #####################
 
 #initiate matrix for storage
-lh_matrix <- matrix(nrow = dim(alffCbf_subjDemos)[1], ncol = 10242)
+lh_matrix <- matrix(nrow = dim(alffCbf_subjDemos_onbcp)[1], ncol = 10242)
 
 #go through each subject, grab 5th column in asc, transpose and stick in matrix
 # output is 831 x 10242 matrix
-for (subj in 1:dim(alffCbf_subjDemos)[1]) {
+for (subj in 1:dim(alffCbf_subjDemos_onbcp)[1]) {
   
-  bblid <- alffCbf_subjDemos$bblid[subj]
-  datexscanid <- alffCbf_subjDemos$datexscanid[subj]
+  bblid <- alffCbf_subjDemos_onbcp$bblid[subj]
+  datexscanid <- alffCbf_subjDemos_onbcp$datexscanid[subj]
   file_path <- paste0("/project/imco/couplingSurfaceMaps/alffCbf/lh/stat/", bblid, "_", datexscanid, "_lh.coupling_coef_alff_cbf.fwhm15.fsaverage5.asc")
   alffCbf_data <- read.table(file_path, stringsAsFactors = FALSE)
   lh_matrix[subj,] <- t(alffCbf_data$V5)
@@ -91,23 +89,23 @@ for (subj in 1:dim(alffCbf_subjDemos)[1]) {
 }
 
 #append with demographics
-alffCbf_subjDemos_with_lh <- cbind(alffCbf_subjDemos, lh_matrix)
+alffCbf_subjDemos_with_lh_bcp <- cbind(alffCbf_subjDemos_onbcp, lh_matrix)
 
 #write output
-write.table(alffCbf_subjDemos_with_lh, file = "/project/imco/baller/results/alffCbf_subjDemos_with_lh_bcp.csv", sep = ",")
+write.table(alffCbf_subjDemos_with_lh_bcp, file = "/project/imco/baller/results/alffCbf_subjDemos_with_lh_bcp_onbcp.csv", sep = ",")
 
 #####################
 #### Right Side #####
 #####################
 #initiate matrix for storage
-rh_matrix <- matrix(nrow = dim(alffCbf_subjDemos)[1], ncol = 10242)
+rh_matrix <- matrix(nrow = dim(alffCbf_subjDemos_onbcp)[1], ncol = 10242)
 
 #go through each subject, grab 5th column in asc, transpose and stick in matrix
 # output is 831 x 10242 matrix
-for (subj in 1:dim(alffCbf_subjDemos)[1]) {
+for (subj in 1:dim(alffCbf_subjDemos_onbcp)[1]) {
   
-  bblid <- alffCbf_subjDemos$bblid[subj]
-  datexscanid <- alffCbf_subjDemos$datexscanid[subj]
+  bblid <- alffCbf_subjDemos_onbcp$bblid[subj]
+  datexscanid <- alffCbf_subjDemos_onbcp$datexscanid[subj]
   file_path <- paste0("/project/imco/couplingSurfaceMaps/alffCbf/rh/stat/", bblid, "_", datexscanid, "_rh.coupling_coef_alff_cbf.fwhm15.fsaverage5.asc")
   alffCbf_data <- read.table(file_path, stringsAsFactors = FALSE)
   rh_matrix[subj,] <- t(alffCbf_data$V5)
@@ -115,10 +113,10 @@ for (subj in 1:dim(alffCbf_subjDemos)[1]) {
 }
 
 #append with demographics
-alffCbf_subjDemos_with_rh <- cbind(alffCbf_subjDemos, rh_matrix)
+alffCbf_subjDemos_with_rh_bcp <- cbind(alffCbf_subjDemos_onbcp, rh_matrix)
 
 #write output
-write.table(alffCbf_subjDemos_with_rh, file = "/project/imco/baller/results/alffCbf_subjDemos_with_rh_bcp.csv", sep = ",")
+write.table(alffCbf_subjDemos_with_rh_bcp, file = "/project/imco/baller/results/alffCbf_subjDemos_with_rh_bcp_onbcp.csv", sep = ",")
 
 ####-----------------------------------------------------------------------------####
 ####---------------------------End of Part 1- Making matrices---_----------------####
@@ -129,8 +127,8 @@ write.table(alffCbf_subjDemos_with_rh, file = "/project/imco/baller/results/alff
 #####################################################################################
 
 #make easier to reference names
-lh_cbf_asl <- alffCbf_subjDemos_with_lh #can also read directly from files if you'd like
-rh_cbf_asl <- alffCbf_subjDemos_with_rh
+lh_cbf_asl <- alffCbf_subjDemos_with_lh_bcp #can also read directly from files if you'd like
+rh_cbf_asl <- alffCbf_subjDemos_with_rh_bcp
 
 
 #####################################################
@@ -140,7 +138,8 @@ rh_cbf_asl <- alffCbf_subjDemos_with_rh
 #initialize vectors for models
 
 hemis <- c("lh", "rh") #hemispheres
-models <- c("age", "bcp", "age_bcp", "accuracy", "speed", "efficiency", "mood", "psychopathology") #models of interest
+#models <- c("age", "bcp", "age_bcp", "accuracy", "speed", "efficiency", "mood", "psychopathology", "est_dose") #models of interest
+models <- c("est_dose")
 coeffs <- c("p", "t") #p or t value
 corrs <- c("uncor", "fdr") #correction
 
@@ -158,15 +157,16 @@ for (hemi in hemis){
 
 
 #make linear models as well
-lm_models <- c("age", "accuracy", "speed", "efficiency")
+#lm_models <- c("age", "accuracy", "speed", "efficiency", "est_dose")
+lm_models <- c("est_dose")
 for (hemi in hemis) {
   for (model in lm_models) {
-   for (coeff in coeffs) {
-    for (corr in corrs) {
-      vector_init_cmd <- paste0(hemi, "_lm_", model, "_", coeff, "_", corrs, "<- vector(length= 10242)")
-      eval(parse(text=as.name(vector_init_cmd)))
+    for (coeff in coeffs) {
+      for (corr in corrs) {
+        vector_init_cmd <- paste0(hemi, "_lm_", model, "_", coeff, "_", corrs, "<- vector(length= 10242)")
+        eval(parse(text=as.name(vector_init_cmd)))
+      }
     }
-   }
   }
 }
 
@@ -180,166 +180,66 @@ numcolumns <- dim(lh_cbf_asl)[2]
 #run gams models and store info in respective vectors
 for (i in 1:10242) {
   curcol = (numcolumns - 10242 + i) # will start you counting at the right part of the df
-  age_bcp_model <- gam(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                         obcp + s(ageAtScan1, k = 4, fx = T), data=lh_cbf_asl)
+  est_dose_model <- gam(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                          s(ageAtScan1, k = 4, fx = T) + est_dose, data=lh_cbf_asl)
   
-  age_bcp_intx_model <- gam(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                              obcp + s(ageAtScan1, k = 4, fx = T) + s(ageAtScan1, by = obcp, k = 4, fx = T), data=lh_cbf_asl)
+  est_dose_lm_model <- lm(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + est_dose, 
+                          data=lh_cbf_asl)
   
-  mood_model <- gam(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                      obcp + s(ageAtScan1, k = 4, fx = T) + mood, data=lh_cbf_asl)
-  
-  psychopathology_model <- gam(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                                 obcp + s(ageAtScan1, k = 4, fx = T) + overall_psychopathology, data=lh_cbf_asl)
-  
-  accuracy_model <- gam(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                          obcp + s(ageAtScan1, k = 4, fx = T) + Overall_Accuracy, data=lh_cbf_asl)
-  
-  speed_model <- gam(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                          obcp + s(ageAtScan1, k = 4, fx = T) + Overall_Speed, data=lh_cbf_asl)
-  
-  efficiency_model <- gam(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                          obcp + s(ageAtScan1, k = 4, fx = T) + Overall_Efficiency, data=lh_cbf_asl)
-  
-
-  age_lm_model <- lm(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1, 
-                     data=lh_cbf_asl)
-  
-  accuracy_lm_model <- lm(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + obcp + Overall_Accuracy, 
-                     data=lh_cbf_asl)
-  
-  speed_lm_model <- lm(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + obcp + Overall_Speed, 
-                     data=lh_cbf_asl)
-  
-  efficiency_lm_model <- lm(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + obcp + Overall_Efficiency, 
-                     data=lh_cbf_asl)
-  
-   #put pvalue in it's appropriate lm
-  lh_gam_age_p_uncor[i] <- summary(age_bcp_model)$s.table[1,4] #smooth term for ageAtScan1
-  lh_gam_bcp_p_uncor[i] <- summary(age_bcp_model)$p.table[4,4] #linear term
-  lh_gam_age_bcp_p_uncor[i] <- summary(age_bcp_intx_model)$s.table[2,4] #smooth term for interaction, this was changed
-  
-  lh_gam_mood_p_uncor[i] <- summary(mood_model)$p.table[5,4]
-  lh_gam_psychopathology_p_uncor[i] <- summary(psychopathology_model)$p.table[5,4]
-  lh_gam_accuracy_p_uncor[i] <- summary(accuracy_model)$p.table[5,4] #accuracy term
-  lh_gam_speed_p_uncor[i] <- summary(speed_model)$p.table[5,4] #speed term
-  lh_gam_efficiency_p_uncor[i] <- summary(efficiency_model)$p.table[5,4] #efficiency term
+  #put pvalue in it's appropriate lm
+  lh_gam_est_dose_p_uncor[i] <- summary(est_dose_model)$p.table[4,4] #estdose
   
   #lm to assess directionality
-  lh_lm_age_p_uncor[i] <- summary(age_lm_model)$coeff[4,4]  
-  lh_lm_accuracy_p_uncor[i] <- summary(accuracy_lm_model)$coeff[5,4]
-  lh_lm_speed_p_uncor[i] <- summary(speed_lm_model)$coeff[5,4]
-  lh_lm_efficiency_p_uncor[i] <- summary(efficiency_lm_model)$coeff[5,4]
+  lh_lm_est_dose_p_uncor[i] <- summary(est_dose_lm_model)$coeff[4,4]
   
   #pull tvalue into its appropriate lm
-  lh_gam_age_t_uncor[i] <- summary(age_bcp_model)$s.table[1,3] #smooth term for ageAtScan1
-  lh_gam_bcp_t_uncor[i] <- summary(age_bcp_model)$p.table[4,3] #linear term
-  lh_gam_age_bcp_t_uncor[i] <- summary(age_bcp_intx_model)$s.table[2,3] #smooth term for interaction
-  
-  lh_gam_mood_t_uncor[i] <- summary(mood_model)$p.table[5,3]
-  lh_gam_psychopathology_t_uncor[i] <- summary(psychopathology_model)$p.table[5,3]
-  lh_gam_accuracy_t_uncor[i] <- summary(accuracy_model)$p.table[5,3] #accuracy term
-  lh_gam_speed_t_uncor[i] <- summary(speed_model)$p.table[5,3] #accuracy term
-  lh_gam_efficiency_t_uncor[i] <- summary(efficiency_model)$p.table[5,3] #accuracy term
+  lh_gam_est_dose_t_uncor[i] <- summary(est_dose_model)$p.table[4,3] #T term
   
   #lm to assess directionality
-  lh_lm_age_t_uncor[i] <- summary(age_lm_model)$coeff[4,3]
-  lh_lm_accuracy_t_uncor[i] <- summary(accuracy_lm_model)$coeff[5,3]
-  lh_lm_speed_t_uncor[i] <- summary(speed_lm_model)$coeff[5,3]
-  lh_lm_efficiency_t_uncor[i] <- summary(efficiency_lm_model)$coeff[5,3]
+  lh_lm_est_dose_t_uncor[i] <- summary(est_dose_lm_model)$coeff[4,3]
   
 }
 
 #####################
 ###### RIGHT ########
 #####################
-
-
 #get # of items in df for calculation of column)
 numcolumns <- dim(rh_cbf_asl)[2]
 #run gams models and store info in respective vectors
 for (i in 1:10242) {
   curcol = (numcolumns - 10242 + i) # will start you counting at the right part of the df
-  age_bcp_model <- gam(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                         obcp + s(ageAtScan1, k = 4, fx = T), data=rh_cbf_asl)
+  est_dose_model <- gam(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                          s(ageAtScan1, k = 4, fx = T) + est_dose, data=rh_cbf_asl)
   
-  age_bcp_intx_model <- gam(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                              obcp + s(ageAtScan1, k = 4, fx = T) + s(ageAtScan1, by = obcp, k = 4, fx = T), data=rh_cbf_asl)
-  
-  mood_model <- gam(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                      obcp + s(ageAtScan1, k = 4, fx = T) + mood, data=rh_cbf_asl)
-  
-  psychopathology_model <- gam(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                                 obcp + s(ageAtScan1, k = 4, fx = T) + overall_psychopathology, data=rh_cbf_asl)
-  
-  accuracy_model <- gam(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                          obcp + s(ageAtScan1, k = 4, fx = T) + Overall_Accuracy, data=rh_cbf_asl)
-  
-  speed_model <- gam(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                       obcp + s(ageAtScan1, k = 4, fx = T) + Overall_Speed, data=rh_cbf_asl)
-  
-  efficiency_model <- gam(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                            obcp + s(ageAtScan1, k = 4, fx = T) + Overall_Efficiency, data=rh_cbf_asl)
-  
-  age_lm_model <- lm(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1, data=rh_cbf_asl)
- 
-
-  accuracy_lm_model <- lm(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + obcp + Overall_Accuracy, 
+  est_dose_lm_model <- lm(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + est_dose, 
                           data=rh_cbf_asl)
   
-  speed_lm_model <- lm(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + obcp + Overall_Speed, 
-                       data=rh_cbf_asl)
-  
-  efficiency_lm_model <- lm(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + obcp + Overall_Efficiency, 
-                            data=rh_cbf_asl)
-  
   #put pvalue in it's appropriate lm
-  rh_gam_age_p_uncor[i] <- summary(age_bcp_model)$s.table[1,4] #smooth term for ageAtScan1
-  rh_gam_bcp_p_uncor[i] <- summary(age_bcp_model)$p.table[4,4] #linear term
-  rh_gam_age_bcp_p_uncor[i] <- summary(age_bcp_intx_model)$s.table[2,4] #smooth term for interaction, this was changed
-  
-  rh_gam_mood_p_uncor[i] <- summary(mood_model)$p.table[5,4]
-  rh_gam_psychopathology_p_uncor[i] <- summary(psychopathology_model)$p.table[5,4]
-  rh_gam_accuracy_p_uncor[i] <- summary(accuracy_model)$p.table[5,4] #accuracy term
-  rh_gam_speed_p_uncor[i] <- summary(speed_model)$p.table[5,4] #speed term
-  rh_gam_efficiency_p_uncor[i] <- summary(efficiency_model)$p.table[5,4] #efficiency term
+  rh_gam_est_dose_p_uncor[i] <- summary(est_dose_model)$p.table[4,4] #efficiency term
   
   #lm to assess directionality
-  rh_lm_age_p_uncor[i] <- summary(age_lm_model)$coeff[4,4]
-  rh_lm_accuracy_p_uncor[i] <- summary(accuracy_lm_model)$coeff[5,4]
-  rh_lm_speed_p_uncor[i] <- summary(speed_lm_model)$coeff[5,4]
-  rh_lm_efficiency_p_uncor[i] <- summary(efficiency_lm_model)$coeff[5,4]
+  rh_lm_est_dose_p_uncor[i] <- summary(est_dose_lm_model)$coeff[4,4]
   
   #pull tvalue into its appropriate lm
-  rh_gam_age_t_uncor[i] <- summary(age_bcp_model)$s.table[1,3] #smooth term for ageAtScan1
-  rh_gam_bcp_t_uncor[i] <- summary(age_bcp_model)$p.table[4,3] #linear term
-  rh_gam_age_bcp_t_uncor[i] <- summary(age_bcp_intx_model)$s.table[2,3] #smooth term for interaction
-  
-  rh_gam_mood_t_uncor[i] <- summary(mood_model)$p.table[5,3]
-  rh_gam_psychopathology_t_uncor[i] <- summary(psychopathology_model)$p.table[5,3]
-  rh_gam_accuracy_t_uncor[i] <- summary(accuracy_model)$p.table[5,3] #accuracy term
-  rh_gam_speed_t_uncor[i] <- summary(speed_model)$p.table[5,3] #accuracy term
-  rh_gam_efficiency_t_uncor[i] <- summary(efficiency_model)$p.table[5,3] #accuracy term
+  rh_gam_est_dose_t_uncor[i] <- summary(est_dose_model)$p.table[4,3] #accuracy term
   
   #lm to assess directionality
-  rh_lm_age_t_uncor[i] <- summary(age_lm_model)$coeff[4,3]
-  rh_lm_accuracy_t_uncor[i] <- summary(accuracy_lm_model)$coeff[5,3]
-  rh_lm_speed_t_uncor[i] <- summary(speed_lm_model)$coeff[5,3]
-  rh_lm_efficiency_t_uncor[i] <- summary(efficiency_lm_model)$coeff[5,3]
+  rh_lm_est_dose_t_uncor[i] <- summary(est_dose_lm_model)$coeff[4,3]
+  
 }
-#################################################################################
-#################################################################################
 
+##########################################
 #####################################################
 #                     results                       #
 #####################################################
+
 
 #### FDR correction ####
 for (hemi in hemis) {
   for (model in models) {
     hemi_model_p_unc <- paste0(hemi, "_gam_", model, "_p_uncor") 
     hemi_model_p_fdr <- paste0(hemi, "_gam_", model, "_p_fdr")    
-
+    
     print(hemi_model_p_unc)
     
     #correct p values
@@ -352,17 +252,16 @@ for (hemi in hemis) {
     names(pfdr) <- c("pfdr", "sig05", "sig05_noNA")
     hemi_model_p_fdr <- as.data.frame(pfdr[,1]) #sig05
     
-   
-   
+    
+    
     #multiply T values by fdr vector to get the list of Ts that are fdr corrected
     hemi_model_t_unc <- paste0(hemi, "_gam_", model, "_t_uncor")
-    hemi_model_t_fdr <- paste0(hemi, "_gam_", model, "_t_fdr"
-                               )
+    hemi_model_t_fdr <- paste0(hemi, "_gam_", model, "_t_fdr")
     t_df <- eval(substitute(as.data.frame(i), list(i = as.name(hemi_model_t_unc))))
     names(t_df) <- c("tval")
     t_df$tfdr <- pfdr[,3] * t_df$tval
     hemi_model_t_fdr <- as.data.frame(t_df[,2])
-  
+    
     
     #######################
     #### write tables #####
@@ -457,4 +356,3 @@ for (hemi in hemis) {
     eval(parse(text=write_table_command))
   }
 }
-
