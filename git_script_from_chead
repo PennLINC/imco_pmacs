@@ -1,0 +1,21 @@
+cd /Users/eballer/BBL/from_chead/ballerDepHeterogen/ballerDepHeterogenScripts/
+find . -name '*.html' -exec mv {} /Users/eballer/BBL/from_chead/ballerDepHeterog
+en/results/htmls/ \;
+find . -name '*.pdf' -exec mv {} /Users/eballer/BBL/from_chead/ballerDepHeteroge
+n/results/pdfs/ \;
+find . -name '*.rds' -exec mv {} /Users/eballer/BBL/from_chead/ballerDepHeteroge
+n/results/rds/ \;
+find . -name '*.R*' -exec cp {} /Users/eballer/BBL/from_chead/ballerDepHeterogen
+/git/ballerDepHeterogenScripts/ballerDepHeterogenScripts \;
+find . -name '*.csh' -exec cp {} /Users/eballer/BBL/from_chead/ballerDepHeteroge
+n/git/ballerDepHeterogenScripts/ballerDepHeterogenScripts \;
+find . -name '*.sh' -exec cp {} /Users/eballer/BBL/from_chead/ballerDepHeterogen
+/git/ballerDepHeterogenScripts/ballerDepHeterogenScripts \;
+cd /Users/eballer/BBL/from_chead/ballerDepHeterogen/git/ballerDepHeterogenScript
+s/ballerDepHeterogenScripts/.
+cp -r ../../../hydra_output_from_cbica/scripts scripts_from_cbica
+rm *html
+rm *pdf
+git add *
+git commit -m "update"
+git push origin master

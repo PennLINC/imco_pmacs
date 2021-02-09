@@ -1,0 +1,1 @@
+bsub -o /project/imco/baller/scripts/logfiles/outputlogjob_psychopathology.out -e /project/imco/baller/scripts/logfiles/outputlogjob_psychopathology.error -R "rusage[mem=128G]" < /project/imco/baller/scripts/psychopathology_wrapper.sh

@@ -1,0 +1,4 @@
+cp /project/imco/baller/scripts/* /project/imco/baller/git/imco_pmacs/.
+git add *
+git commit -m "update"
+git push origin main
