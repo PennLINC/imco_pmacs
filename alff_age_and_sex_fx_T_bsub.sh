@@ -1,0 +1,1 @@
+bsub -o /project/imco/baller/scripts/alff/logfiles/outputlogjob.out -e /project/imco/baller/scripts/alff/logfiles/outputlogjob.error -R "rusage[mem=128G]" < /project/imco/baller/scripts/alff/alff_age_and_sex_fx_T_wrapper.sh
