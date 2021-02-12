@@ -1,0 +1,1 @@
+bsub -o /project/imco/baller/scripts/coupling/logfiles/outputlogjob.out -e /project/imco/baller/scripts/coupling/logfiles/outputlogjob.error -R "rusage[mem=128G]" < /project/imco/baller/scripts/coupling/coupling_accuracy_fx_T_wrapper.sh

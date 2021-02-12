@@ -5,9 +5,9 @@ function PBP_vertWiseEffect_Erica(LH,RH,name)% pretty picture code, AAB 4/2018 -
 
 %%% SET THRESHOLDS AS DESIRED HERE: only fill in each threshold as needed (no need to set both if you only want to threshold one end)
 % Values at or above this set to gray
- %Uthresh=-2;
+Uthresh=-2;
 % Values at or below this set to gray
- LThresh=2;
+% LThresh=2;
 %%%
 
 

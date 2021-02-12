@@ -1,0 +1,366 @@
+Sender: LSF System <jszostek@lasr1>
+Subject: Job 8191963: <#!/bin/bash;echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc;Rscript cbf_age_and_sex_fx_T.R> in cluster <PMACS-SCC> Done
+
+Job <#!/bin/bash;echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc;Rscript cbf_age_and_sex_fx_T.R> was submitted from host <scisub> by user <eballer> in cluster <PMACS-SCC> at Thu Feb 11 16:05:14 2021
+Job was executed on host(s) <lasr1>, in queue <bbl_normal>, as user <eballer> in cluster <PMACS-SCC> at Thu Feb 11 16:05:15 2021
+</home/eballer> was used as the home directory.
+</project/imco/baller/scripts/cbf> was used as the working directory.
+Started at Thu Feb 11 16:05:15 2021
+Terminated at Thu Feb 11 16:21:16 2021
+Results reported at Thu Feb 11 16:21:16 2021
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc
+Rscript cbf_age_and_sex_fx_T.R
+
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   831.24 sec.
+    Max Memory :                                 697 MB
+    Average Memory :                             598.83 MB
+    Total Requested Memory :                     131072.00 MB
+    Delta Memory :                               130375.00 MB
+    Max Swap :                                   -
+    Max Processes :                              4
+    Max Threads :                                5
+    Run time :                                   960 sec.
+    Turnaround time :                            962 sec.
+
+The output (if any) follows:
+
+[1] "lh_gam_age_p_uncor <- vector(length = 10242)"
+[2] "lh_gam_age_p_fdr <- vector(length = 10242)"  
+[1] "lh_gam_age_p_uncor <- vector(length = 10242)"
+[2] "lh_gam_age_p_fdr <- vector(length = 10242)"  
+[1] "lh_gam_age_t_uncor <- vector(length = 10242)"
+[2] "lh_gam_age_t_fdr <- vector(length = 10242)"  
+[1] "lh_gam_age_t_uncor <- vector(length = 10242)"
+[2] "lh_gam_age_t_fdr <- vector(length = 10242)"  
+[1] "lh_gam_sex_p_uncor <- vector(length = 10242)"
+[2] "lh_gam_sex_p_fdr <- vector(length = 10242)"  
+[1] "lh_gam_sex_p_uncor <- vector(length = 10242)"
+[2] "lh_gam_sex_p_fdr <- vector(length = 10242)"  
+[1] "lh_gam_sex_t_uncor <- vector(length = 10242)"
+[2] "lh_gam_sex_t_fdr <- vector(length = 10242)"  
+[1] "lh_gam_sex_t_uncor <- vector(length = 10242)"
+[2] "lh_gam_sex_t_fdr <- vector(length = 10242)"  
+[1] "lh_gam_age_sex_p_uncor <- vector(length = 10242)"
+[2] "lh_gam_age_sex_p_fdr <- vector(length = 10242)"  
+[1] "lh_gam_age_sex_p_uncor <- vector(length = 10242)"
+[2] "lh_gam_age_sex_p_fdr <- vector(length = 10242)"  
+[1] "lh_gam_age_sex_t_uncor <- vector(length = 10242)"
+[2] "lh_gam_age_sex_t_fdr <- vector(length = 10242)"  
+[1] "lh_gam_age_sex_t_uncor <- vector(length = 10242)"
+[2] "lh_gam_age_sex_t_fdr <- vector(length = 10242)"  
+[1] "rh_gam_age_p_uncor <- vector(length = 10242)"
+[2] "rh_gam_age_p_fdr <- vector(length = 10242)"  
+[1] "rh_gam_age_p_uncor <- vector(length = 10242)"
+[2] "rh_gam_age_p_fdr <- vector(length = 10242)"  
+[1] "rh_gam_age_t_uncor <- vector(length = 10242)"
+[2] "rh_gam_age_t_fdr <- vector(length = 10242)"  
+[1] "rh_gam_age_t_uncor <- vector(length = 10242)"
+[2] "rh_gam_age_t_fdr <- vector(length = 10242)"  
+[1] "rh_gam_sex_p_uncor <- vector(length = 10242)"
+[2] "rh_gam_sex_p_fdr <- vector(length = 10242)"  
+[1] "rh_gam_sex_p_uncor <- vector(length = 10242)"
+[2] "rh_gam_sex_p_fdr <- vector(length = 10242)"  
+[1] "rh_gam_sex_t_uncor <- vector(length = 10242)"
+[2] "rh_gam_sex_t_fdr <- vector(length = 10242)"  
+[1] "rh_gam_sex_t_uncor <- vector(length = 10242)"
+[2] "rh_gam_sex_t_fdr <- vector(length = 10242)"  
+[1] "rh_gam_age_sex_p_uncor <- vector(length = 10242)"
+[2] "rh_gam_age_sex_p_fdr <- vector(length = 10242)"  
+[1] "rh_gam_age_sex_p_uncor <- vector(length = 10242)"
+[2] "rh_gam_age_sex_p_fdr <- vector(length = 10242)"  
+[1] "rh_gam_age_sex_t_uncor <- vector(length = 10242)"
+[2] "rh_gam_age_sex_t_fdr <- vector(length = 10242)"  
+[1] "rh_gam_age_sex_t_uncor <- vector(length = 10242)"
+[2] "rh_gam_age_sex_t_fdr <- vector(length = 10242)"  
+[1] "lh_gam_age_p_uncor"
+[1] "lh_gam_sex_p_uncor"
+[1] "lh_gam_age_sex_p_uncor"
+[1] "rh_gam_age_p_uncor"
+[1] "rh_gam_sex_p_uncor"
+[1] "rh_gam_age_sex_p_uncor"
+[1] "lh_lm_age_p_uncor"
+[1] "rh_lm_age_p_uncor"
+
+
+PS:
+
+Read file </project/imco/baller/scripts/cbf/logfiles/outputlogjob.error> for stderr output of this job.
+
+Sender: LSF System <jszostek@galton>
+Subject: Job 8192958: <#!/bin/bash;echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc;Rscript cbf_age_and_sex_fx_T.R> in cluster <PMACS-SCC> Done
+
+Job <#!/bin/bash;echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc;Rscript cbf_age_and_sex_fx_T.R> was submitted from host <scisub> by user <eballer> in cluster <PMACS-SCC> at Fri Feb 12 11:13:25 2021
+Job was executed on host(s) <galton>, in queue <bbl_normal>, as user <eballer> in cluster <PMACS-SCC> at Fri Feb 12 11:13:26 2021
+</home/eballer> was used as the home directory.
+</project/imco/baller/scripts/cbf> was used as the working directory.
+Started at Fri Feb 12 11:13:26 2021
+Terminated at Fri Feb 12 11:29:55 2021
+Results reported at Fri Feb 12 11:29:55 2021
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc
+Rscript cbf_age_and_sex_fx_T.R
+
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   863.72 sec.
+    Max Memory :                                 696 MB
+    Average Memory :                             596.81 MB
+    Total Requested Memory :                     131072.00 MB
+    Delta Memory :                               130376.00 MB
+    Max Swap :                                   -
+    Max Processes :                              4
+    Max Threads :                                5
+    Run time :                                   988 sec.
+    Turnaround time :                            990 sec.
+
+The output (if any) follows:
+
+[1] "lh_gam_age_p_uncor <- vector(length = 10242)"
+[2] "lh_gam_age_p_fdr <- vector(length = 10242)"  
+[1] "lh_gam_age_p_uncor <- vector(length = 10242)"
+[2] "lh_gam_age_p_fdr <- vector(length = 10242)"  
+[1] "lh_gam_age_t_uncor <- vector(length = 10242)"
+[2] "lh_gam_age_t_fdr <- vector(length = 10242)"  
+[1] "lh_gam_age_t_uncor <- vector(length = 10242)"
+[2] "lh_gam_age_t_fdr <- vector(length = 10242)"  
+[1] "lh_gam_sex_p_uncor <- vector(length = 10242)"
+[2] "lh_gam_sex_p_fdr <- vector(length = 10242)"  
+[1] "lh_gam_sex_p_uncor <- vector(length = 10242)"
+[2] "lh_gam_sex_p_fdr <- vector(length = 10242)"  
+[1] "lh_gam_sex_t_uncor <- vector(length = 10242)"
+[2] "lh_gam_sex_t_fdr <- vector(length = 10242)"  
+[1] "lh_gam_sex_t_uncor <- vector(length = 10242)"
+[2] "lh_gam_sex_t_fdr <- vector(length = 10242)"  
+[1] "lh_gam_age_sex_p_uncor <- vector(length = 10242)"
+[2] "lh_gam_age_sex_p_fdr <- vector(length = 10242)"  
+[1] "lh_gam_age_sex_p_uncor <- vector(length = 10242)"
+[2] "lh_gam_age_sex_p_fdr <- vector(length = 10242)"  
+[1] "lh_gam_age_sex_t_uncor <- vector(length = 10242)"
+[2] "lh_gam_age_sex_t_fdr <- vector(length = 10242)"  
+[1] "lh_gam_age_sex_t_uncor <- vector(length = 10242)"
+[2] "lh_gam_age_sex_t_fdr <- vector(length = 10242)"  
+[1] "rh_gam_age_p_uncor <- vector(length = 10242)"
+[2] "rh_gam_age_p_fdr <- vector(length = 10242)"  
+[1] "rh_gam_age_p_uncor <- vector(length = 10242)"
+[2] "rh_gam_age_p_fdr <- vector(length = 10242)"  
+[1] "rh_gam_age_t_uncor <- vector(length = 10242)"
+[2] "rh_gam_age_t_fdr <- vector(length = 10242)"  
+[1] "rh_gam_age_t_uncor <- vector(length = 10242)"
+[2] "rh_gam_age_t_fdr <- vector(length = 10242)"  
+[1] "rh_gam_sex_p_uncor <- vector(length = 10242)"
+[2] "rh_gam_sex_p_fdr <- vector(length = 10242)"  
+[1] "rh_gam_sex_p_uncor <- vector(length = 10242)"
+[2] "rh_gam_sex_p_fdr <- vector(length = 10242)"  
+[1] "rh_gam_sex_t_uncor <- vector(length = 10242)"
+[2] "rh_gam_sex_t_fdr <- vector(length = 10242)"  
+[1] "rh_gam_sex_t_uncor <- vector(length = 10242)"
+[2] "rh_gam_sex_t_fdr <- vector(length = 10242)"  
+[1] "rh_gam_age_sex_p_uncor <- vector(length = 10242)"
+[2] "rh_gam_age_sex_p_fdr <- vector(length = 10242)"  
+[1] "rh_gam_age_sex_p_uncor <- vector(length = 10242)"
+[2] "rh_gam_age_sex_p_fdr <- vector(length = 10242)"  
+[1] "rh_gam_age_sex_t_uncor <- vector(length = 10242)"
+[2] "rh_gam_age_sex_t_fdr <- vector(length = 10242)"  
+[1] "rh_gam_age_sex_t_uncor <- vector(length = 10242)"
+[2] "rh_gam_age_sex_t_fdr <- vector(length = 10242)"  
+[1] "lh_gam_age_p_uncor"
+[1] "lh_gam_sex_p_uncor"
+[1] "lh_gam_age_sex_p_uncor"
+[1] "rh_gam_age_p_uncor"
+[1] "rh_gam_sex_p_uncor"
+[1] "rh_gam_age_sex_p_uncor"
+[1] "lh_lm_age_p_uncor"
+[1] "lh_lm_sex_p_uncor"
+[1] "rh_lm_age_p_uncor"
+[1] "rh_lm_sex_p_uncor"
+
+
+PS:
+
+Read file </project/imco/baller/scripts/cbf/logfiles/outputlogjob.error> for stderr output of this job.
+
+Sender: LSF System <jszostek@galton>
+Subject: Job 8193018: <#!/bin/bash;echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc;Rscript cbf_accuracy_fx_T.R> in cluster <PMACS-SCC> Done
+
+Job <#!/bin/bash;echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc;Rscript cbf_accuracy_fx_T.R> was submitted from host <linc1> by user <eballer> in cluster <PMACS-SCC> at Fri Feb 12 13:35:22 2021
+Job was executed on host(s) <galton>, in queue <bbl_normal>, as user <eballer> in cluster <PMACS-SCC> at Fri Feb 12 13:35:22 2021
+</home/eballer> was used as the home directory.
+</project/imco/baller/scripts/cbf> was used as the working directory.
+Started at Fri Feb 12 13:35:22 2021
+Terminated at Fri Feb 12 14:10:29 2021
+Results reported at Fri Feb 12 14:10:29 2021
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc
+Rscript cbf_accuracy_fx_T.R
+
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   2085.87 sec.
+    Max Memory :                                 664 MB
+    Average Memory :                             656.10 MB
+    Total Requested Memory :                     131072.00 MB
+    Delta Memory :                               130408.00 MB
+    Max Swap :                                   -
+    Max Processes :                              4
+    Max Threads :                                5
+    Run time :                                   2107 sec.
+    Turnaround time :                            2107 sec.
+
+The output (if any) follows:
+
+[1] "lh_gam_age_p_uncor <- vector(length = 10242)"
+[2] "lh_gam_age_p_fdr <- vector(length = 10242)"  
+[1] "lh_gam_age_p_uncor <- vector(length = 10242)"
+[2] "lh_gam_age_p_fdr <- vector(length = 10242)"  
+[1] "lh_gam_age_t_uncor <- vector(length = 10242)"
+[2] "lh_gam_age_t_fdr <- vector(length = 10242)"  
+[1] "lh_gam_age_t_uncor <- vector(length = 10242)"
+[2] "lh_gam_age_t_fdr <- vector(length = 10242)"  
+[1] "lh_gam_sex_p_uncor <- vector(length = 10242)"
+[2] "lh_gam_sex_p_fdr <- vector(length = 10242)"  
+[1] "lh_gam_sex_p_uncor <- vector(length = 10242)"
+[2] "lh_gam_sex_p_fdr <- vector(length = 10242)"  
+[1] "lh_gam_sex_t_uncor <- vector(length = 10242)"
+[2] "lh_gam_sex_t_fdr <- vector(length = 10242)"  
+[1] "lh_gam_sex_t_uncor <- vector(length = 10242)"
+[2] "lh_gam_sex_t_fdr <- vector(length = 10242)"  
+[1] "lh_gam_accuracy_p_uncor <- vector(length = 10242)"
+[2] "lh_gam_accuracy_p_fdr <- vector(length = 10242)"  
+[1] "lh_gam_accuracy_p_uncor <- vector(length = 10242)"
+[2] "lh_gam_accuracy_p_fdr <- vector(length = 10242)"  
+[1] "lh_gam_accuracy_t_uncor <- vector(length = 10242)"
+[2] "lh_gam_accuracy_t_fdr <- vector(length = 10242)"  
+[1] "lh_gam_accuracy_t_uncor <- vector(length = 10242)"
+[2] "lh_gam_accuracy_t_fdr <- vector(length = 10242)"  
+[1] "lh_gam_exec_accuracy_p_uncor <- vector(length = 10242)"
+[2] "lh_gam_exec_accuracy_p_fdr <- vector(length = 10242)"  
+[1] "lh_gam_exec_accuracy_p_uncor <- vector(length = 10242)"
+[2] "lh_gam_exec_accuracy_p_fdr <- vector(length = 10242)"  
+[1] "lh_gam_exec_accuracy_t_uncor <- vector(length = 10242)"
+[2] "lh_gam_exec_accuracy_t_fdr <- vector(length = 10242)"  
+[1] "lh_gam_exec_accuracy_t_uncor <- vector(length = 10242)"
+[2] "lh_gam_exec_accuracy_t_fdr <- vector(length = 10242)"  
+[1] "lh_gam_soc_accuracy_p_uncor <- vector(length = 10242)"
+[2] "lh_gam_soc_accuracy_p_fdr <- vector(length = 10242)"  
+[1] "lh_gam_soc_accuracy_p_uncor <- vector(length = 10242)"
+[2] "lh_gam_soc_accuracy_p_fdr <- vector(length = 10242)"  
+[1] "lh_gam_soc_accuracy_t_uncor <- vector(length = 10242)"
+[2] "lh_gam_soc_accuracy_t_fdr <- vector(length = 10242)"  
+[1] "lh_gam_soc_accuracy_t_uncor <- vector(length = 10242)"
+[2] "lh_gam_soc_accuracy_t_fdr <- vector(length = 10242)"  
+[1] "lh_gam_mem_accuracy_p_uncor <- vector(length = 10242)"
+[2] "lh_gam_mem_accuracy_p_fdr <- vector(length = 10242)"  
+[1] "lh_gam_mem_accuracy_p_uncor <- vector(length = 10242)"
+[2] "lh_gam_mem_accuracy_p_fdr <- vector(length = 10242)"  
+[1] "lh_gam_mem_accuracy_t_uncor <- vector(length = 10242)"
+[2] "lh_gam_mem_accuracy_t_fdr <- vector(length = 10242)"  
+[1] "lh_gam_mem_accuracy_t_uncor <- vector(length = 10242)"
+[2] "lh_gam_mem_accuracy_t_fdr <- vector(length = 10242)"  
+[1] "rh_gam_age_p_uncor <- vector(length = 10242)"
+[2] "rh_gam_age_p_fdr <- vector(length = 10242)"  
+[1] "rh_gam_age_p_uncor <- vector(length = 10242)"
+[2] "rh_gam_age_p_fdr <- vector(length = 10242)"  
+[1] "rh_gam_age_t_uncor <- vector(length = 10242)"
+[2] "rh_gam_age_t_fdr <- vector(length = 10242)"  
+[1] "rh_gam_age_t_uncor <- vector(length = 10242)"
+[2] "rh_gam_age_t_fdr <- vector(length = 10242)"  
+[1] "rh_gam_sex_p_uncor <- vector(length = 10242)"
+[2] "rh_gam_sex_p_fdr <- vector(length = 10242)"  
+[1] "rh_gam_sex_p_uncor <- vector(length = 10242)"
+[2] "rh_gam_sex_p_fdr <- vector(length = 10242)"  
+[1] "rh_gam_sex_t_uncor <- vector(length = 10242)"
+[2] "rh_gam_sex_t_fdr <- vector(length = 10242)"  
+[1] "rh_gam_sex_t_uncor <- vector(length = 10242)"
+[2] "rh_gam_sex_t_fdr <- vector(length = 10242)"  
+[1] "rh_gam_accuracy_p_uncor <- vector(length = 10242)"
+[2] "rh_gam_accuracy_p_fdr <- vector(length = 10242)"  
+[1] "rh_gam_accuracy_p_uncor <- vector(length = 10242)"
+[2] "rh_gam_accuracy_p_fdr <- vector(length = 10242)"  
+[1] "rh_gam_accuracy_t_uncor <- vector(length = 10242)"
+[2] "rh_gam_accuracy_t_fdr <- vector(length = 10242)"  
+[1] "rh_gam_accuracy_t_uncor <- vector(length = 10242)"
+[2] "rh_gam_accuracy_t_fdr <- vector(length = 10242)"  
+[1] "rh_gam_exec_accuracy_p_uncor <- vector(length = 10242)"
+[2] "rh_gam_exec_accuracy_p_fdr <- vector(length = 10242)"  
+[1] "rh_gam_exec_accuracy_p_uncor <- vector(length = 10242)"
+[2] "rh_gam_exec_accuracy_p_fdr <- vector(length = 10242)"  
+[1] "rh_gam_exec_accuracy_t_uncor <- vector(length = 10242)"
+[2] "rh_gam_exec_accuracy_t_fdr <- vector(length = 10242)"  
+[1] "rh_gam_exec_accuracy_t_uncor <- vector(length = 10242)"
+[2] "rh_gam_exec_accuracy_t_fdr <- vector(length = 10242)"  
+[1] "rh_gam_soc_accuracy_p_uncor <- vector(length = 10242)"
+[2] "rh_gam_soc_accuracy_p_fdr <- vector(length = 10242)"  
+[1] "rh_gam_soc_accuracy_p_uncor <- vector(length = 10242)"
+[2] "rh_gam_soc_accuracy_p_fdr <- vector(length = 10242)"  
+[1] "rh_gam_soc_accuracy_t_uncor <- vector(length = 10242)"
+[2] "rh_gam_soc_accuracy_t_fdr <- vector(length = 10242)"  
+[1] "rh_gam_soc_accuracy_t_uncor <- vector(length = 10242)"
+[2] "rh_gam_soc_accuracy_t_fdr <- vector(length = 10242)"  
+[1] "rh_gam_mem_accuracy_p_uncor <- vector(length = 10242)"
+[2] "rh_gam_mem_accuracy_p_fdr <- vector(length = 10242)"  
+[1] "rh_gam_mem_accuracy_p_uncor <- vector(length = 10242)"
+[2] "rh_gam_mem_accuracy_p_fdr <- vector(length = 10242)"  
+[1] "rh_gam_mem_accuracy_t_uncor <- vector(length = 10242)"
+[2] "rh_gam_mem_accuracy_t_fdr <- vector(length = 10242)"  
+[1] "rh_gam_mem_accuracy_t_uncor <- vector(length = 10242)"
+[2] "rh_gam_mem_accuracy_t_fdr <- vector(length = 10242)"  
+[1] "lh_gam_age_p_uncor"
+[1] "lh_gam_sex_p_uncor"
+[1] "lh_gam_accuracy_p_uncor"
+[1] "lh_gam_exec_accuracy_p_uncor"
+[1] "lh_gam_soc_accuracy_p_uncor"
+[1] "lh_gam_mem_accuracy_p_uncor"
+[1] "rh_gam_age_p_uncor"
+[1] "rh_gam_sex_p_uncor"
+[1] "rh_gam_accuracy_p_uncor"
+[1] "rh_gam_exec_accuracy_p_uncor"
+[1] "rh_gam_soc_accuracy_p_uncor"
+[1] "rh_gam_mem_accuracy_p_uncor"
+[1] "lh_lm_age_p_uncor"
+[1] "lh_lm_sex_p_uncor"
+[1] "lh_lm_accuracy_p_uncor"
+[1] "lh_lm_exec_accuracy_p_uncor"
+[1] "lh_lm_soc_accuracy_p_uncor"
+[1] "lh_lm_mem_accuracy_p_uncor"
+[1] "rh_lm_age_p_uncor"
+[1] "rh_lm_sex_p_uncor"
+[1] "rh_lm_accuracy_p_uncor"
+[1] "rh_lm_exec_accuracy_p_uncor"
+[1] "rh_lm_soc_accuracy_p_uncor"
+[1] "rh_lm_mem_accuracy_p_uncor"
+
+
+PS:
+
+Read file </project/imco/baller/scripts/cbf/logfiles/outputlogjob.error> for stderr output of this job.
+

@@ -1,0 +1,1 @@
+bsub -o /project/imco/baller/scripts/cbf/logfiles/outputlogjob.out -e /project/imco/baller/scripts/cbf/logfiles/outputlogjob.error -R "rusage[mem=128G]" < /project/imco/baller/scripts/cbf/cbf_accuracy_fx_T_wrapper.sh
