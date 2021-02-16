@@ -34,8 +34,8 @@ foreach subj (`cat /project/imco/baller/subjectLists/n831_alff_cbf_finalSample.c
 end
 
 # make average maps
-mri_concat *lh*.mgh --o lh_alff_mean.mgh --mean
-mri_concat *rh*.mgh --o rh_alff_mean.mgh --mean
+mri_concat --i *lh*.mgh --o lh_alff_mean.mgh --mean
+mri_concat --i *rh*.mgh --o rh_alff_mean.mgh --mean
 
 #convert to asc
 mri_convert --ascii lh_alff_mean.mgh lh_alff_mean.asc
