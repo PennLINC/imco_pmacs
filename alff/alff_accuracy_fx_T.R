@@ -246,7 +246,7 @@ for (i in 1:10242) {
   
   #lm to assess directionality
   lh_lm_age_t_uncor[i] <- summary(age_lm_model)$coeff[4,3]
-  lh_lm_sex_t_uncor[i] <- summary(age_sex_model)$p.table[4,3] #linear term
+  lh_lm_sex_t_uncor[i] <- summary(age_sex_model)$coeff[4,3] #linear term
   
   lh_lm_accuracy_t_uncor[i] <- summary(accuracy_lm_model)$coeff[5,3]
   lh_lm_exec_accuracy_t_uncor[i] <- summary(exec_accuracy_lm_model)$coeff[5,3]
@@ -330,7 +330,7 @@ for (i in 1:10242) {
   
   #lm to assess directionality
   rh_lm_age_t_uncor[i] <- summary(age_lm_model)$coeff[4,3]
-  rh_lm_sex_t_uncor[i] <- summary(age_sex_model)$p.table[4,3] #linear term
+  rh_lm_sex_t_uncor[i] <- summary(age_sex_model)$coeff[4,3] #linear term
   
   rh_lm_accuracy_t_uncor[i] <- summary(accuracy_lm_model)$coeff[5,3]
   rh_lm_exec_accuracy_t_uncor[i] <- summary(exec_accuracy_lm_model)$coeff[5,3]

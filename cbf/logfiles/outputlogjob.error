@@ -49,3 +49,57 @@ The following objects are masked from ‘package:base’:
 
     intersect, setdiff, setequal, union
 
+Loading required package: nlme
+This is mgcv 1.8-33. For overview type 'help("mgcv-package")'.
+
+Attaching package: ‘dplyr’
+
+The following object is masked from ‘package:nlme’:
+
+    collapse
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Loading required package: nlme
+This is mgcv 1.8-33. For overview type 'help("mgcv-package")'.
+
+Attaching package: ‘dplyr’
+
+The following object is masked from ‘package:nlme’:
+
+    collapse
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Error in lh_lm_sex_t_uncor[i] <- summary(age_sex_model)$coeff[4, 3] : 
+  replacement has length zero
+Execution halted
+Loading required package: nlme
+This is mgcv 1.8-33. For overview type 'help("mgcv-package")'.
+
+Attaching package: ‘dplyr’
+
+The following object is masked from ‘package:nlme’:
+
+    collapse
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
