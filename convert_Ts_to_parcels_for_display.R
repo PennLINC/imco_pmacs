@@ -1,5 +1,5 @@
 ################################
-## 2/16/2021 Convert Parcels ###
+## 2/19/2021 Convert Parcels ###
 ################################
 
 ################################
@@ -14,12 +14,18 @@
         #a) lh and rh 10242 matrices with the vertex #s
         #b) the ID number matrix (length = 7 for Yeo7)
         #c) the names of the networks (length = 7 for Yeo7)
-#post: a vector corresponding to the parcel value for the regions you want to display
+    #3) this is optional second mask, I am using glycolytic index so I don't have to rewrite the script
+
+#post: 
+  #1) a vector corresponding to the parcel value for the regions you want to display
+  #2) Optional - a vector corresponding to second map
+
 #uses: 
   #1) Will take the input vector, convert all non-zeros to 1s. 
     #will also do this for positive and negative only, for better visualization
-  #2) will multiple this vector with the parcel assignment
+  #2) will multiple this vector with the parcel assignment (or second mask)
   #3) Will save output in chosen directory
+
 #dependencies
   #any R should do
   #I am using PMACS, and R 3.2.5
@@ -32,9 +38,15 @@ parcel_type = "Yeo"
 parcel_num = 7 
 input_parcel_array_length = 10242
 
+##### Alternative second mask
+make_second_mask_flag = TRUE #i.e. I want to make an additional mask
+second_mask_path = "/baller/processed_data/glycolytic_index_maps/"
+mask = "GI_fsaverage5"
+mask_length = 10242
+
 ### set results path
 stat_path <- "/coupling_accuracy/"
-result_path <- "lm_sex_t_fdr05" 
+result_path <- "lm_exec_accuracy_t_fdr05" 
 #####################
 ### Read in files ###
 #####################
@@ -123,3 +135,49 @@ write.csv(x = rh_stat_booleanxnetwork_pos, file = rh_outdir_pos, quote = F, row.
 #write output
 write.csv(x = lh_stat_booleanxnetwork_neg, file = lh_outdir_neg, quote = F, row.names = F)
 write.csv(x = rh_stat_booleanxnetwork_neg, file = rh_outdir_neg, quote = F, row.names = F)
+
+
+##############################################
+######### Optional Second Mask Code ##########
+##############################################
+
+##### Alternative second mask
+
+if (make_second_mask_flag == TRUE){
+  lh_mask_nums <- read.csv(paste0(homedir, second_mask_path, "lh_", mask, "_", mask_length, ".csv"), header = F)
+  rh_mask_nums <- read.csv(paste0(homedir, second_mask_path, "rh_", mask, "_", mask_length, ".csv"), header = F)
+ 
+  #output
+  lh_outdir <- paste0(homedir, "/baller/results/", stat_path, "lh_", result_path, "_", mask, "_", mask_length, ".csv")
+  rh_outdir <- paste0(homedir, "/baller/results/", stat_path, "rh_", result_path, "_", mask, "_", mask_length, ".csv")
+  
+  lh_outdir_pos <- paste0(homedir, "/baller/results/", stat_path, "lh_pos_", result_path, "_", mask, "_", mask_length, ".csv")
+  rh_outdir_pos <- paste0(homedir, "/baller/results/", stat_path, "rh_pos_", result_path, "_", mask, "_", mask_length, ".csv")
+  
+  lh_outdir_neg <- paste0(homedir, "/baller/results/", stat_path, "lh_neg_", result_path, "_", mask, "_", mask_length, ".csv")
+  rh_outdir_neg <- paste0(homedir, "/baller/results/", stat_path, "rh_neg_", result_path, "_", mask, "_", mask_length, ".csv")
+  
+  ## multiply
+  lh_stat_booleanxnetwork <- lh_stat_boolean * lh_mask_nums
+  rh_stat_booleanxnetwork <- rh_stat_boolean * rh_mask_nums
+  
+  lh_stat_booleanxnetwork_pos <- lh_stat_boolean_pos * lh_mask_nums
+  rh_stat_booleanxnetwork_pos <- rh_stat_boolean_pos * rh_mask_nums 
+  
+  lh_stat_booleanxnetwork_neg <- lh_stat_boolean_neg * lh_mask_nums
+  rh_stat_booleanxnetwork_neg <- rh_stat_boolean_neg * rh_mask_nums
+  
+  #write output
+  write.csv(x = lh_stat_booleanxnetwork, file = lh_outdir, quote = F, row.names = F)
+  write.csv(x = rh_stat_booleanxnetwork, file = rh_outdir, quote = F, row.names = F)
+  
+  #write output
+  write.csv(x = lh_stat_booleanxnetwork_pos, file = lh_outdir_pos, quote = F, row.names = F)
+  write.csv(x = rh_stat_booleanxnetwork_pos, file = rh_outdir_pos, quote = F, row.names = F)
+  
+  #write output
+  write.csv(x = lh_stat_booleanxnetwork_neg, file = lh_outdir_neg, quote = F, row.names = F)
+  write.csv(x = rh_stat_booleanxnetwork_neg, file = rh_outdir_neg, quote = F, row.names = F)
+  
+  
+}
