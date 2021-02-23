@@ -25,31 +25,36 @@ scp eballer@transfer.pmacs.upenn.edu:/project/imco/baller/results/images/pbp .
 On PMACS:/project/imco/baller/scripts/PBP_graphics
 
 ## Yeo7 (PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath.m)
+
 -----
+
+Using the following mapping of Yeo network to random coded number to num for display
+
+<img width="100%" src="/Users/eballer/BBL/imco/results/images/Yeo7_net_to_number.png"/>
+
 
 [x] coupling gam age, fdr05
 
 command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05_Yeo7.csv','coupling_gam_age_yeo7_fdr05')
 
-![](/Users/eballer/BBL/imco/results/images/pbp/coupling_gam_age_yeo7_fdr05.png)
 
 [x] coupling lm age, fdr05
 
 command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_lm_age_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_age_t_fdr05_Yeo7.csv','coupling_lm_age_yeo7_fdr05')  
 
-![](/Users/eballer/BBL/imco/results/images/pbp/coupling_lm_age_yeo7_fdr05.png)
+
 
 [x] coupling lm sex, fdr05
 
 command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_lm_sex_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_sex_t_fdr05_Yeo7.csv','coupling_lm_sex_yeo7_fdr05')  
 
-![](/Users/eballer/BBL/imco/results/images/pbp/coupling_lm_sex_yeo7_fdr05.png)
+
 
 [x] coupling lm exec accuracy, fdr05
 
 command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05_Yeo7.csv','coupling_lm_exec_accuracy_yeo7_fdr05')   
 
-![](/Users/eballer/BBL/imco/results/images/pbp/coupling_lm_exec_accuracy_yeo7_fdr05.png)
+
 
 
 <img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_gam_age_yeo7_fdr05.png"/>
@@ -318,3 +323,4 @@ command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/resul
 <img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_neg_lm_age.png"/>
 <img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_neg_lm_sex.png"/>
 <img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_neg_lm_exec_accuracy.png"/>
+

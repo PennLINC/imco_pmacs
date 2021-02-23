@@ -1,0 +1,3569 @@
+---
+title: "R Notebook for IMCO"
+output:
+  html_notebook
+
+---
+
+```{r graphic_setup, echo=TRUE}
+
+library(knitr)    # For knitting document and include_graphics function
+library(ggplot2)  # For plotting
+library(png)      # For grabbing the dimensions of png files
+
+```
+
+This project was started on 20200911 
+
+IMCO, or intermodal coupling (or "coupling"), was a project that begun in 2018 and has had numerous data anaylists/managers on the project. It is based on work by Simon 's work in 2016 (Paper: Vandekar, S. N., Shinohara, R. T., Raznahan, A., Hopson, R. D., Roalf, D. R., Ruparel, K., … Satterthwaite, T. D. (2016). Subject-level Measurement of Local Cortical Coupling. NeuroImage, 133, 88–97.), which looked at the relationship between cortical thickness and sulcal depth, which demonstrated regional differences, non-linear trajectories, as well as sex differences. His work used surface gray matter maps. The general process was the brain was divided into vertices and a neighborhood around each vertex was defined. For each neighborhood, the relationship between ct and sulcal depth was calculated with a variety of covariates. 
+
+In 2018, Lauren Beard replicated this work, studying cbf (ASL) with ALFF (rs-fmri). This was all done in 2D at the surface. Ali and Kristin then developed a 3D method (using volumes rather than surface), but ran into significant partial volume effects given white matter flanking edges of GM. As such, we have decided to move forward with Lauren Beard's main analyses in 2D space.
+
+#Relevant Wikis:
+
+ 1) how to generate 2D coupling maps: https://github.com/PennBBL/tutorials/wiki/Surface-Coupling
+ 
+ 2) CBF-ALFF specifically (single subject): https://github.com/PennBBL/imcoScripts/wiki/Rest-CBF-Coupling
+ 
+     *Links to* https://github.com/PennBBL/tutorials/wiki/3D-Volume-to-Surface-Projection-(FS)
+     
+ 3) group analysis: https://github.com/PennBBL/imcoScripts/wiki/AlffCbf-RehoCbf-GLM-Summary
+
+  4) Vertex wise group analysis: https://github.com/PennBBL/tutorials/wiki/FreeSurfer-Vertex-Wise-Group-Level-Analyses
+  
+ 5) results:https://github.com/PennBBL/imcoScripts/blob/master/alffCbf_rehoCbf_effects_20180607%20(1).pdf
+ 
+ Replicated by Graham Baum
+ 
+ ---
+ 
+ Lab notebook by date:
+ 
+#### **20200911:**
+
+#####1) Moving through Surface-Coupling Wiki:
+
+*Source code*: **https://bitbucket.org/simonvandekar/coupling**
+
+Input for this analysis consists of a csv that lists bblid/scanid:     **/data/joy/BBL/tutorials/exampleData/surfCoupling/subjList.csv**
+    
+It also requires that the subjects have been processed using freesurfer. Specifically, **these files must be present:** lh.sphere.reg lh.sulc lh.thickness rh.sphere.reg rh.sulc rh.thickness.The **fsaverage5 directory must be present** as well.
+    
+*Code location*: **/data/joy/BBL/tutorials/code/surfCoupling**
+ 
+  --- *\*This is all on sample data, not on actual data --- skipped replicating this step and moved onto second Wiki*
+   ---
+  
+  
+#####2) CBF-ALFF Wiki:
+
+Surface projections are carried out using **freesurfer version 6**. Surface coupling carried out with **freesurfer version 5.3**. Please refer to this wiki for more information on surface projections: 
+  
+*Code Location*: **/data/jux/BBL/projects/coupling/imcoScripts/surfProjection/\***
+
+**Steps: **
+  
+  * 1. copy LB's stuff to PMACS from chead - *completed 20200911*
+    
+      + Remote connect via F5
+      + ssh -Y eballer@chead 
+      + cd /data/jux/BBL/projects/
+      + in a second terminal, ssh -Y eballer@scisub.pmacs.upenn.edu
+      + cd /project/imco
+      + mkdir from_lb #denoting data copied from lb, on chead
+      + scp -r coupling eballer@scisub.pmacs.upenn.edu:/project/imco/from_lb 
+      
+   * 2. Making changes so that paths are PMACS and not chead
+   
+      + \*9/15: Ran into issues here - the scripts not only have chead paths, but they also require different freesurfer loads. These loads will need to be copied to PMACS in addition to having all scripts changed. This will require more effort to replicate than originally expected.
+
+#### **20200915:**
+ - Decided to change course from original plan to move everything from chead to PMACS and rerun
+ - We will reprocess images with ASLPrep and FMRIPREP+XCP on cubic
+ - Figuring out whether we 
+    + Rerun but use existing container, project to surface later
+    + Rerun and wait for new container that projects to surface
+ 
+#### **20200916:**
+  - Will proceed in two steps
+    + Will rerun in ASLPrep/fmriPrep + xcp ( a little later)
+    + But first, will start with datafreeze data
+        - move data from datafreeze alff and cbf onto PMACS
+        - redo surface projections for a few people
+        - run coupling maps for a few people
+        - this will let me confirm that this stuff is good/her data is okay
+   
+#### **20200917:**
+  - Trying to find the input files for surface projection based on wikis
+  - issue is that code is in example data, but not clear where original files are
+  - need to start with freesurfer files
+  - to meet with Azeez 9/18 to discuss more about freesurfer
+  
+#### **20200918:**
+  - Seems to be something possibly useful in: /data/joy/BBL/studies/pnc/processedData/structural/freesurfer53/\*/fsaverage/
+  - WAIT, I think I found the files (these have mgh files in them)!!!!!:
+  /data/joy/BBL/studies/pnc/processedData/structural/freesurfer53/\*/\*/surf
+  - pcasl and restbold have asl and alff subcategories, I think this is where things came from
+  - made a directory:
+```{bash}
+#get into directory
+cd /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/
+
+#make new subdirectories
+mkdir code subjectLists surfaceProjection surfaceProjection/cbf surfaceProjection/alff
+
+#go into code dir
+cd code
+
+#copy LB's surf projection code
+cp /data/jux/BBL/projects/coupling/imcoScripts/surfProjection/* .
+
+#go into subjectLists
+cd /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/subjectLists/
+
+#copy LB's alff surface projection list
+cp /data/jux/BBL/projects/coupling/subjectsLists/n2166_alff_surfProj.csv .
+
+#extract first 5
+more n2166_alff_surfProj.csv | head -5 >! test_n5_alff_surfProg.csv
+```
+
+  - Testing whether I can replicate vol2surf
+
+```{bash}
+  cd /data/jux/BBL/projects/coupling/coupling_test_eb_20200918
+  cd /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/code
+  ./vol2surf_wrapper.sh -i /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/subjectLists/test_n5_alff_surfProg.csv -s /data/joy/BBL/studies/pnc/processedData/structural/freesurfer53/ -o /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/surfaceProjection/alff
+  qstat #to see progress
+```
+        
+**Check output**
+
+```{bash}
+cd /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/surfaceProjection
+#double check that 5 directories of BBLIDs are created
+cd 100031/20100918x3818
+more 100031_20100918x3818_projection.log
+```
+
+**Error**
+
+  - line 1: /opt/sge/default/spool/compute-0-20/job_scripts/921984: line 26: lta_convert: command not found
+           regio_read_register(): No such file or directory -> **make sure I have right freesurfer libraries**
+  - more error.log
+    + mghRead(/data/jux/BBL/projects/coupling/coupling_test_eb_20200918/surfaceProjection//100031/20100918x3818/100031_20100918x3818_rh_surf.mgh, -1): could not open file **likely related to failing step 1***
+           
+**looked at ~/.bash_profile and realized freesurfer 5.3.0 was version being used**
+
+    - per Surface Coupling wiki, coupling requires you change the bash_profile to 
+            "export FREESURFER_HOME=$CFNAPPS/freesurfer/5.3.0"
+```{bash}
+gedit ~/.bash_profile
+# added export FREESURFER_HOME=$CFNAPPS/freesurfer/6.0.0 to profile and commented out 5.3.0 version and saved
+source ~/.bash_profile
+```
+         
+**then compared - and I can replicate surface projection!**
+```{bash}
+diff 100088_20120514x6853_matrixFinalTransform.dat /data/jux/BBL/projects/coupling/surfaceMaps/alff/100088/20120514x6853/100088_20120514x6853_matrixFinalTransform.dat
+```
+            
+Output: Same... i.e. diff returns **nothing**
+
+  - tried this for a bunch of the files, for a bunch of the people, and it worked
+  - also compared files of different types to verify, and would get errors: 
+            
+```{bash}
+diff 100031_20100918x3818_lh_surf.mgh ../../../../surfaceMaps/alff/100031/20100918x3818/100031_20100918x3818_lh_fs5_surf.mgh 
+```
+
+Result: \"Binary files 100031_20100918x3818_lh_surf.mgh and ../../../../surfaceMaps/alff/100031/20100918x3818/100031_20100918x3818_lh_fs5_surf.mgh differ\"
+
+---
+
+**From meeting with Azeez @ 1:30pm**
+
+  - First step of preprocessing is to run freesurfer on T1 (i.e. in T1 space)
+      + scp to get cbf, reho, alff, all in native space (\*std means standard or pnc space)
+      + seq2struct -> changes reho, cbf, alff into T1 space
+          - after transform, they are in T1 space
+      + then, you have to do vol2surf
+      + lta_convert changes to fsl format
+      + R script transformMatrix.R is important because fsl matrix is in a different format than freesurfer, so you need to do some manipulation,multiply some column by -1. It is a whole to-do
+      + mri_vol2surf actually goes from fsl to freesurfer
+          - reg -> takes matrixFinalTransform.dat, which is output of transformMatrix.R
+          - now you have actually moved from native space to freesurfer space
+              + fsaverage5 (fs5) - freesurfer space that is most similar to 2x2x2mm **most often used**
+              + fsaverage6 (fs6) - more similar to 1x1x1mm, takes a lot more processing speed so people often use fs5
+
+  - surface to surface - moves from one surface to another
+  
+---     
+ 
+**Visualization to view mgh images**
+
+```{bash}
+freeview -f /share/apps/freesurfer/6.0.0/subjects/fsaverage5/surf/lh.pial:overlay=100031_20100918x3818_lh_fs5_surf.mgh
+
+#you can add lh.inflated if you'd like to see an inflated map by clicking the green + next to the brain
+```
+
+
+**Now make sure I can project cbf into fs5 space**
+
+```{bash}
+#LB does not have a subject list for asl surface projection, so I will adapt my most recent one
+#move into directory
+cd /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/subjectLists
+
+#copy alff to cbf list
+cp test_n5_alff_surfProg.csv test_n5_cbf_surfProg.csv 
+
+#change directory name from restbold to pacsl, greedy
+more test_n5_cbf_surfProg.csv | perl -pe 's/restbold\/restbold_201607151621/pcasl\/pcasl_201607291423/g' > temp1
+
+#change alff to cbf, greedy
+more temp1 | perl -pe 's/alff/asl/g'> temp2
+
+#change _asl to _aslQuantSST1 which refers to native space asl
+more temp2 | perl -pe 's/_asl/_aslQuantSST1/' > temp3
+
+#Change temp3 name back to original file
+mv temp3 test_n5_cbf_surfProg.csv
+
+#delete temp files
+rm temp1 temp2
+
+#go back to code
+cd /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/code
+./vol2surf_wrapper.sh -i /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/subjectLists/test_n5_cbf_surfProg.csv -s /data/joy/BBL/studies/pnc/processedData/structural/freesurfer53/ -o /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/surfaceProjection/cbf
+```
+
+**great news! Was able to make all of the appropriate files**
+
+Checking to see if they match LB's cbf surface projections
+
+```{bash}
+#check if surface projections match
+diff /data/jux/BBL/projects/coupling/surfaceMaps/cbf/100088/20120514x6853/100088_20120514x6853_matrixFinalTransform.dat /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/surfaceProjection/cbf/100088/20120514x6853/100088_20120514x6853_matrixFinalTransform.dat #match
+
+diff /data/jux/BBL/projects/coupling/surfaceMaps/cbf/100088/20120514x6853/100088_20120514x6853_lh_fs5_surf.mgh /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/surfaceProjection/cbf/100088/20120514x6853/100088_20120514x6853_lh_fs5_surf.mgh #match
+
+#trying different person to be sure
+diff /data/jux/BBL/projects/coupling/surfaceMaps/cbf/100050/20130810x8309/100050_20130810x8309_rh_fs5_surf.mgh /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/surfaceProjection/cbf/100050/20130810x8309/100050_20130810x8309_rh_fs5_surf.mgh #match
+
+``` 
+
+**We can now be confident that surface projections in both alff and cbf (from native space through to freesurfer space) are good **
+
+#### 20200922 
+
+Will proceed with attempting coupling today on surface maps generated last week
+
+Step 1: Make subject list to be used for coupling.
+    - For this, I edited the surface projection list
+
+```{bash}
+
+#go into directory
+cd /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/subjectLists
+
+#take alff subject list (though could use cbf as well), grab BBLID and SCANID, and put them in new file format <BBLID>/<SCANID> by getting rid of , between, stores in n5_surfCoupling_list
+more test_n5_alff_surfProg.csv | perl -pe 's/(.*),(\d{8}x\d{4}),.*/$1\/$2/' > n5_surfCoupling_list
+```
+
+**Comparing /data/joy/BBL/tutorials/code/surfCoupling/grid_submit.sh with /data/jux/BBL/projects/coupling/imcoScripts/surfCoupling/R/grid_submit.sh **
+
+  - Essentially identical. Big difference
+      + /data/jux/BBL/projects/coupling/imcoScripts/surfCoupling/R/grid_submit.sh calls cbfAlffgrid.sh in qsub command, whereas /data/joy/BBL/tutorials/code/surfCoupling/grid_submit.sh  calls surfCoup_wrapper.sh
+      
+  - Minor differences
+      + paths (obviously)
+      + commented out line #sublist=$scripts/bblid_scanid.txt in /data/jux/BBL/projects/coupling/imcoScripts/surfCoupling/R/grid_submit.sh
+      + logdir=$scripts/logdir2 in /data/jux/BBL/projects/coupling/imcoScripts/surfCoupling/R/grid_submit.sh (versus logdir1 in tutorials example)
+
+**Comparing /data/jux/BBL/projects/coupling/imcoScripts/surfCoupling/R/cbfAlffgrid.sh with /data/joy/BBL/tutorials/code/surfCoupling/surfCoupling_wrapper.sh**
+
+  - Major Difference
+    - flags at the end of the call
+    - surfCoupling_wrapper: -m thickness,sulc -f 15 -t fsaverage5
+    - cbfAlffgrid.sh: -m alff,cbf
+    
+  - Minor Difference
+    + both call coupling_v2.R
+    + both call different paths/subject lists (of course)
+  
+  - Assessment:
+    + my read on this is that alff,cbf should be our calls (this indicates what coupling measures we actually want to use)
+    + flags for fwhm at 15 and fsaverage5 are correct, and seem to be defaults for cbfAlffgrid.sh
+
+**Will use surfCoupling_wrapper.sh and ammend thickness,sulc to be alff,cbf **
+    
+---    
+
+**Comparing /data/joy/BBL/tutorials/code/surfCoupling/coupling_v2.R and /data/jux/BBL/projects/coupling/imcoScripts/surfCoupling/R/coupling_v2.R **
+ 
+ 1) In first section
+ 
+  - /data/joy/BBL/tutorials/code/surfCoupling/coupling_v2.R has a lot of commented out stuff that is not there in the cleaner example code script
+ 
+ 2) Next section is identical
+ 
+ 3) In section of \#### GET ENVIRONMENT VARIABLES ####:
+ 
+  - Only difference is the signal to change scripts path
+ 
+ 4) In section of \#### NOW FIND THE NEAREST NEIGHBORS FOR THIS TEMPLATE ####
+ 
+  - chunk after this is only different in the paths and instructions for what paths to replace
+  
+ 5) Both are the same below the line #### CREATE LABELS IF THEY DON'T EXIST YET ####
+ 
+  - line 90 in /data/joy/BBL/tutorials/code/surfCoupling/coupling_v2.R
+  - line 78 /data/joy/BBL/tutorials/code/surfCoupling/coupling_v2.R
+  
+**Will proceed with updating/changing coupling_v2.R and subsequent code copied from tutorial**
+
+---
+
+Step 2: Copy appropriate code into my code directory 
+
+```{bash}
+
+#go into my directory
+/data/jux/BBL/projects/coupling/coupling_test_eb_20200918/code
+
+#copy tutorial code
+cp /data/joy/BBL/tutorials/code/surfCoupling/* .
+
+```
+
+ Step 3: Change directories within grid_submit.sh 
+ 
+  - SUBJECTS_DIR=/data/joy/BBL/studies/pnc/processedData/structural/freesurfer53/
+  - scripts=/data/jux/BBL/projects/coupling/coupling_test_eb_20200918/code
+  - sublist=/data/jux/BBL/projects/coupling/coupling_test_eb_20200918/subjectLists/n5_surfCoupling_list
+  - add line: outdir=/data/jux/BBL/projects/coupling/coupling_test_eb_20200918/surfCoupling
+  - add output directories (added **\$outdir** to the end of both lines):
+    + qsub -V -N coupling_\$time -t 1 -cwd -o \$logdir -e \$logdir -q \$queue \$scripts/surfCoup_wrapper.sh -s \$sublist -f \$fwhm -o **\$outdir**
+    + qsub -V -t 2-\$nsub -cwd -hold_jid coupling_\$time -o \$logdir -e \$logdir -q \$queue \$scripts/surfCoup_wrapper.sh -s \$sublist -f \$fwhm -o **\$outdir**
+  - kept fwhm at 15, and wrapper as surfCoup_wrapper
+  - saved
+  - *info on what to replace is in the script
+  - *have kept grid_submit_eb.sh as reference
+
+---
+
+ Step 4: Change directories within surfCoup_wrapper.sh
+ 
+  - change /data/joy/BBL/tutorials/code/surfCoupling/coupling_v2.R to /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/code/coupling_v2.R
+  - change /data/joy/BBL/tutorials/exampleData/surfCoupling/subjList.csv to /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/subjectLists/n5_surfCoupling_list
+  - change thickness,sulc to alff,cbf
+  - verified that the changes actually point to real directories that are correctly formatted
+  - saved
+
+---
+
+  Step 5: Change directories within /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/code/coupling_v2.R
+  
+  - line 41, changed script directory to: /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/code
+  - line 75, changed kth neighbor path to: /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/code/kth_neighbors_v3.R  
+  - verified these scripts/locations exist
+  - saved
+  
+---
+
+  Step 6: Verified that no changes need to be made to kth_neighbors_v3.R
+  
+  - no changes needed to be made
+  
+---
+
+  Step 7: Change environment settings per LB (surfCoupling will only work on FS 5.3)
+
+  - open bash profile (gedit ~/.bash_profile)
+  - verify FS version
+    + line should read: FREESURFER_HOME=$CFNAPPS/freesurfer/5.3.0 
+      - if commented out, uncomment 
+      - if not present, add it 
+      - comment out line with 6.0.0
+  - source ~/.bash_profile
+  - set SUBJECTS_DIR (this is confusing because it looks like it is set in grid_submit.sh), but did it anyway
+  
+```{bash}
+
+#export subjects dir, have gone back and forth with this
+export SUBJECTS_DIR=/data/joy/BBL/studies/pnc/processedData/structural/freesurfer53/
+#export SUBJECTS_DIR=/data/jux/BBL/projects/coupling/coupling_test_eb_20200918_surfCoupling
+```
+  
+  - after completed, **WILL NEED TO** comment out the 5.3.0 line and bring back the 6.0.0 line
+
+---
+
+  Step 8: Ran: qsub -q himem.q -V -N baller_imco_replication ./grid_submit.sh
+  
+  **ERROR** 
+  
+  In /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/code/logdir :
+  
+  coupling_161336.o925032.1, surfCoup_wrapper.sh.o925033.[1-5], all the same: 
+  
+  Loading required package: optparse
+Warning message:
+In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘optparse’
+Error in make_option(c("-s", "--subjectlist"), action = "store", default = NULL,  : 
+  could not find function "make_option"
+Execution halted
+
+---
+
+#### 20200923
+
+  - seems like an issue with python optparse - is this accurate? How to fix?
+    + looks like /data/jux/BBL/projects/coupling/imcoScripts/surfCoupling/setup_test.R does this
+    
+```{bash}
+# copied it into my directory
+cp /data/jux/BBL/projects/coupling/imcoScripts/surfCoupling/setup_test.R /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/code/.
+```
+  - evaluated, looks like it sets up the scripts, main pieces are to add a new SHEBANG and install package.
+  - Added these directly at the top of my grid_submit.sh
+    + \#!/share/apps/R/R-3.2.3/bin/Rscript --vanilla --no-init-file
+    + install.packages('optparse', repo='http://cran.us.r-project.org')
+ 
+ - Planned to run grid_submit.sh again, but not R script
+ 
+ - decided to add it to top of coupling_v2.R
+   + \#!/share/apps/R/R-3.2.3/bin/Rscript --vanilla --no-init-file
+   + install.packages('optparse', repo='http://cran.us.r-project.org')
+   
+---
+
+Found a new script that looks more promising, and uses the directories that were previously made
+
+  - /data/jux/BBL/projects/coupling/imcoScripts/surfCoupling/old/alffCbf_surfCoupling.R
+
+**Will evaluate and amend this one**
+
+---
+
+  Step 1: Copied this into my directory
+```{bash}
+
+#copy into my directory
+cp /data/jux/BBL/projects/coupling/imcoScripts/surfCoupling/old/alffCbf_surfCoupling.R /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/code
+```
+
+  Step 2: Changed directory paths **have not done this yet**
+  
+  - alffCbf_subjects <- read.csv("/data/jux/BBL/projects/coupling/coupling_test_eb_20200918/subjectLists/n5_surfCoupling_list")
+  - demos <- read.csv("/data/joy/BBL/studies/pnc/n1601_dataFreeze/demographics/n1601_demographics_go1_20161212.csv")
+  - setwd("/data/jux/BBL/projects/coupling/coupling_test_eb_20200918/couplingSurfaceMaps/alffCbf/lh/stat")
+  
+**This requires the surface coupling was already done, this just looks at covariates **
+  
+**Don't know why this is considered \"old\" **
+
+---
+
+Per meeting with Azeez:
+
+**Big problems**
+
+  - Chaining of multiple scripts whose inputs don't feed directly into each other
+  - R version used by script is outdated (may be a minor problem)
+  - Input and output directory for LB's stuff writes to the same directory
+  - Seems to be some manual moving and renaming of files, which makes it very hard to replicate
+  - Tutorial files/info was also moved manually into a strange structure that is not present in actual data. 
+  
+**Minor issues**
+
+  - I am guessing the actual algorithm works, but figuring out input/outputs very difficult
+  - Lots of multi levels of naming stuff weirdly in coupling_v2.R
+    + plan to avoid environmental variables and just name things locally- making it all super confusiong
+
+**Actionable ideas**
+  
+1) don't do grid_submit, could use surfCoupling_wrapper.sh or just start with coupling_v2.R
+2) She did actually take files from /data/joy/BBL/studies/pnc/processedData/structural/freesurfer53/ and dumbed it back into the same directory. Looks like she then manually copied these files
+3) There are many iterations of files in /data/joy/BBL/studies/pnc/processedData/structural/freesurfer53/, some with doubles
+4) Good news is that 
+  - diff ../surfaceProjection/alff/100031/20100918x3818/100031_20100918x3818_lh_fs5_surf.mgh /data/joy/BBL/studies/pnc/processedData/structural/freesurfer53/100031/20100918x3818/surf/lh.alff.fsaverage5.mgh
+  - these are the same files
+
+5) Will need to take the coupling_v2.R script (added SHEBANG and optparse load) and rewrite so it grabs data from my directories and writes to mine
+  - INPUT: /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/surfaceProjection/[alff,cbf]/*
+  - OUTPUT: /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/couplingSurfaceMaps/alffCbf/lh/
+
+6) Once this is done/verified, will need to copy the actual files to PMACS (or preferably CUBIC) and do correlations with age, sex, cognition there
+
+7) Will also need to figure out which files that are in the datafreeze actually match what I generate
+
+8) containerize?
+
+
+**surface files just has numbers, asc is same info, just different format**
+
+Afternoon:
+
+1) Started rewriting coupling script. Will be called **coupling_v2_eb.R**
+  
+  - For now, I am going to get rid of the wrappers and just assign things directly
+  
+#### 20200924
+
+- Continuing to rewrite the code in coupling_v2_eb.R
+
+    + kth_neighbor_v3.R makes the neighborhoods based on whatever size you want to use
+       - will need to give this a better output file
+
+- Found whole new directory with seemingly important stuff:
+    + /data/jux/BBL/projects/coupling/imcoScripts/restCbf/
+    + unclear how this relates, but within dependencies, there is an imco script
+    + looks like this is done at volume and not surface level, but should theoretically be a similar approach
+    + **will pass for now, coupling seems to be contained in coupling_v2.R script**
+  
+- also starting to work on kth_neighbor_v3_eb.R
+   
+    + Am going to send it an additional argument so that I can specify output directory
+      - sending neigh_outdir (/data/jux/BBL/projects/coupling/coupling_test_eb_20200918/surfCoupling/neighborhood_info) to the kth_neighbor_v3_eb.R script
+      
+#### 20200925
+- Start at line 15 for kth_neighbor_v3_eb.R 
+
+  + make sure you are coping the asc files (that is the command entered yesterday)
+  
+To do:
+
+  - [x] go through the script and make sure indirectory/out directory are ok
+  - [x] suggest copying files from structural into my local directory and doing everything from within that
+  - [x] compare with neighborhoods from structural dir
+      + x <-readRDS("/data/joy/BBL/studies/pnc/processedData/structural/freesurfer53/fsaverage5/surf/rh.10neighbors_degree.rds")
+      + y <- readRDS("/data/jux/BBL/projects/coupling/coupling_test_eb_20200918/surfCoupling/neighborhood_info/surf/rh.10neighbors_degree.rds")
+      + plot(x[,5], y[,5]) -> identical #randomly selected
+      + cor.test(x[,5], y[,5]) : **t = inf, df = 10248, p-val <2.2 x 10^-16, cor = 1**
+      + identical(x,y) = TRUE
+  - **kth_neighbor_v3_eb.R has been amended and replicated, now writing neighborhood tables to my local directory**
+  
+  - [x] we are using structural kth neighbor - seems like those vertices should be okay as it is not actually running coupling but getting neighborhoods, which should be derived structurally  
+    + [x] double check with azeez
+      - azeez says that this is some sort of partial volume correction but I am not sure
+
+#### 20200929
+
+To do
+
+  - [x] read simon's paper again to understand the neighborhood business, as well as the imco manuscript. My sense is that the defining of the neighborhoods on the structural inflated brain is okay, because alff and cbf surface projections were based on those structural brains. - still think this is true
+  - [o] surface projections were in native space, so that group map might be useless
+  
+#### 20200930
+  - [x] will keep working through script. Important part is that it replicates. We are just trying to make sure the output files can be used
+      + having a lot of issues getting the MRI preprocessing command to work
+      + it is set up to use structural data and structural paths
+      + please see beginning of script where I have to set environmental variable to run with freesurfer
+```{bash}
+#must set subject directory or freesurfer will not know where to look
+#currently set to /data/joy/BBL/studies/pnc/processedData/structural/freesurfer53
+Sys.setenv
+```
+      
+  - [x] what is .asc (looks like suffix to indicate ascii) vs mgh? Do i need to take my single subject surface projections (in mgh) and convert to asc and then do kth neighbor on those files?
+      + https://cran.r-project.org/web/packages/freesurferformats/freesurferformats.pdf (page 40)
+      + http://brainvis.wustl.edu/pipermail/caret-users/2014-June/006150.html
+      
+      + **it is ascii abbreviation and no, don't need to take indiv surface for template b/c the surface projection was based on structural template, so it should similarly define neighborhoods**
+      
+      -**Spoke with Azeez, there are so many dependencies with respect to using freesurfer stuff in joy that this is essentially super challenging to replicate bottom up.**
+      
+      -**Will instead just run wrapper /data/jux/BBL/projects/coupling/imcoScripts/surfCoupling/RcbfAlffgrid.sh and change outasc in coupling_v2.R to see if I can make the files and if I can, just go on from there**
+      
+      -Went back to original coupling_v2.R in my personal coupling directory, and saved a copy
+      coupling_v2_eb_justoutasc_change.R
+      
+        + In this, just changing where files are written to, to see if I can replicate. Not going to rewrite the whole thing. Feels like a waste.
+        
+```{r}
+# Added lines 140 to 147
+localdir = "/data/jux/BBL/projects/coupling/coupling_test_eb_20200918/surfCoupling/couplingMaps/surf"
+subdir = file.path(localdir, id)
+#added by EB, if direc doesn't exist, make it
+  if (!dir.exists(subdir)) {
+     system(paste0("mkdir ", subdir))
+   }
+```
+    - Then realized that this was not the problem, the script writes everything to a single directory. So I deleted that piece and instead added two lines (163 and 169)
+    
+```{r}
+#dded by EB
+		localdir = "/data/jux/BBL/projects/coupling/coupling_test_eb_20200918/surfCoupling/couplingMaps/"
+		localsubj_dir = file.path(localdir, id, surf)
+		if (!dir.exists(localsubj_dir)) {
+		  system(paste0("mkdir ", file.path(localsubj_dir)))
+		}
+		outasc = file.path(localsubj_dir, paste(hemi, paste('coupling_', retcoef, '_', paste(measures, collapse='_'), '.fwhm', fwhm, sep=''), template, 'asc', sep='.') ) 
+	
+
+```
+    
+- **spoke with Azeez, will take a break so he can work on some stuff and we can look together next week**
+
+#### 20201007
+
+- spoke with Azeez. he stated:
+"I look at the code,  to make it work for coupling computation, the projected surfaces ike rh.alff.fsaverage5.mgh etc has to be copied to surf/rh.alff . A lot of steps were skipped  that are not included in the wiki for all and cbf coupling. the original code  (gitlab) by Simeons will work  on structural only ( curv,thickness)"
+
+He plans to move this all to python soon.
+
+##### To do:
+
+[x] can replicate sample construction
+
+  - using /data/jux/BBL/projects/coupling/imcoScripts/restCbf/n831_alff_cbf_makeSample.R
+  - **question - why is ltnExclude used rather than healthRatingExclude? **
+    + *answer: ltn is low threshold normal (or dirty normal). healthExclude is major medical issues, squeaky clean is TDs. fewest # meet criteria for squeaky clean, then LTN, then health Exclude
+  - **question - there is no original file output from this, but it does seem to make logical sense and gets to 831 **
+  - ltnExclude takes out 340 people, healthRating exclude only 154
+    
+[x] figure out which high level script she used and replicate backwards (i.e. from highest level 2nd level analysis to lower)
+
+  + starting in /data/jux/BBL/projects/coupling/imcoScripts/restCbf
+    - /data/jux/BBL/projects/coupling/imcoScripts/restCbf/alffCbf_surfCoupling.Rmd (this is most up-to-date script)
+      +good news is it runs
+      +not quite sure what the actual models show
+      +looks like she loops through (each voxel? 10242) and runs a linear model, relatng the coupling to age, sex and motion. 
+      + every time she does the loop though, it should rewrite the model. 
+      + it is showing huge age effect, not sex effect
+    
+  + the big missing chunk right now is actually making the coupling maps, but may be able to replicate group analysis and sample construction
+    - /data/jux/BBL/projects/coupling/imcoScripts/surfCoupling/* scripts will be the last to replicate
+ 
+#### 20201008
+
+- Stepping through /data/jux/BBL/projects/coupling/imcoScripts/restCbf/alffCbf_surfCoupling.Rmd to see if I can make sense of what is happening. Code below
+```{r}
+---
+title: "Alff-Cbf Surface Coupling"
+author: "Erica Baller"
+date: '20201007'
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+
+### ALFF-CBF SURF COUPLING 
+
+# read in packages
+library(plyr)
+
+# read in demographics, this is directly from LB's stuff
+alffCbf_subjDemos <- read.csv("/data/jux/BBL/projects/coupling/subjectsLists/n831_rest_cbf_finalSample_imageOrder.csv")
+
+#factorize sex
+alffCbf_subjDemos$sex <- as.factor(alffCbf_subjDemos$sex)
+
+# read in all files and get in the right format
+
+#change working directory within R - this only works if you knit, not if you run line by line
+setwd("/data/jux/BBL/projects/coupling/couplingSurfaceMaps/alffCbf/lh/stat")
+#pth <- paste0("/data/jux/BBL/projects/coupling/couplingSurfaceMaps/alffCbf/lh/stat/")
+
+#store all files with .asc in lh_alffCbf_files - this is the part that only works if you knit - otherwise, you stay in your current working directory and these local files without full paths don't exist. Tried to add full paths but could not do this. If I wanted to try again, could do a string replace but thought better of it.
+lh_alffCbf_files = list.files(pattern="*.asc")
+
+#goes through each file, reads in the table, and then makes each table a row in the lh_alff_Cbf_data data frame. This makes one massive data frame.
+
+#do.call actually makes every element of the list into a row and stacks them together. So each person should be represented by 10242 rows - this is # of voxels?
+lh_alffCbf_data = do.call(rbind, lapply(lh_alffCbf_files, function(x) read.table(x, stringsAsFactors = FALSE)))
+
+#extracts the 5th column, which looks like T values
+lh_alffCbf_coupling <- as.data.frame(lh_alffCbf_data$V5)
+
+#takes the data frame and transposes it. Specifically, it will divide the # of rows total by 831 and group (this basically re-separates the lines by person), and then transposes it
+#the end result is a data frame with 831 rows, with one column per voxel, and the value of each column is the T value associated with the T-test at that voxel
+lh_alffCbf_coupling_n <- t(as.data.frame(split(lh_alffCbf_coupling,1:831)))
+
+#do same thing for right side
+setwd("/data/jux/BBL/projects/coupling/couplingSurfaceMaps/alffCbf/rh/stat")
+rh_alffCbf_files = list.files(pattern="*.asc")
+rh_alffCbf_data = do.call(rbind, lapply(rh_alffCbf_files, function(x) read.table(x, stringsAsFactors = FALSE)))
+rh_alffCbf_coupling <- as.data.frame(rh_alffCbf_data$V5)
+rh_alffCbf_coupling_n <- t(as.data.frame(split(rh_alffCbf_coupling,1:831)))
+
+# run model. For each voxel, run linear model regressing age and sex on T. This confuses me, because by the ned, each of the models only contain the last i (10242), and not all of the interim models
+for (i in 1:10242) {
+  lh_alffCbf_agemodel <- lm(lh_alffCbf_coupling_n[,i] ~ ageAtScan1, data=alffCbf_subjDemos)
+  lh_alffCbf_ageSexmodel <- lm(lh_alffCbf_coupling_n[,i] ~ ageAtScan1 + sex, data=alffCbf_subjDemos)
+  lh_alffCbf_ageSex_qaModel <- lm(lh_alffCbf_coupling_n[,i] ~ ageAtScan1 + sex + pcaslRelMeanRMSMotion + restRelMeanRMSMotion, data=alffCbf_subjDemos)
+}
+
+for (i in 1:10242) {
+  rh_alffCbf_agemodel <- lm(rh_alffCbf_coupling_n[,i] ~ ageAtScan1, data=alffCbf_subjDemos)
+  rh_alffCbf_ageSexmodel <- lm(rh_alffCbf_coupling_n[,i] ~ ageAtScan1 + sex, data=alffCbf_subjDemos)
+  rh_alffCbf_ageSex_qaModel <- lm(rh_alffCbf_coupling_n[,i] ~ ageAtScan1 + sex, pcaslRelMeanRMSMotion + restRelMeanRMSMotion, data=alffCbf_subjDemos)
+}
+
+# print out summary results
+#summary(lh_alffCbf_agemodel)
+#summary(lh_alffCbf_ageSexmodel)
+summary(lh_alffCbf_ageSex_qaModel)
+
+#summary(rh_alffCbf_agemodel)
+#summary(rh_alffCbf_ageSexmodel)
+summary(rh_alffCbf_ageSex_qaModel)
+```
+
+
+- started testing models with psychopathology and cognition
+- mood and overall psychopathology - no diff
+- accuracy, speed, efficiency - no diff
+- age continues to be. by far, the most significant factor
+
+- Azeez will figure out if model that LB ran makes sense, or just rewrites the same piece over and over again
+ 
+#### 20201027
+
+Doing LRP work now. Need to figure out number of subjects with good ASL and rest data.
+
+- Final N = 969 (after excluding pcaslExclude, restExclude, t1Exclude, smry_dep = NA, healthExcludev2)
+
+```{r}
+aslQA <- read.csv("/Users/eballer/BBL/from_chead/ballerDepHeterogen/data/neuroimaging/neuroimaging/n1601_PcaslQaData_20170403.csv", sep = ",", header = TRUE)
+aslQA <- aslQA[which(aslQA$pcaslExclude == 0),] #n = 1508
+
+restQA <-read.csv("/Users/eballer/BBL/from_chead/ballerDepHeterogen/data/neuroimaging/rest/n1601_RestQAData_20170714.csv", sep = ",", header = TRUE)
+restQA <- restQA[which(restQA$restExclude == 0),] #n = 1123
+
+structQA <- read.csv("/Users/eballer/BBL/from_chead/ballerDepHeterogen/data/neuroimaging/t1struct/n1601_t1QaData_20170306.csv", sep = ",", header = TRUE)
+structQA <- restQA[which(structQA$t1Exclude == 0),] #n = 1540
+
+psych <- read.csv("/Users/eballer/BBL/from_chead/ballerDepHeterogen/data/n9498_goassess_psych_summary_vars_20131014.csv", sep = ",", header = TRUE)
+psych <- psych[!is.na(psych$smry_dep),] #n = 9411
+
+med <- read.csv("/Users/eballer/BBL/from_chead/ballerDepHeterogen/data/n1601_health_with_meds_20170421.csv", sep = ",", header = TRUE)
+med <- med[which(med$healthExcludev2 == 0), ] #n = 1447
+
+aslQA_subset <- subset(aslQA, by=c("bblid","scanid","pcaslExclude"))
+restQA_subset <- subset(restQA, by=c("bblid","scanid","restExclude"))
+structQA_subset <- subset(structQA, by=c("bblid","scanid","t1Exclude"))
+merged <- merge(aslQA_subset, restQA_subset, by = c("bblid","scanid"))
+merged <- merge(merged, structQA_subset, by = c("bblid","scanid"))
+merged <- merge(merged, psych, by = "bblid")
+merged <- merge(merged, med, by = "bblid") #final n = 969
+
+print(paste0("Summary #s from smry_dep: Dep = 4: ", 
+             length(which(merged$smry_dep == 4)), #n = 146
+             ", Dep = 3: ", length(which(merged$smry_dep == 3)), #n = 7
+             ", Dep = 2: ", length(which(merged$smry_dep == 2)), #n = 49
+             ", Dep = 1: ", length(which(merged$smry_dep == 1)),# n = 277
+             ", Dep = 0: ", length(which(merged$smry_dep == 0)))) #n = 490
+
+```
+
+#### 20201029
+
+Will use anxious-misery factor score rather than depression to define groups. See below:
+
+```{r}
+aslQA <- read.csv("/Users/eballer/BBL/from_chead/ballerDepHeterogen/data/neuroimaging/neuroimaging/n1601_PcaslQaData_20170403.csv", sep = ",", header = TRUE)
+aslQA <- aslQA[which(aslQA$pcaslExclude == 0),] #n = 1508
+
+restQA <-read.csv("/Users/eballer/BBL/from_chead/ballerDepHeterogen/data/neuroimaging/rest/n1601_RestQAData_20170714.csv", sep = ",", header = TRUE)
+restQA <- restQA[which(restQA$restExclude == 0),] #n = 1123
+
+structQA <- read.csv("/Users/eballer/BBL/from_chead/ballerDepHeterogen/data/neuroimaging/t1struct/n1601_t1QaData_20170306.csv", sep = ",", header = TRUE)
+structQA <- restQA[which(structQA$t1Exclude == 0),] #n = 1540
+
+psych <- read.csv("/Users/eballer/BBL/from_chead/ballerDepHeterogen/data/n9498_goassess_psych_summary_vars_20131014.csv", sep = ",", header = TRUE)
+#psych <- psych[!is.na(psych$smry_dep),] #n = 9411
+
+#factor scores
+goassess <- read.csv("/Users/eballer/BBL/from_chead/ballerDepHeterogen/data/n9498_goassess_itemwise_bifactor_scores_20161219.csv", sep = ",", header = TRUE)
+
+med <- read.csv("/Users/eballer/BBL/from_chead/ballerDepHeterogen/data/n1601_health_with_meds_20170421.csv", sep = ",", header = TRUE)
+med <- med[which(med$healthExcludev2 == 0), ] #n = 1447
+
+aslQA_subset <- subset(aslQA, by=c("bblid","scanid","pcaslExclude"))
+restQA_subset <- subset(restQA, by=c("bblid","scanid","restExclude"))
+structQA_subset <- subset(structQA, by=c("bblid","scanid","t1Exclude"))
+merged <- merge(aslQA_subset, restQA_subset, by = c("bblid","scanid"))
+merged <- merge(merged, structQA_subset, by = c("bblid","scanid"))
+merged <- merge(merged, psych, by = "bblid")
+merged <- merge(merged, med, by = "bblid") #final n = 969
+merged <- merge(merged, goassess, by = "bblid") #final n = 969
+
+print(paste0("Summary #s from anxious-misery: Patients (moodv2 > 1): ", 
+             length(which(merged$mood_4factorv2 > 1)), #n = 157
+             ", TD: ", length(which(merged$mood_4factorv2 <= 1)))) #TD 812
+
+number_of_depressive_pts <- length(which((merged$smry_dep == 4) | (merged$smry_gad == 4) | (merged$smry_ptd == 4) | merged$smry_man == 4))
+number_of_tds <- dim(merged)[1] - number_of_depressive_pts
+print(paste0("Summary #s for meeting full criteria (score =4: MDD + BAD + GAD + PTSD = ", number_of_depressive_pts, #n=231
+             ", TD = ", number_of_tds,  #n = 738
+             ", mood_cat: ", length(which(merged$smry_mood_cat == 4)))) #n=154
+
+#liberalize to people with 3/4
+number_of_depressive_pts <- length(which((merged$smry_dep >= 3) | (merged$smry_gad >= 3) | (merged$smry_ptd >= 3) | merged$smry_man >= 3))
+number_of_tds <- dim(merged)[1] - number_of_depressive_pts
+print(paste0("Summary #s for liberalizing to 3/4: MDD + BAD + GAD + PTSD = ", number_of_depressive_pts, #n=259
+             ", TD = ", number_of_tds,  #n = 710
+             ", mood_cat: ", length(which(merged$smry_mood_cat >= 3)))) #n=162
+
+
+```
+
+Based on this review, using moodv2 >2 as a cutoff, n = 157 of affected.
+
+1) If you include people who have mdd, bad, gad, ptsd, you get n = 231 affected, 738 unaffected. Mood disorders specifically, n = 154
+
+2) If you liberalize and look at people who have 3 or 4 for those measures, things do not change much
+  mdd+bad+gad+ptsd = 259, td = 710, mood_cat = 162
+  
+3) As such, **will do mdd+bad+gad+ptsd == 4**
+
+#### 20201117
+
+Rechanged criteria
+- will do dimensional analysis across all mood states and HYDRA, use the criteria from my depression paper
+
+Making figures from:
+/data/jux/BBL/projects/coupling/fsGLM/lhAlffCbf_oneSampletTest/lh.n831.coupling_coef_alff_cbf.fwhm15.fsaverage5.mean.fwhm15.fsaverage5/contrast1/z.mgh
+
+Contrast 1: Age
+Contrast 2: Sex
+Contrast 3: asl motion
+Contrast 4: rest motion
+
+To view:
+```{bash}
+freeview -f /share/apps/freesurfer/6.0.0/subjects/fsaverage5/surf/lh.pial:overlay=/data/jux/BBL/projects/coupling/fsGLM/lhAlffCbf/lh.n831.coupling_coef_alff_cbf.fwhm15.fsaverage5.ageAtScanmean_sex_pcaslRelMeanRMSMotion_restRelMeanRMSMotion.fwhm15.fsaverage5/contrast1/z.mgh
+```
+
+
+To change threshold, can add:
+```{bash}
+example visualization command: freeview -f /share/apps/freesurfer/6.0.0/subjects/fsaverage5/surf/lh.pial:overlay=/data/jux/BBL/projects/coupling/fsGLM/lhAlffCbf/lh.n831.coupling_coef_alff_cbf.fwhm15.fsaverage5.ageAtScanmean_sex_pcaslRelMeanRMSMotion_restRelMeanRMSMotion.fwhm15.fsaverage5/contrast1/z.mgh:overlay_threshold=3.09,30 #or whatever the range you would like
+```
+
+I am thresholding at 3.09 for my grant.
+
+#### 20201118
+
+Spoke with Azeez. Big hole in data is that the directory/naming format that the surface projection maps are saved under is not what the coupling script requires. The surface projection maps were actually manually renamed, which is why things have been so complicated to replicate.
+
+A few notes from our meetingL
+Coupling flow -> native space -> T1 -> surface (using fmri vox_to_surf), using fsaverage5
+
+To make the coupling run,
+
+1) Have to move surfaces into the freesurfer directory (which requires writing to frozen)
+
+2) In coupling_v2
+  
+  - mri_preproc is doing regression from one surface to another
+  - line 183 - mris_preproc
+  - saves file as mgh
+  - then converts to ascii which only saves vertex number, vertex location (x,y,z) and beta weigtht
+  
+  - line 205 - if any regions w/NA, they will be replaced by 0s. This would account for areas that were masked out
+  
+  - lr: local regression
+  
+  - line 11, uncomment
+  
+  - line 18, must change to cbf, alff. Files must be saved in different format
+      - this is the part of the script I'll need to write
+      - format needs to be subj/surf/rh.alff.fsaverage5.mgh and needs to be copied to freesurfer directory
+      
+----
+
+For the grant, 
+ Going through LB's scripts
+  - the nice lhAlffCBF script has a fatal mistake - does not store LMs
+ 
+    -take this script, get average of betas and correlate with age
+    - removed vertices with NA
+    - did not work, spread is all within 3-4 for betas. Got an essentially flat line.
+   
+  - fsGLM_lhAlffCbf_eb.sh - useful?
+  - azeez will look for where the code is that generated the glm - that seems useful
+  - this directory that she points to in the script doesn't exist-
+    homedir=/data/jux/BBL/projects/coupling/imcoScripts/surfCoupling/groupAnalysis/lhAlffCbf
+    
+-----
+
+#### 20201124 
+
+Working now on fsGLM, have identified script to work on: 
+
+I have changed the 
+  - home directory: /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/fsGLM
+  - data directory:/data/jux/BBL/projects/coupling/coupling_test_eb_20200918/subjectLists/n831_cbf_alff_w_mood_and_cognition.csv
+  - scripts directory: /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/code/fsGLM/groupAnalysis
+  
+I have copied the design matrix locally
+```{bash}
+cp /data/jux/BBL/projects/coupling/imcoScripts/fsGLM/designMatrix.R /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/code/fsGLM/groupAnalysis/.
+
+```
+
+I have constructed the new data frame using 
+/data/jux/BBL/projects/coupling/imcoScripts/fsGLM/make_new_subj_list.R
+
+```{r}
+#read in LB's n831 script and concatenate cognition and mood data for GLM
+
+#read in LB's df
+df <- read.csv("/data/jux/BBL/projects/coupling/subjectsLists/n831_rest_cbf_finalSample_imageOrder.csv", sep = ",", header = TRUE)
+
+#read in clinical and cog dfs
+clinical <- read.csv("/data/joy/BBL/studies/pnc/n1601_dataFreeze/clinical/n1601_goassess_itemwise_corrtraits_scores_20161219.csv", sep = ",", header = TRUE)
+cog <- read.csv("/data/joy/BBL/studies/pnc/n1601_dataFreeze/cnb/n1601_cnb_factorscores.csv", sep = ",", header = TRUE)
+
+#subset 
+#combine dfs
+final_df <- merge(df, clinical, by = c("bblid", "scanid"))
+final_df <- merge(final_df, cog, by = c("bblid", "scanid"))
+
+write.csv(x = final_df, file = "/data/jux/BBL/projects/coupling/coupling_test_eb_20200918/subjectLists/n831_cbf_alff_w_mood_and_cognition.csv", quote = FALSE, row.names=FALSE)
+```
+
+Experimented with the glm models by adding mood_corrtraitsv2, mood_corrtraitsv2 + psychosis_corrtraitsv2 to see if each contrast was independent or if the F depended on how many terms in the model
+
+F DEPENDS ON HOW MANY TERMS IN THE MODEL
+
+- went back to just mood, right and left, this can be okay for sobp I believe
+
+Output can be found in:
+/data/jux/BBL/projects/coupling/coupling_test_eb_20200918/fsGLM/lh.n831.coupling_coef_alff_cbf.fwhm15.fsaverage5.ageAtScanmean_sex_pcaslRelMeanRMSMotion_restRelMeanRMSMotion_mood_corrtraitsv2.fwhm15.fsaverage5
+
+/data/jux/BBL/projects/coupling/coupling_test_eb_20200918/fsGLM/rh.n831.coupling_coef_alff_cbf.fwhm15.fsaverage5.ageAtScanmean_sex_pcaslRelMeanRMSMotion_restRelMeanRMSMotion_mood_corrtraitsv2.fwhm15.fsaverage5
+
+We now can replicate 
+-age effects (stronger coupling posteriorly) - contrast 1
+- sex effects (stronger coupling in females > males) - contrast 2
+
+And new mood effects (anterior, posterio cingulate, temporal) - contrast 3 but much weaker
+Probs, nothing corrected
+
+#### 20201201
+
+- make pngs for ted
+- abstract for sobp - age effects, sex effects, mood effects
+- what is the F cutoff for "sig"
+
+#### 20201202
+- something is up
+- I run fsglm with models including mood and psychosis together, i get different results than if I run a model with either mood or psychosis
+- I also seem to be getting something funny for the right side of the brain
+- right and left do NOT matcj
+- Design files are also not hemisphere specific
+- also confusing because l&r look ok in age and sex, just not mood and psychosis.
+
+#### 20201203
+plan:
+[x] review script to run R and L sides of the brain
+     - mood one identical to each other with exception of lh/rh
+[x] rerun mood independent analysis?
+[x] talk to ted, am I using the right corr traits folder? -yes, correct to use non-age regressed because they are regressed on full sample, not my sample
+[x] do I want bifactor? - YES
+[x] which abstract to use? I think just development and sex differences one, can add other stuff once I get it working.- development and sex differences
+
+[x] talk to adam on how to analyze surfaces
+  - he is going to get me some surface code for visualization. 
+[] tinashe working on general analysis tool to do models. This would be a good testing dataset
+
+#### 20201204
+[] Go into R data, store the results of each regression in a vector. FDR correct. Then he will help with visualization
+
+- first, I made  anew directory that will hold group level analyses in R, then copied the following scripts into it: 
+
+```{bash}
+mkdir /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/code/restCbf_R
+cp /data/jux/BBL/projects/coupling/imcoScripts/restCbf/alffCbf_surfCoupling_eb.* /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/code/restCbf_R/.
+```
+
+- Now, will go into alffCbf_surfCoupling_eb.Rmd and make some code changes:
+
+  - The plan is to take all subjects' list of vertices (10242 per person, 831 people) and make a matrix that is 831 x 10242 (each row is a person, each column is the beta at that vertex from cbf ~ alff)
+  - Next, I will run a gam model at every vertex across subjects: gam(coupling ~ s(age) + sex + motionalff + motioncbf + mood)
+  - Each model will be stored in a vector of 10242 (one per vertex)
+  - I will then make 5 other vectors that correspond to each p value
+  - Next, I will run an FDR correction for each p
+  - lastly, I will use adam's data to visualize
+
+#### 20201208
+
+-Crashed the rstudio on chead when I tried to make a matrix that stores the results of the linear models at each of the vertices. Brought it to my local machine to see if that would help
+- Will write matrix to one data frame and send it locally to work on further
+
+```{bash}
+scp eballer@chead:/data/jux/BBL/projects/coupling/coupling_test_eb_20200918/data/* .
+
+```
+ -now working on /Users/eballer/BBL/imco/code/from_chead/data/.
+ 
+ - The mood model isn't working with FDR correction. Uncorrected, 577 brain regions show mood differences at p<0.05, 121 at p<0.01, 54 @ p<0.005, 8 @ p< 0.001.
+ 
+ - Another way to do this might be to specifically look within regions that showed sex or development differences, as opposed to whole brain
+ 
+ 
+#### 20201210
+
+AZEEZ DID IT!!!
+
+Step 1: Surface projection
+  - Surface projection scripts worked
+  - One step to consider adding to the end of the projection scrips is a change in the names of the files. Coupling needs files names rh.cbf rather than rh.cbf.mgh (which is what comes out of surface projection)
+  - To accomplish this, a simple: cp rh.cbf.mgh rh.cbf works just fine
+  - Azeez okay with me adding this last piece to the projection scripts themselves so it does not have to be done manually
+  
+Step 2: Coupling
+  - What Azeez did
+  
+      1) made a local directory (/data/jag/aadebimpe/subjecdir)
+      
+      2) copied one subject (99991) to test
+```{bash}
+ cp -r /data/joy/BBL/studies/pnc/processedData/structural/freesurfer53/99991 .
+```
+      
+        
+      3) copied fsaverage5 directory locally
+```{bash}
+ cp -r /data/joy/BBL/studies/pnc/processeddata/structural/freesurfer53/fsaverage5 .
+ 
+```
+      
+      4) View the script 
+```{bash}
+ cd surfCoupling
+ cd R
+ Rscript coupling_v2.R -h
+ 
+# -m MEASURES cbf,alff
+        # -t fsaverage5
+       #  -fwhm 15
+```
+     
+      
+      5) Only 2 places to change in script
+      
+        - scripts="/data/joag/aadebimpe/surfCoupling/R" #this contains the coupling_v2.R and kth_neighbor_v3.R
+        - change full path for kth_neightbor script
+        
+      6) change SUBJECT_DIR in bash profile
+```{bash}
+gedit ~/.bash_profile
+         export SUBJECT_DIR=/data/jag/aadebimpe/subjecdir #this is the directory you make
+```
+      
+      7) should work
+      
+  -Extra note: 
+  
+    - SURFACE PROJECTION WORKS
+    - COUPLING WORKS
+    - There are super duper minor changes between his new coupling and the old coupling, just having to do with using an updated R library. These are non-significant
+    - THE COUPLING FILES ARE FINE TO USE FOR ANALYSIS AS THEY ARE
+    - Need to talk to Bart about mixed models/etc
+    - Adam helpful- he has a tool that you can use to visualize things, but unfortunately the correcting for multiple comparisons with 10242 tests is drowning out any minor effect from mood/psychosis.
+    
+         
+#### 20201211
+
+- did some group level analysis in cbf_alff_age_sex_bifactor_cog_regression
+- do fsglm overall psychopathology (bifactor)
+     - really small spot in left temp lobe
+     
+#### 20201215
+
+- Trying some of adam's stuff
+
+1) Log on to cubic: (F5 first): ssh -Y ballere@cubic-login.uphs.upenn.edu (gen epic pwd)
+
+ - Remember for heterogeneity, sudo -u pncheterogeneity sudosh *gen epic pwd), then to ballerDepHeterogen (but none of this matters for today!)
+
+2) Check out Adam's stuff: needed access to his stuff
+
+#### 20201216
+
+- [x] got access to Adam's directory
+
+- Steps to run 
+
+1) script: /cbica/projects/pinesParcels/multiscale/scripts/derive_netstats/VertexWise_Setup.m
+
+   -input
+   
+    * bblids.txt - just list of bblids
+    
+    * /cbica/projects/pinesParcels/results/EffectVecs/forMLpc.csv
+      - format: 80010,261,0.100231666666667,1 (looks like BBLID, age in months, motion, sex (2 f, 1 m)) - pulled directly from pnc freeze
+      
+    * /cbica/projects/pinesParcels/results/aggregated_data/ind_vertices_bw_allscales.mat
+      - 3d matrix, subject x vertex x scale
+      - For me, could just be 2D, subject x vertex + demographics. Should double size though so I can get L& R in the same matrix! (so like 831 x (demographics first + 20484 vertices L than R ))
+ 
+      
+   -output:
+      * Saves the exact df from previous step as one of the following files:
+      
+      * /cbica/projects/pinesParcels/results/aggregated_data/Scale_K_vertices_bw_allscales.csv where K is one of 29 scales (mine would just be 1 scale b/c not using millions of scales)
+      * example: /cbica/projects/pinesParcels/results/aggregated_data/Scale_23_vertices_bw_allscales.csv
+  
+   -purpose: 
+   
+    * vertex-wise setup - looks like just merges your files like in R, so you get the right output format. Not sure I need to do this
+    
+   -dependencies
+    * matlab version: 9.4 (R2018a)
+
+```{bash}
+#/cbica/projects/pinesParcels/multiscale/scripts/derive_netstats/VertexWise_Setup.m 
+
+
+#this is actually matlab. Just going through it to familiarize myself. Directly from Adam's code. Not modifying anything, just understanding
+
+%vertex-wise age effects over subjects and scales
+
+% your output directory
+outdir = '/cbica/projects/pinesParcels/results/aggregated_data'
+
+% load in surface-associated subjects list to ensure that they are in the same order as they are in your R file!
+subjs=load('/cbica/projects/pinesParcels/data/bblids.txt');
+%%%% you can use these few lines to confirm ordering, or do it your own way
+
+% EB Comment - convert the BBLIDs to characters from numbers
+subjsStr=num2str(subjs); 
+
+% A cell array {} is a data type with indexed data containers called cells, where each cell can contain any type of data. 
+subjsCell={};
+% takes some massaging to get it in proper format
+subjsCell(:,1)=cellstr(subjsStr); %set first column to be BBLID in string form
+subjsTable=table(subjsCell); %put into table form
+subjsTable.Properties.VariableNames={'bblid'}; %name this column
+% load in r-generated bblid, Age, Motion, Sex arrays
+rStats=load('/cbica/projects/pinesParcels/results/EffectVecs/forMLpc.csv');
+rStatsCell={};
+rStatsCell(:,1)=cellstr(num2str(rStats(:,1)));
+rStatsCell(:,2)=num2cell(rStats(:,2));
+rStatsCell(:,3)=num2cell(rStats(:,3));
+rStatsCell(:,4)=num2cell(rStats(:,4));
+rStatsTable=cell2table(rStatsCell,'VariableNames',{'bblid','Age','Motion', 'Sex'});
+% join the tables together (will join on bblid, similar to merge in R)
+nonFCdata=join(subjsTable,rStatsTable);
+% check if 1st subject on matlab list is the same as the first subject on the merged list to ensure correspondence
+if subjs(1)~=str2num(char(nnet{1,1}))
+disp('Matlab subject list differs from merged subject list')
+else
+end
+%%%% End of ordering confirmation
+
+% load in surface values
+surfaceValues=load('/cbica/projects/pinesParcels/results/aggregated_data/ind_vertices_bw_allscales.mat');
+% initialize array to save out for R (FC values + Age Motion Sex, columns 2:4)
+Covariates=table2array(nnet(:,2:4));
+% initialize empty matrix for writeout all vertices (17734) + covariates of interest (3) for all subjects (693)
+
+%%% For EB, this should be all vertices (20484 + covs of interest for all subjects (831))
+
+covsNverts=zeros(693,17737);
+% this puts the 1st three columns as your covariates, important for the next step in R
+covsNverts(:,1:3)=Covs;
+% this is specific to the surface files I had for each subject, you might have to adapt it depending on what your surface data looks like
+for v=1:17734
+	% v+3 because the first three columns are covariates. The ' is there to transpose: remove if you data does not need to be transposed'
+	covsNverts(:,v+3)=surfaceValues(v,:)';
+end
+writetable(array2table(covsNverts),strcat(outdir,'/','SurfaceAndCovariates.csv'));
+```
+
+2) Get stuff to PMACS via scp, ends up in /home/pinesa/VertexwiseTables_forDR2 (or my own coupling directory, obv)
+
+3) Source bbl stuff 
+
+```{bash}
+source /project/bbl_projects/apps/default_modules.sh
+```
+
+4) Make script to set up dependencies for next step
+  - reads corresponding vertex so you can do in parallel. Uses the same file, just picks the column (similar to what i have done in my r script but much faster and less cumbersome)
+
+```{bash bsub.sh}
+#!/bin/bash
+v=$1
+module load R/3.6.3
+Rscript vert_mixedEffects_looper_gamm_ageScaleInt_BoStr-MultRun.R $v #put in my own R script
+```
+
+5) Make loop script that can run this bash command for every gam so it can be bsubed (like gsub)
+
+```{bash for_loop_for_bsub.sh}
+#I made this name up
+for v in {1..20424}
+do
+  bsub bsub.sh $v
+done
+```
+
+6) /cbica/projects/pinesParcels/multiscale/scripts/derive_mixedModels/Gams_On_Surface.R 
+
+  * Input: TheFileYouWroteOutWithAllTheVerticesAndCovariates (831:20484 or whatever)
+  
+  * Output: Modeled_fSex_fMot_sScale_sAges_3fxT_raInt_v[whatever]_bwVals_BoStr_overScales.csv
+  
+  * Purpose: Runs GAMS at each vertex
+  
+  * Dependencies:
+  
+    - library(mgcv)
+  
+```{R }
+### for parallelizing over vertices, read in which vertex this should run on
+v=commandArgs(trailingOnly=TRUE)
+### load libraries
+library(mgcv)
+### read in data
+df<-read.csv('TheFileYouWroteOutWithAllTheVerticesAndCovariates')
+### initialize output
+outputcolnames=c('s_Age','s_Scale','Motion','Sex')
+outputrownames=c('CoefEstimate')
+outarray=matrix(1,nrow=4,ncol=1)
+colnames(outarray)=outputcolnames
+rownames(outarray)=outputrownames
+### convert the data into dataframe format
+df<-data.frame(df)
+# get coefficient estimates for this vertex, set this vertex's corresponding column name to "value" for gam to target
+colnames(df)[v+3]<-"value"
+model=gam(value~Motion+Sex+s(Scale,k=3,fx=T)+s(Age,k=3,fx=T),data=df)
+gamsum=summary(model)
+#### readout estimates: p.table is parametric coefs, s.table is smooths
+# not sure if you want the t value or the estimate: they are both in the p.table
+Motion_obs=gamsum$p.table['Motion','Estimate']
+outarray['Coef','Motion']=Motion_obs
+Sex_obs=gamsum$p.table['Sex','Estimate']
+outarray['Coef','Sex']=Sex_obs
+Scale_obs=gamsum$s.table['s(Scale)','F']
+outarray['Coef','s_Scale']=Scale_obs
+Age_obs=gamsum$s.table['s(Age)','F']
+outarray['Coef','s_Age']=Age_obs
+
+# change to whatever filename you want to organize this: make sure to keep "v" for aggregating these files in order later
+write.table(outarray,file=paste('~/mixedEffectModels/Modeled_fSex_fMot_sScale_sAges_3fxT_raInt_v',v,'_bwVals_BoStr_overScales.csv',sep=''),sep=',',row.names=F,quote=F)
+
+ 
+```
+
+Output, vector of effects x number of vertices. 
+
+- Extras: k in gam is the amount of wigglyness . Standard in lab is 4.
+- Gam takes into account all paramaters of model at the same time, not in order 
+- 
+
+example would be 
+
+- /cbica/projects/pinesParcels/pmacstxr/mixedEffectModels
+  - contains files like: Modeled_plSc_flSc_pMot_fMot_pAge_fAge_v10047_bwVals_overScales.csv
+  - these contain the following info: 
+  logScaleRawSig,logScaleCoef,motionRawSig,motionCoef,AgeSig,Age
+0,0.00772063924095,8.52571497659677e-05,-0.0244156337615447,5.78486527171955e-51,6.42376062398326e-0
+5
+
+
+#### 20201217
+
+- From John Detre meeting:
+
+Potential for magnitude of alff is constrained by blood flow.
+Alff should be pretty coupled. 
+
+Old literature
+
+-	Alff was poor mans cbf map. How you get cbf out of bold
+
+-	If it was just that, you’d expect uniformity. But that is not the case.
+
+-	What could regional variations mean?
+
+  o	Does alff have something to do with function in different parts of the brain. Alff could be high in lower blood flow areas b/c of network relationships.
+
+-	Next q- not all blood flow
+  o	Aerobic glycolysis strong in development
+  
+  o	Huge blood flow in development that correlates with glucose metabolism
+  
+  o	Maybe cbf related to aerobic and not oxidative metabolism
+
+-	Why is local correlation between alff and cbf: 
+
+  o	Bold goes up when blood flow goes up. Bold goes down with oxidative metabolism goes up – when brain regions become more active: blood flow higher than oxidative metabolism.
+
+-	AG- bf up, and oxidative metabolism not going up as much – this would give you bigger bold response- this would increase the coupling
+
+
+To do: 
+[] Think more, write stuff down
+
+     - oxidative metabolism
+     - aerobic glycolysis 
+     - distribution in brain
+     
+[o] follow up analyses
+
+    - cbf separately
+    - alff separately
+    - cbf:alff surface interactions - need to wait until Adam's stuff on pmacs
+    - relation of alff to general functional connectivity - need more clarification on this
+
+
+#### 20201218
+
+Pictures saved in : eballer/Documents/Penn T32/Progress/Figures_for_ted_meeting_20201217.pptx
+
+[x] cbf alone
+
+  [x] l
+  
+  [x] r
+
+[x] alff alone
+
+  [x] l
+  
+  [x] r
+  
+- from azeez meeting
+  : if we want to use fsglm, need freesurfer files
+  : if just other like R analysis, can use asc
+  : with azeez will be doing everything on PMACS from now
+    - the reason people are doing things on cubic is that the version of matlab (2018a) is different than the default pmacs matlab version (2020). But you can specify which matlab you want in bash profile. Azeez suggests 2018b because it is complete version of 2018 model (a is like beta version)
+    
+- to do
+  
+  [x] space is needed - Ted, where do you want these to go? 
+      /project/imco/baller/
+        - data_freeze (from frozen)
+        - processed_data (any single subject stuff)
+        - scripts - need to sync it to git
+  
+  [x] moving data
+    
+    [x] moved my coupling_test_eb directory
+    [x] frozen stuff already moved and in /project/imco/pnc
+  
+  
+
+#### 20201222
+
+[x] going to run some gams!
+
+  - script: /eballer/BBL/imco/scripts/cbf_alff_age_sex_bifactor_cog_regression.R
+
+```{r old version}
+mood_model <- lm(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + mood, data = lh_cbf_asl)
+
+age_sex_model <- gam(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                         sex + ageAtScan1 + s(ageAtScan1, k = 4, fx = T) + 
+                         s(ageAtScan1, by = osex, k = 4, fx = T), 
+                       random = list(bblid=~1), data=lh_cbf_asl)
+  
+  #accuracy_model <- gam(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + 
+                         # s(ageAtScan1, k = 4, fx = T) + Overall_Accuracy + 
+                         # s(ageAtScan1, by = osex, k = 4, fx = T), 
+                       # random = list(bblid=~1), data=lh_cbf_asl)
+  psychopathology_model <- lm(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + overall_psychopathology, data=lh_cbf_asl)
+
+```
+
+ - then spoke with bart, stuff jumping around all over the place. Specifically, don't use random = list(bblid=~1) if not doing mixed model. This term allowed for you to account for the repeated measures I believe. With some more tweaks, I've added some terms that are of interest to us right now. As of the end of the day, the most recent model is: 
+```{r}
+for (i in 1:10242) {
+  curcol = (numcolumns - 10242 + i) # will start you counting at the right part of the df
+  age_sex_model <- gam(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                         osex + s(ageAtScan1, k = 4, fx = T) + 
+                         s(ageAtScan1, by = osex, k = 4, fx = T) + 
+                         mood + overall_psychopathology + Overall_Accuracy, 
+                       data=lh_cbf_asl)
+  
+  
+  #put pvalue in it's appropriate lm
+  
+  lh_gam_sex[i] <- summary(age_sex_model)$p.table[4,4] #linear term
+  lh_gam_age[i] <- summary(age_sex_model)$s.table[1,4] #smooth term for ageAtScan1
+  lh_gam_age_sex[i] <- summary(age_sex_model)$s.table[2,4] #smooth term for interaction
+  
+  lh_gam_mood[i] <- summary(age_sex_model)$p.table[5,4]
+  lh_gam_psychopathology[i] <- summary(age_sex_model)$p.table[6,4]
+  lh_gam_accuracy[i] <- summary(age_sex_model)$p.table[7,4] #accuracy term
+  
+}
+
+#####################################################
+#                     results                       #
+#####################################################
+
+lh_models <- c("lh_gam_mood", "lh_gam_age", "lh_gam_sex", "lh_gam_age_sex", "lh_gam_accuracy", "lh_gam_psychopathology")
+for (model in lh_models){
+  pfdr_anova <- eval(substitute(p.adjust(i, method="fdr"), list(i = as.name(model))))
+  pfdr_anova <- as.data.frame(pfdr_anova)
+  pfdr_round_anova <- round(pfdr_anova[pfdr_anova<0.05],3)
+  print(paste0(model, " - num corrected: ", length(pfdr_round_anova)))
+}
+
+
+```
+ 
+ Same is done with right side: 
+ 
+```{r}
+#set vector to save info in - all are 10242 - # vertices in model
+rh_gam_age <- vector(length = 10242)
+rh_gam_sex <- vector(length = 10242)
+rh_gam_age_sex <- vector(length = 10242)
+rh_gam_mood <- vector(length = 10242)
+rh_gam_psychopathology <- vector(length = 10242)
+rh_gam_accuracy <- vector(length = 10242)
+
+
+#get # of items in df for calculation of column)
+numcolumns <- dim(rh_cbf_asl)[2]
+#run gams models and store info in respective vectors
+for (i in 1:10242) {
+  curcol = (numcolumns - 10242 + i) # will start you counting at the right part of the df
+  age_sex_model <- gam(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                         osex + s(ageAtScan1, k = 4, fx = T) + 
+                         s(ageAtScan1, by = osex, k = 4, fx = T) + 
+                         mood + overall_psychopathology + Overall_Accuracy, 
+                       data=rh_cbf_asl)
+  
+  
+  #put pvalue in it's appropriate lm
+  
+  rh_gam_sex[i] <- summary(age_sex_model)$p.table[4,4] #linear term
+  rh_gam_age[i] <- summary(age_sex_model)$s.table[1,4] #smooth term for ageAtScan1
+  rh_gam_age_sex[i] <- summary(age_sex_model)$s.table[2,4] #smooth term for interaction
+  
+  rh_gam_mood[i] <- summary(age_sex_model)$p.table[5,4]
+  rh_gam_psychopathology[i] <- summary(age_sex_model)$p.table[6,4]
+  rh_gam_accuracy[i] <- summary(age_sex_model)$p.table[7,4] #accuracy term
+}
+
+#####################################################
+#                     results                       #
+#####################################################
+
+rh_models <- c("rh_gam_mood", "rh_gam_age", "rh_gam_sex", "rh_gam_age_sex", "rh_gam_accuracy", "rh_gam_psychopathology")
+for (model in rh_models){
+  pfdr_anova <- eval(substitute(p.adjust(i, method="fdr"), list(i = as.name(model))))
+  pfdr_anova <- as.data.frame(pfdr_anova)
+  pfdr_round_anova <- round(pfdr_anova[pfdr_anova<0.05],3)
+  print(paste0(model, " - num corrected: ", length(pfdr_round_anova)))
+}
+
+
+```
+ 
+ - output the same for both- big time age outcome, really nothing else for any of the other terms. Weird.
+
+#### 20210107
+
+[x] continue to move data
+
+  [x] now need to figure out how to do freesurfer directory so that the structure is preserved so it works with Azeez's scripts - azeez doing this part
+    
+  [x] in the first part of the new script, load the right versions (matlab 2018b, R 3.6.3)
+  [x] copy Adam's scripts from cubic to pmacs, and adapt for my work
+  [x] rerun analyses
+  [x] after I have output saved, how to visualize and cluster correct?
+    - Azeez will ask Sheila for visualization tools, he will email her and cc me
+
+[x] Adam visualization tools
+[x] read about what alff is
+[x] keep making sense of aerobic glycolosis
+[x] redo fsGLM pictures if I'd  like - they actually look worse with changed threshold. Will show a few examples to Ted. But not really helpful
+
+#### 20210112
+
+[x] Adam meeting
+
+-inputs: a list of values for each vertex for R and L
+
+   - should be coefficients for age x coupling and sex x coupling
+   
+- output: pretty visualizations
+- uses: takes the vertices and projects them, changes colors, etc. Can also be adapted to map onto parcels or networks, which I am interested in because I think it will be easier to write about
+- dependencies: right now it is on cubic and in matlab. Adam will try to get running on pmacs. He will let me know which version of things.
+
+[x] make the vectors with cbf_alff_age_sex_bifactor_cog_regression.R
+
+   - save as coupling_age_for_adam_lh_20210112.csv and coupling_age_for_adam_rh_20210112.csv
+   
+[x] send via slack
+
+  *** Adam had problems running it, looked like vertices orders were messed up
+   - realizing that the way that lb's script de-parsed the ordering of the scans really didn't work and possibly explains why adam's stuff isn't working. Am going to do this step in bash and feed it into my home script.
+   - have tried my own, saved in: /Users/eballer/BBL/imco/data/from_chead/
+   - will now use these as feeds in to my analysis
+
+[x] redo analyses using the matrices that I constructed myself
+   - it works !!!!!!!!!!
+
+```{matlab}
+
+#code location
+/cbica/projects/pinesParcels/multiscale/scripts/derive_parcels/Toolbox/PBP/PBP_vertWiseEffect_Erica.m
+
+#CHanges Adam made
+PBP_vertWiseEffect_Erica('/cbica/projects/pinesParcels/dropbox/coupling_age_for_adam_lh_20210112.csv','/cbica/projects/pinesParcels/dropbox/coupling_age_for_adam_rh_20210112.csv','test')
+
+
+```
+
+#### 20210113
+
+[x] adapt Adam's code for the rest of my analyses
+  - requires moving to pmacs. Only thing that might not work is colormap:
+  - From Adam : the only dependency that might not be on there is the colormapping: you can always revert to a default matlab colormap by changing custommap=colormap(b2r(-1,1)); to something like custommap=colormap('jet');  though the colormap is one thing I expect you'll want to tinker with, along with the thresholding (all in the first few lines variables Uthresh and Lthresh), and the datalr=1./datalr line I used to transform the pvalues into 1/p
+
+```{bash}
+#move stuff from adam to pmacs
+scp /cbica/projects/pinesParcels/multiscale/scripts/derive_parcels/Toolbox/PBP/PBP_vertWiseEffect_Erica.m eballer@transfer.pmacs.upenn.edu:/project/imco/baller/scripts/. 
+
+#move files from local comp to 
+scp /Users/eballer/BBL/imco/results/* eballer@transfer.pmacs.upenn.edu:/project/imco/baller/processed_data/regression_matrices_n831/.
+
+# log into pmacs
+ssh -Y eballer@scisub.pmacs.upenn.edu
+
+# change to xbash
+xbash
+
+#set up interactive bash
+bsub -Is -XF -q matlab_interactive 'bash'
+
+#open matlab
+matlab
+
+#now in matlab
+
+#add new paths
+addpath(genpath('/appl/freesurfer-6.0.0/matlab/'));
+addpath(genpath('/project/imco/baller/scripts/subaxis/')); #this required i download it from the web and scp to /baller/scripts/subaxis
+
+#commented out the rest of addpath
+#changed the paths for the surfaces to /project/imco/surfaces/fsaverage5/surf/lh.inflated and rh.inflated
+#line 70, went to color defaults
+custommap=colormap('jet');
+
+#run
+PBP_vertWiseEffect_Erica('/project/imco/baller/processed_data/regression_matrices_n831/coupling_lh_gam_age_20210112.csv','/project/imco/baller/processed_data/regression_matrices_n831/coupling_rh_gam_age_20210112.csv','test')
+
+```
+
+#### 20200114
+[x] move pnc data to PMACS- script to_move
+
+[x] sample construction to PMACS
+
+   [x] script moved
+   [x] script rerun and files saved
+
+
+```{bash moving_scripts_to_pnc}
+#move pnc data to pmacs for sample construction
+source /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/code/to_move #have to enter pwd every time
+
+#contains the following commands:
+scp /data/joy/BBL/studies/pnc/n1601_dataFreeze/neuroimaging/asl/n1601_PcaslQaData_20170403.csv eballer@transfer.pmacs.upenn.edu:/project/imco/pnc/neuroimaging/asl/.
+scp /data/joy/BBL/studies/pnc/n1601_dataFreeze/neuroimaging/rest/n1601_RestQAData_20170714.csv eballer@transfer.pmacs.upenn.edu:/project/imco/pnc/neuroimaging/rest/.
+scp /data/joy/BBL/studies/pnc/n1601_dataFreeze/neuroimaging/t1struct/n1601_t1QaData_20170306.csv eballer@transfer.pmacs.upenn.edu:/project/imco/pnc/neuroimaging/t1struct/.
+scp /data/joy/BBL/studies/pnc/n1601_dataFreeze/clinical/n1601_goassess_itemwise_bifactor_scores_20161219.csv eballer@transfer.pmacs.upenn.edu:/project/imco/pnc/clinical/.
+scp /data/joy/BBL/studies/pnc/n1601_dataFreeze/health/n1601_health_20170421.csv eballer@transfer.pmacs.upenn.edu:/project/imco/pnc/health/.
+scp /data/joy/BBL/studies/pnc/n1601_dataFreeze/demographics/n1601_demographics_go1_20161212.csv eballer@transfer.pmacs.upenn.edu:/project/imco/pnc/demographics/.
+scp /data/joy/BBL/studies/pnc/n1601_dataFreeze/cnb/n1601_cnb_factor_scores_tymoore_20151006.csv eballer@transfer.pmacs.upenn.edu:/project/imco/pnc/cnb/.
+scp /data/jux/BBL/projects/coupling/imcoScripts/restCbf/n831_alff_cbf_makeSample.R eballer@transfer.pmacs.upenn.edu:/project/imco/baller/scripts/
+scp /data/jux/BBL/projects/coupling/subjectsLists/n1601_bblid_datexscanid.csv eballer@transfer.pmacs.upenn.edu:/project/imco/baller/subjectLists/.
+scp /data/jux/BBL/projects/coupling/subjectsLists/n831_imageOrder.csv eballer@transfer.pmacs.upenn.edu:/project/imco/baller/subjectLists/.
+scp /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/code/restCbf_R/make_831x10242_matrices.R eballer@transfer.pmacs.upenn.edu:/project/imco/baller/scripts/.
+#these should later be in a different path once Azeez moves it
+
+
+```
+
+```{bash SAMPLE_CONSTRUCTION }
+
+#data copied from /data/jux/BBL/projects/coupling/imcoScripts/restCbf/n831_alff_cbf_makeSample.R
+ssh -Y eballer@scisub.pmacs.upenn.edu
+xbash
+cd /project/imco/baller/scripts
+
+#make local pmacs so I can use my home Rstudio
+#on local comp
+cd /Users/eballer/BBL/imco/pmacs
+mkdir /Users/eballer/BBL/imco/pmacs/PMACS_remote
+chmod 700 PMACS_remote
+sshfs eballer@sciget.pmacs.upenn.edu:/project/imco/baller/scripts/ /Users/eballer/BBL/imco/pmacs/PMACS_remote -o defer_permissions,volname=project
+
+#open it in R and edit.. Here is a summary of changes made
+
+#file paths changed
+pcaslQA <- read.csv("/project/imco/pnc/neuroimaging/asl/n1601_PcaslQaData_20170403.csv") 
+restQA <- read.csv("/project/imco/pnc/neuroimaging/rest/n1601_RestQAData_20170714.csv")
+t1QA <- read.csv("/project/imco/pnc/neuroimaging/t1struct/n1601_t1QaData_20170306.csv")
+healthQA <- read.csv("/project/imco/pnc/health/n1601_health_20170421.csv")
+demos <- read.csv("/project/imco/pnc/demographics/n1601_demographics_go1_20161212.csv")
+
+
+#these two are premade, do not need to be done for r, but do need to be done for fsGLM, can be commented out -lines 9/10
+datexscan <- read.csv("/data/jux/BBL/projects/coupling/subjectsLists/n1601_bblid_datexscanid.csv")
+order <- read.csv("/data/jux/BBL/projects/coupling/subjectsLists/n831_imageOrder.csv")
+
+# Get correct image order for GLM
+finalOrdered <- merge(order,final,by=c("bblid","datexscanid")) #only if you do fsglm
+
+
+# Write out final demos for sample
+write.csv(final,"/project/imco/baller/subjectLists/n831_alff_cbf_finalSample.csv", row.names=FALSE, quote = FALSE) #added if you don't want to deal with the Ordered
+write.csv(finalOrdered,"/project/imco/baller/subjectLists/n831_alff_cbf_finalSample_imageOrder.csv",row.names=FALSE, quote = FALSE)
+
+#### unmount
+diskutil umount force /Users/eballer/BBL/imco/PMACS_remote
+
+```
+
+  
+```{bash matrix_construction_and_regressions_setup}
+
+######going to combine two scripts: 
+#1) /project/imco/baller/scripts/make_831x10242_matrices.R (from /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/code/restCbf_R/make_831x10242_matrices.R)
+#2) /project/imco/baller/scripts/cbf_alff_age_sex_bifactor_cog_regression: (from: /Users/eballer/BBL/imco/scripts/cbf_alff_age_sex_bifactor_cog_regression.R
+
+#MOVE FILES IF NOT DONE ALREADY
+
+#on chead
+scp /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/code/restCbf_R/make_831x10242_matrices.R eballer@transfer.pmacs.upenn.edu:/project/imco/baller/scripts/.
+
+#on local
+scp /Users/eballer/BBL/imco/scripts/cbf_alff_age_sex_bifactor_cog_regression.R eballer@transfer.pmacs.upenn.edu:/project/imco/baller/scripts/.
+
+### Mount scripts dir on local machine so I can use my rstudio
+cd /Users/eballer/BBL/imco/pmacs
+mkdir /Users/eballer/BBL/imco/pmacs/PMACS_remote
+chmod 700 PMACS_remote
+sshfs eballer@sciget.pmacs.upenn.edu:/project/imco/baller/scripts/ /Users/eballer/BBL/imco/pmacs/PMACS_remote -o defer_permissions,volname=project
+
+### get on pmacs and xbash
+ssh -Y eballer@scisub.pmacs.upenn.edu
+xbash
+cd /project/imco/baller/scripts
+
+```
+
+#### 20210115
+[o] move freesurfer files
+
+*** UH OH *** Some of the directories that we want to copy that have coupling maps are empty
+
+  - made a script to generate a file list with all people who don't have freesurfer directories
+  - /project/imco/baller/scripts/no_coupling_maps.csh
+  - results in: /project/imco/baller/subjectLists/n831_no_freesurfer_dir (n = 114)
+  - Azeez to rerun coupling this weekend
+
+
+
+  
+```{bash}
+#!/bin/csh
+set cnt = 1
+echo -n "" >! /project/imco/baller/subjectLists/n831_no_freesurfer_dir
+foreach x (`cat /project/imco/baller/subjectLists/n831_imageOrder.csv`)
+	if ($cnt > 1) then
+	   set bblid = `echo $x | cut -f1 -d ','`
+ 	   set datexscanid = `echo $x | cut -f2 -d ','`
+	   echo $bblid/$datexscanid
+	   if (`ls /project/imco/surfaces/$bblid/$datexscanid/surf/lh.coupling_coef_alff_cbf.fwhm1
+5.fsaverage5.asc | wc -l` > 0) then
+	    echo "$bblid/$datexscanid exists"
+	   else
+	    echo $bblid/$datexscanid" does not exist"
+	    echo $bblid/$datexscanid >> /project/imco/baller/subjectLists/n831_no_freesurfer_dir
+	   endif
+	endif
+	@ cnt += 1 
+end
+```
+  
+
+#### 20210119
+[x] azeez moved the couplingSurfaceFiles from the coupling directory, not freesurfer directory this AM. Rest of the data analysis uses these coupling files.
+
+[x] read in coupling asc files
+
+  [x] make matrices
+  
+  [x] new regression models
+  
+      - age + sex + motion
+      - age + sex + motion + cog
+      - age + sex + motion + psychopathology
+      - age + sex + motion + mood
+      - age:sex interaction
+      
+  [x] regressions with ps saved
+  
+  [x] regressions with ts saved
+  
+[x] visualizations in matlab
+  - look crappy. Here was code I ran:
+  
+  
+```{bash bsub command}
+source test_bsub.sh
+
+#contains code
+#bsub -o /project/imco/baller/scripts/logfiles/outputlogjob.out -e /project/imco/baller/scripts/logfiles/outputlogjob.
+#error -R "rusage[mem=128G]" < /project/imco/baller/scripts/test_wrapper.sh
+```
+
+```{bash test_wrapper.sh}
+#called by bsub command
+#!/bin/bash
+echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc
+Rscript test_step_by_step.R
+
+```
+
+```{r test_step_by_step.R}
+
+#script called from test_wrapper. GOes through all the newly moved files, makes a matrix, runs the regressions and stores info in individual matrices
+######################################
+### Initial construction 1/14/2021 ###
+######################################
+
+####################
+##### Summary ######
+####################
+
+#input: asc files, and pnc demographics, cnb, clinical files
+#output: 10242 length vector csvs with T and/or p values for vertex-wide regression
+#uses: goes vertex by vertex and does regression (coupling by age, sex, cognition, etc), pulls out T and p from these values and sticks it in a vector. The vector can then be used for visualization in matlab
+#dependencies: R (3.6.3 is my current default in pmacs)
+
+####################
+###  Libraries   ###
+####################
+
+library(mgcv)
+library(dplyr)
+library(ggplot2)
+
+#####################################################################################
+####              Makes the 831x10242 matrices, both left and right              ####
+#####################################################################################
+
+# read in demos
+alffCbf_subjDemos <- read.csv("/project/imco/baller/subjectLists/n831_alff_cbf_finalSample_imageOrder.csv")
+
+#some verification preprocessing
+alffCbf_subjDemos$sex <- as.factor(alffCbf_subjDemos$sex)
+alffCbf_subjDemos$race <- as.factor(alffCbf_subjDemos$race)
+alffCbf_subjDemos$race2 <- as.factor(alffCbf_subjDemos$race2)
+
+#add osex category for use in gam later
+alffCbf_subjDemos$osex <- ordered(alffCbf_subjDemos$sex)
+
+#add psych bifactor scores
+psych <- read.csv("/project/imco/pnc/clinical/n1601_goassess_itemwise_bifactor_scores_20161219.csv", header = TRUE)
+
+#remove 4factorv2 from title
+names(psych) <-gsub("_4factorv2", "", names(psych))
+
+#merge
+alffCbf_subjDemos <- merge(alffCbf_subjDemos, psych, by = "bblid")
+
+#cognitive data
+cog <- read.csv("/project/imco/pnc/cnb/n1601_cnb_factor_scores_tymoore_20151006.csv")
+cog <- subset(cog, select = c("bblid", "Overall_Efficiency", "Overall_Accuracy", "Overall_Speed"))
+
+#merge
+alffCbf_subjDemos <- merge(alffCbf_subjDemos, cog, by = "bblid")
+
+#drop the scanid.y
+alffCbf_subjDemos <- subset(alffCbf_subjDemos, select = -scanid.y)
+
+#rename scanid.x to scanid
+names(alffCbf_subjDemos) <- gsub("scanid.x", "scanid", names(alffCbf_subjDemos)) 
+
+#make list of bblid/scanid
+bblid_scanid <- paste0(alffCbf_subjDemos$bblid, "_", alffCbf_subjDemos$datexscanid)
+
+#####################
+##### Left Side #####
+#####################
+
+#initiate matrix for storage
+lh_831_x_10242_matrix <- matrix(nrow = 831, ncol = 10242)
+
+#go through each subject, grab 5th column in asc, transpose and stick in matrix
+# output is 831 x 10242 matrix
+for (subj in 1:831) {
+  
+  bblid <- alffCbf_subjDemos$bblid[subj]
+  datexscanid <- alffCbf_subjDemos$datexscanid[subj]
+  file_path <- paste0("/project/imco/couplingSurfaceMaps/alffCbf/lh/stat/", bblid, "_", datexscanid, "_lh.coupling_co
+ef_alff_cbf.fwhm15.fsaverage5.asc")
+  alffCbf_data <- read.table(file_path, stringsAsFactors = FALSE)
+  lh_831_x_10242_matrix[subj,] <- t(alffCbf_data$V5)
+  
+}
+
+#append with demographics
+alffCbf_subjDemos_with_lh_831x10242 <- cbind(alffCbf_subjDemos, lh_831_x_10242_matrix)
+
+#write output
+write.table(alffCbf_subjDemos_with_lh_831x10242, file = "/project/imco/baller/results/alffCbf_subjDemos_with_lh_831x1
+0242.csv", sep = ",")
+
+#####################
+#### Right Side #####
+#####################
+#initiate matrix for storage
+rh_831_x_10242_matrix <- matrix(nrow = 831, ncol = 10242)
+
+#go through each subject, grab 5th column in asc, transpose and stick in matrix
+# output is 831 x 10242 matrix
+for (subj in 1:831) {
+  
+  bblid <- alffCbf_subjDemos$bblid[subj]
+  datexscanid <- alffCbf_subjDemos$datexscanid[subj]
+  file_path <- paste0("/project/imco/couplingSurfaceMaps/alffCbf/rh/stat/", bblid, "_", datexscanid, "_rh.coupling_co
+ef_alff_cbf.fwhm15.fsaverage5.asc")
+  alffCbf_data <- read.table(file_path, stringsAsFactors = FALSE)
+  rh_831_x_10242_matrix[subj,] <- t(alffCbf_data$V5)
+  
+}
+
+#append with demographics
+alffCbf_subjDemos_with_rh_831x10242 <- cbind(alffCbf_subjDemos, rh_831_x_10242_matrix)
+
+#write output
+write.table(alffCbf_subjDemos_with_rh_831x10242, file = "/project/imco/baller/results/alffCbf_subjDemos_with_rh_831x1
+0242.csv", sep = ",")
+
+####-----------------------------------------------------------------------------####
+####---------------------------End of Part 1- Making matrices---_----------------####
+####-----------------------------------------------------------------------------####
+
+#####################################################################################
+####                   Run regression, both left and right                       ####
+#####################################################################################
+
+#make easier to reference names
+lh_cbf_asl <- alffCbf_subjDemos_with_lh_831x10242 #can also read directly from files if you'd like
+rh_cbf_asl <- alffCbf_subjDemos_with_rh_831x10242
+
+
+#####################################################
+#                       lm/gams                     #
+#####################################################
+
+#initialize vectors for models
+
+hemis <- c("lh", "rh") #hemispheres
+models <- c("age", "sex", "age_sex", "accuracy", "mood", "psychopathology") #models of interest
+coeffs <- c("p", "t") #p or t value
+corrs <- c("uncor", "fdr") #correction
+
+for (hemi in hemis){
+  for (model in models) {
+    for (coeff in coeffs) {
+      for (corr in corrs) {
+        vector_init_cmd <- paste0(hemi, "_gam_", model, "_", coeff, "_", corrs, " <- vector(length = 10242)")
+        print(vector_init_cmd)
+        eval(parse(text=as.name(vector_init_cmd)))
+      }
+    }
+  }
+}
+
+
+#######################
+######## Left #########
+#######################
+
+#get # of items in df for calculation of column)
+numcolumns <- dim(lh_cbf_asl)[2]
+#run gams models and store info in respective vectors
+for (i in 1:10242) {
+  curcol = (numcolumns - 10243 + i) # will start you counting at the right part of the df
+  age_sex_model <- gam(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                         osex + s(ageAtScan1, k = 4, fx = T), data=lh_cbf_asl)
+  
+  age_sex_intx_model <- gam(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + osex + s(ageAtScan1, k = 4, fx = T) + s(ageAtScan1, by = osex, k= 4, fx = T), data=lh_cbf_asl)
+  
+  mood_model <- gam(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                      osex + s(ageAtScan1, k = 4, fx = T) + mood, data=lh_cbf_asl)
+  
+  psychopathology_model <- gam(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + osex + s(ageAtScan1, k = 4, fx = T) + overall_psychopathology, data=lh_cbf_asl)
+  
+  accuracy_model <- gam(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                          osex + s(ageAtScan1, k = 4, fx = T) + Overall_Accuracy, data=lh_cbf_asl)
+  
+  
+
+  
+  #put pvalue in it's appropriate lm
+  lh_gam_age_p_uncor[i] <- summary(age_sex_model)$s.table[1,4] #smooth term for ageAtScan1
+  lh_gam_sex_p_uncor[i] <- summary(age_sex_model)$p.table[4,4] #linear term
+  lh_gam_age_sex_p_uncor[i] <- summary(age_sex_intx_model)$s.table[2,4] #smooth term for interaction, this was changed
+  
+  lh_gam_mood_p_uncor[i] <- summary(mood_model)$p.table[5,4]
+  lh_gam_psychopathology_p_uncor[i] <- summary(psychopathology_model)$p.table[5,4]
+  lh_gam_accuracy_p_uncor[i] <- summary(accuracy_model)$p.table[5,4] #accuracy term
+  
+  #pull tvalue into its appropriate lm
+  lh_gam_age_t_uncor[i] <- summary(age_sex_model)$s.table[1,3] #smooth term for ageAtScan1
+  lh_gam_sex_t_uncor[i] <- summary(age_sex_model)$p.table[4,3] #linear term
+  lh_gam_age_sex_t_uncor[i] <- summary(age_sex_intx_model)$s.table[2,3] #smooth term fo interaction
+  
+  lh_gam_mood_t_uncor[i] <- summary(mood_model)$p.table[5,3]
+  lh_gam_psychopathology_t_uncor[i] <- summary(psychopathology_model)$p.table[5,3]
+  lh_gam_accuracy_t_uncor[i] <- summary(accuracy_model)$p.table[5,3] #accuracy term
+  
+}
+
+#####################
+###### RIGHT ########
+#####################
+
+
+#get # of items in df for calculation of column)
+numcolumns <- dim(rh_cbf_asl)[2]
+#run gams models and store info in respective vectors
+for (i in 1:10242) {
+  curcol = (numcolumns - 10243 + i) # will start you counting at the right part of the df
+  age_sex_model <- gam(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                         osex + s(ageAtScan1, k = 4, fx = T), data=rh_cbf_asl)
+  
+  age_sex_intx_model <- gam(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + osex + s(ageAtScan1, k = 4, fx = T) + s(ageAtScan1, by = osex, k = 4, fx = T), data=rh_cbf_asl)
+  
+  mood_model <- gam(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                      osex + s(ageAtScan1, k = 4, fx = T) + mood, data=rh_cbf_asl)
+  
+  psychopathology_model <- gam(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + osex + s(ageAtScan1, k = 4, fx = T) + overall_psychopathology, data=rh_cbf_asl)
+  
+  accuracy_model <- gam(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                          osex + s(ageAtScan1, k = 4, fx = T) + Overall_Accuracy, data=rh_cbf_asl)
+  
+  #put pvalue in it's appropriate lm
+  rh_gam_age_p_uncor[i] <- summary(age_sex_model)$s.table[1,4] #smooth term for ageAtScan1
+  rh_gam_sex_p_uncor[i] <- summary(age_sex_model)$p.table[4,4] #linear term
+  rh_gam_age_sex_p_uncor[i] <- summary(age_sex_intx_model)$s.table[2,4] #smooth term for interaction, this was changed
+  
+  rh_gam_mood_p_uncor[i] <- summary(mood_model)$p.table[5,4]
+  rh_gam_psychopathology_p_uncor[i] <- summary(psychopathology_model)$p.table[5,4]
+  rh_gam_accuracy_p_uncor[i] <- summary(accuracy_model)$p.table[5,4] #accuracy term
+  
+  #pull tvalue into its appropriate lm
+  rh_gam_age_t_uncor[i] <- summary(age_sex_model)$s.table[1,3] #smooth term for ageAtScan1
+  rh_gam_sex_t_uncor[i] <- summary(age_sex_model)$p.table[4,3] #linear term
+  rh_gam_age_sex_t_uncor[i] <- summary(age_sex_intx_model)$s.table[2,3] #smooth term for interaction
+  
+  rh_gam_mood_t_uncor[i] <- summary(mood_model)$p.table[5,3]
+  rh_gam_psychopathology_t_uncor[i] <- summary(psychopathology_model)$p.table[5,3]
+  rh_gam_accuracy_t_uncor[i] <- summary(accuracy_model)$p.table[5,3] #accuracy term
+  
+}
+#################################################################################
+#################################################################################
+
+#####################################################
+#                     results                       #
+#####################################################
+
+#### FDR correction ####
+for (hemi in hemis) {
+  for (model in models) {
+    hemi_model_p_unc <- paste0(hemi, "_gam_", model, "_p_uncor") 
+    hemi_model_p_fdr <- paste0(hemi, "_gam_", model, "_p_fdr")    
+
+    print(hemi_model_p_unc)
+    
+    #correct p values
+    pfdr <- eval(substitute(p.adjust(i, method="fdr"), list(i = as.name(hemi_model_p_unc))))
+    
+    #figure out which values are < 0.05 and add to pfdr matrix
+    pfdr <- as.data.frame(pfdr)
+    pfdr$sig <- ifelse(pfdr<0.05, 1, 0)
+    pfdr$sig_noNA <- ifelse(is.na(pfdr$sig), 0, pfdr$sig)
+    names(pfdr) <- c("pfdr", "sig05", "sig05_noNA")
+    hemi_model_p_fdr <- as.data.frame(pfdr[,2]) #sig05
+    
+   
+   
+    #multiply T values by fdr vector to get the list of Ts that are fdr corrected
+    hemi_model_t_unc <- paste0(hemi, "_gam_", model, "_t_uncor")
+    hemi_model_t_fdr <- paste0(hemi, "_gam_", model, "_t_fdr"
+                               )
+    t_df <- eval(substitute(as.data.frame(i), list(i = as.name(hemi_model_t_unc))))
+    names(t_df) <- c("tval")
+    t_df$tfdr <- pfdr[,3] * t_df$tval
+    hemi_model_t_fdr <- as.data.frame(t_df[,2])
+  
+    
+    #######################
+    #### write tables #####
+    #######################
+    
+    ## uncorrected ##
+    
+    ### p
+    filename <- paste0("/project/imco/baller/processed_data/regression_matrices_n831/", hemi_model_p_unc, ".csv")
+    write_table_command <- paste0("write.table(x = ", hemi_model_p_unc, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
+    eval(parse(text=write_table_command))
+    
+    ### t
+    
+    filename <- paste0("/project/imco/baller/processed_data/regression_matrices_n831/", hemi_model_t_unc, ".csv")
+    write_table_command <- paste0("write.table(x = ", hemi_model_t_unc, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
+    eval(parse(text=write_table_command))
+    
+    ## corrected ##
+    
+    ### p
+    filename <- paste0("/project/imco/baller/processed_data/regression_matrices_n831/", hemi, "_gam_", model, "_p_fdr05.csv")
+    write_table_command <- paste0("write.table(x = ", hemi_model_p_fdr, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
+    eval(parse(text=write_table_command))
+    
+    ### t
+    filename <- paste0("/project/imco/baller/processed_data/regression_matrices_n831/", hemi, "_gam_", model, "_t_fdr05.csv")
+    write_table_command <- paste0("write.table(x = ", hemi_model_t_fdr, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
+    eval(parse(text=write_table_command))
+    
+  }
+}
+
+```
+
+- wonder if it is because i changed my models so now they include less stuff
+
+  [x] i can run the crappy, meaty model and just see if age gives me back the old picture to test that hypothesis
+  [X] also realized my indexing of the matrix could be off by 1. numcol-10243 + i instead of numcolumns - 10242 + i. Have made the change. Submitted job at 16:41
+
+#### 20210120
+  [x] find out ways to make prettier
+  
+[] could coupling relate to aerobic glycolysis 
+
+  - what does bold index
+  - what does alff index
+  - are cbf/bold relationships indicative of aerobic glycolysis?
+
+[] other mechanisms of what coupling is
+  - generally, brain activity leads to a release in glutamate. Glutamate binds through mglutR on the astroctye, triggering a second messenger system -> LCP - IP3 -> ER -> Ca2+ release -> diffuses into smooth muscle (which astrocyte foot processes are on) -> activates nitric oxide synthase -> NO release -> smooth muscle vasodilation - > how you get your blood flow to match your brain activity. But controversy:
+  Clare Howarth: The exact mechanisms by which astrocytes are able to sense changes in neuronal activity and trigger the intracellular events regulating the resulting vascular response which underlies the fMRI BOLD signal remain unclear. Indeed, which pathway predominates may often result from the experimental model used. Other issues which remain to be solved are: what is the functional significance of astrocytic [Ca2+]i transients in awake animals? Under what circumstances are mGluR-mediated vasodilation and constriction important? What are the messengers underlying neurovascular coupling in healthy and diseased brain? Do slow astrocyte [Ca2+]i signals contribute to the sustained hemodynamic response? 
+  - also evidence that through eicosanoids, contraction can occur, so whichever signal is stronger defines the vasodilation/constriction
+  
+  V. Muoio: Experiments with induced hypoxia have shown that vasoconstriction or vasodilation are directly related to oxygen levels in the neuronal environment (Xu et al. 2004, Gordon et al. 2007, 2008). The onset of hypoxia induces an increase in extracellular lactate and adenosine surrounding NVUs, which reduce the production and action of prostaglandins, promoting a vasodilator response(Lee et al. 2011). Likewise, when the oxygen tension is high, the production of lactate by neurones decreases. This event leads to a higher bioavailability of prostaglandins, thus favouring vasoconstriction(Iadecola et al. 1993, 1995, Pillai et al. 2013). .. 
+   NO important. Production depends on: hypoxia, second messengers, noradrenaline, acetylcholine and hormones such as oestrogen (Krause et al. 2011, Lee et al. 2011). 
+   Pericytes also important
+  
+  
+ *** workflow ***
+ 
+  - write into make_regression_vectors_for_matlab_viz
+  - test it bit by bit in test_step_by_step.R [it works!!!]
+
+```{bash load_rstudio}
+
+#do this in xbash, run at beginning of session
+
+#from https://pennlinc.github.io/docs/pmacs#using-the-batch-system
+source  /project/bbl_projects/apps/default_modules.sh
+conda activate rstudio
+rstudio &
+
+```
+
+#how to actually run the bsub
+
+```{bash test_bsub.sh}
+source test_bsub.sh
+```
+
+
+```{r matrix_and_regressions_combo}
+#input: asc files, and pnc demographics, cnb, clinical files
+#output: 10242 length vector csvs with T and/or p values for vertex-wide regression
+#uses: goes vertex by vertex and does regression (coupling by age, sex, cognition, etc), pulls out T and p from these values and sticks it in a vector. The vector can then be used for visualization in matlab
+#dependencies: R (3.6.3 is my current default in pmacs)
+
+######################################
+### Initial construction 1/14/2021 ###
+######################################
+
+####################
+##### Summary ######
+####################
+
+#input: asc files, and pnc demographics, cnb, clinical files
+#output: 10242 length vector csvs with T and/or p values for vertex-wide regression
+#uses: goes vertex by vertex and does regression (coupling by age, sex, cognition, etc), pulls out T and p from these
+ values and sticks it in a vector. The vector can then be used for visualization in matlab
+#dependencies: R (3.6.3 is my current default in pmacs)
+
+####################
+###  Libraries   ###
+####################
+
+library(mgcv)
+library(dplyr)
+library(ggplot2)
+
+#####################################################################################
+####              Makes the 831x10242 matrices, both left and right              ####
+#####################################################################################
+
+# read in demos
+alffCbf_subjDemos <- read.csv("/project/imco/baller/subjectLists/n831_alff_cbf_finalSample_imageOrder.csv")
+
+#some verification preprocessing
+alffCbf_subjDemos$sex <- as.factor(alffCbf_subjDemos$sex)
+alffCbf_subjDemos$race <- as.factor(alffCbf_subjDemos$race)
+alffCbf_subjDemos$race2 <- as.factor(alffCbf_subjDemos$race2)
+
+#add osex category for use in gam later
+alffCbf_subjDemos$osex <- ordered(alffCbf_subjDemos$sex)
+
+#add psych bifactor scores
+psych <- read.csv("/project/imco/pnc/clinical/n1601_goassess_itemwise_bifactor_scores_20161219.csv", header = TRUE)
+
+#remove 4factorv2 from title
+names(psych) <-gsub("_4factorv2", "", names(psych))
+
+#merge
+alffCbf_subjDemos <- merge(alffCbf_subjDemos, psych, by = "bblid")
+
+#cognitive data
+cog <- read.csv("/project/imco/pnc/cnb/n1601_cnb_factor_scores_tymoore_20151006.csv")
+cog <- subset(cog, select = c("bblid", "Overall_Efficiency", "Overall_Accuracy", "Overall_Speed"))
+
+#merge
+alffCbf_subjDemos <- merge(alffCbf_subjDemos, cog, by = "bblid")
+
+#drop the scanid.y
+alffCbf_subjDemos <- subset(alffCbf_subjDemos, select = -scanid.y)
+
+#rename scanid.x to scanid
+names(alffCbf_subjDemos) <- gsub("scanid.x", "scanid", names(alffCbf_subjDemos)) 
+
+#make list of bblid/scanid
+bblid_scanid <- paste0(alffCbf_subjDemos$bblid, "_", alffCbf_subjDemos$datexscanid)
+
+#####################
+##### Left Side #####
+#####################
+
+#initiate matrix for storage
+lh_831_x_10242_matrix <- matrix(nrow = 831, ncol = 10242)
+
+#go through each subject, grab 5th column in asc, transpose and stick in matrix
+# output is 831 x 10242 matrix
+for (subj in 1:831) {
+  
+  bblid <- alffCbf_subjDemos$bblid[subj]
+  datexscanid <- alffCbf_subjDemos$datexscanid[subj]
+  file_path <- paste0("/project/imco/couplingSurfaceMaps/alffCbf/lh/stat/", bblid, "_", datexscanid, "_lh.coupling_co
+ef_alff_cbf.fwhm15.fsaverage5.asc")
+  alffCbf_data <- read.table(file_path, stringsAsFactors = FALSE)
+  lh_831_x_10242_matrix[subj,] <- t(alffCbf_data$V5)
+  
+}
+
+#append with demographics
+alffCbf_subjDemos_with_lh_831x10242 <- cbind(alffCbf_subjDemos, lh_831_x_10242_matrix)
+
+#write output
+write.table(alffCbf_subjDemos_with_lh_831x10242, file = "/project/imco/baller/results/alffCbf_subjDemos_with_lh_831x1
+0242.csv", sep = ",")
+
+#####################
+#### Right Side #####
+#####################
+#initiate matrix for storage
+rh_831_x_10242_matrix <- matrix(nrow = 831, ncol = 10242)
+
+#go through each subject, grab 5th column in asc, transpose and stick in matrix
+# output is 831 x 10242 matrix
+for (subj in 1:831) {
+  
+  bblid <- alffCbf_subjDemos$bblid[subj]
+  datexscanid <- alffCbf_subjDemos$datexscanid[subj]
+  file_path <- paste0("/project/imco/couplingSurfaceMaps/alffCbf/rh/stat/", bblid, "_", datexscanid, "_rh.coupling_co
+ef_alff_cbf.fwhm15.fsaverage5.asc")
+  alffCbf_data <- read.table(file_path, stringsAsFactors = FALSE)
+  rh_831_x_10242_matrix[subj,] <- t(alffCbf_data$V5)
+  
+}
+
+#append with demographics
+alffCbf_subjDemos_with_rh_831x10242 <- cbind(alffCbf_subjDemos, rh_831_x_10242_matrix)
+
+#write output
+write.table(alffCbf_subjDemos_with_rh_831x10242, file = "/project/imco/baller/results/alffCbf_subjDemos_with_rh_831x1
+0242.csv", sep = ",")
+
+####-----------------------------------------------------------------------------####
+####---------------------------End of Part 1- Making matrices---_----------------####
+####-----------------------------------------------------------------------------####
+
+#####################################################################################
+####                   Run regression, both left and right                       ####
+#####################################################################################
+
+#make easier to reference names
+lh_cbf_asl <- alffCbf_subjDemos_with_lh_831x10242 #can also read directly from files if you'd like
+rh_cbf_asl <- alffCbf_subjDemos_with_rh_831x10242
+
+
+#####################################################
+#                       lm/gams                     #
+#####################################################
+
+#initialize vectors for models
+
+hemis <- c("lh", "rh") #hemispheres
+models <- c("age", "sex", "age_sex", "accuracy", "mood", "psychopathology") #models of interest
+coeffs <- c("p", "t") #p or t value
+corrs <- c("uncor", "fdr") #correction
+
+for (hemi in hemis){
+  for (model in models) {
+    for (coeff in coeffs) {
+      for (corr in corrs) {
+        vector_init_cmd <- paste0(hemi, "_gam_", model, "_", coeff, "_", corrs, " <- vector(length = 10242)")
+        print(vector_init_cmd)
+        eval(parse(text=as.name(vector_init_cmd)))
+      }
+    }
+  }
+}
+
+#make linear models as well
+for (hemi in hemis) {
+  for (coeff in coeffs) {
+    for (corr in corrs) {
+      vector_init_cmd <- paste0(hemi, "_lm_age_", coeff, "_", corrs, "<- vector(length= 10242)")
+      eval(parse(text=as.name(vector_init_cmd)))
+    }
+  }
+}
+
+
+#######################
+######## Left #########
+#######################
+
+#get # of items in df for calculation of column)
+numcolumns <- dim(lh_cbf_asl)[2]
+#run gams models and store info in respective vectors
+for (i in 1:10242) {
+  curcol = (numcolumns - 10242 + i) # will start you counting at the right part of the df
+  age_sex_model <- gam(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                         osex + s(ageAtScan1, k = 4, fx = T), data=lh_cbf_asl)
+  
+  age_sex_intx_model <- gam(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                              osex + s(ageAtScan1, k = 4, fx = T) + s(ageAtScan1, by = osex, k = 4, fx = T), data=lh_
+cbf_asl)
+  
+  mood_model <- gam(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                      osex + s(ageAtScan1, k = 4, fx = T) + mood, data=lh_cbf_asl)
+  
+  psychopathology_model <- gam(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                                 osex + s(ageAtScan1, k = 4, fx = T) + overall_psychopathology, data=lh_cbf_asl)
+  
+  accuracy_model <- gam(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                          osex + s(ageAtScan1, k = 4, fx = T) + Overall_Accuracy, data=lh_cbf_asl)
+  
+  
+  age_lm_model <- lm(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1, 
+                     data=lh_cbf_asl)
+  
+  #put pvalue in it's appropriate lm
+  lh_gam_age_p_uncor[i] <- summary(age_sex_model)$s.table[1,4] #smooth term for ageAtScan1
+  lh_gam_sex_p_uncor[i] <- summary(age_sex_model)$p.table[4,4] #linear term
+  lh_gam_age_sex_p_uncor[i] <- summary(age_sex_intx_model)$s.table[2,4] #smooth term for interaction, this was change
+d
+  
+  lh_gam_mood_p_uncor[i] <- summary(mood_model)$p.table[5,4]
+  lh_gam_psychopathology_p_uncor[i] <- summary(psychopathology_model)$p.table[5,4]
+  lh_gam_accuracy_p_uncor[i] <- summary(accuracy_model)$p.table[5,4] #accuracy term
+  
+  #lm age
+  lh_lm_age_p_uncor[i] <- summary(age_lm_model)$coeff[4,4]
+  
+  #pull tvalue into its appropriate lm
+  lh_gam_age_t_uncor[i] <- summary(age_sex_model)$s.table[1,3] #smooth term for ageAtScan1
+  lh_gam_sex_t_uncor[i] <- summary(age_sex_model)$p.table[4,3] #linear term
+  lh_gam_age_sex_t_uncor[i] <- summary(age_sex_intx_model)$s.table[2,3] #smooth term for interaction
+  
+  lh_gam_mood_t_uncor[i] <- summary(mood_model)$p.table[5,3]
+  lh_gam_psychopathology_t_uncor[i] <- summary(psychopathology_model)$p.table[5,3]
+  lh_gam_accuracy_t_uncor[i] <- summary(accuracy_model)$p.table[5,3] #accuracy term
+  
+  #lm age
+  lh_lm_age_t_uncor[i] <- summary(age_lm_model)$coeff[4,3]
+}
+
+#####################
+###### RIGHT ########
+#####################
+
+
+#get # of items in df for calculation of column)
+numcolumns <- dim(rh_cbf_asl)[2]
+#run gams models and store info in respective vectors
+for (i in 1:10242) {
+  curcol = (numcolumns - 10242 + i) # will start you counting at the right part of the df
+  age_sex_model <- gam(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                         osex + s(ageAtScan1, k = 4, fx = T), data=rh_cbf_asl)
+  
+  age_sex_intx_model <- gam(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                              osex + s(ageAtScan1, k = 4, fx = T) + s(ageAtScan1, by = osex, k = 4, fx = T), data=rh_
+cbf_asl)
+  
+  mood_model <- gam(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                      osex + s(ageAtScan1, k = 4, fx = T) + mood, data=rh_cbf_asl)
+  
+  psychopathology_model <- gam(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                                 osex + s(ageAtScan1, k = 4, fx = T) + overall_psychopathology, data=rh_cbf_asl)
+  
+  accuracy_model <- gam(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                          osex + s(ageAtScan1, k = 4, fx = T) + Overall_Accuracy, data=rh_cbf_asl)
+  
+  
+  age_lm_model <- lm(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1, data=rh_cbf_asl
+)
+ 
+   #put pvalue in it's appropriate lm
+  rh_gam_age_p_uncor[i] <- summary(age_sex_model)$s.table[1,4] #smooth term for ageAtScan1
+  rh_gam_sex_p_uncor[i] <- summary(age_sex_model)$p.table[4,4] #linear term
+  rh_gam_age_sex_p_uncor[i] <- summary(age_sex_intx_model)$s.table[2,4] #smooth term for interaction, this was change
+d
+  
+  rh_gam_mood_p_uncor[i] <- summary(mood_model)$p.table[5,4]
+  rh_gam_psychopathology_p_uncor[i] <- summary(psychopathology_model)$p.table[5,4]
+  rh_gam_accuracy_p_uncor[i] <- summary(accuracy_model)$p.table[5,4] #accuracy term
+  
+  #lm age
+  rh_lm_age_p_uncor[i] <- summary(age_lm_model)$coeff[4,4]
+  
+  #pull tvalue into its appropriate lm
+  rh_gam_age_t_uncor[i] <- summary(age_sex_model)$s.table[1,3] #smooth term for ageAtScan1
+  rh_gam_sex_t_uncor[i] <- summary(age_sex_model)$p.table[4,3] #linear term
+  rh_gam_age_sex_t_uncor[i] <- summary(age_sex_intx_model)$s.table[2,3] #smooth term for interaction
+  
+  rh_gam_mood_t_uncor[i] <- summary(mood_model)$p.table[5,3]
+  rh_gam_psychopathology_t_uncor[i] <- summary(psychopathology_model)$p.table[5,3]
+  rh_gam_accuracy_t_uncor[i] <- summary(accuracy_model)$p.table[5,3] #accuracy term
+  
+  #lm age
+  rh_lm_age_t_uncor[i] <- summary(age_lm_model)$coeff[4,3]
+}
+#################################################################################
+#################################################################################
+
+#####################################################
+#                     results                       #
+#####################################################
+
+#### FDR correction ####
+for (hemi in hemis) {
+  for (model in models) {
+    hemi_model_p_unc <- paste0(hemi, "_gam_", model, "_p_uncor") 
+    hemi_model_p_fdr <- paste0(hemi, "_gam_", model, "_p_fdr")    
+
+    print(hemi_model_p_unc)
+    
+    #correct p values
+    pfdr <- eval(substitute(p.adjust(i, method="fdr"), list(i = as.name(hemi_model_p_unc))))
+    
+    #figure out which values are < 0.05 and add to pfdr matrix
+    pfdr <- as.data.frame(pfdr)
+    pfdr$sig <- ifelse(pfdr<0.05, 1, 0)
+    pfdr$sig_noNA <- ifelse(is.na(pfdr$sig), 0, pfdr$sig)
+    names(pfdr) <- c("pfdr", "sig05", "sig05_noNA")
+    hemi_model_p_fdr <- as.data.frame(pfdr[,1]) #sig05
+    
+   
+   
+    #multiply T values by fdr vector to get the list of Ts that are fdr corrected
+    hemi_model_t_unc <- paste0(hemi, "_gam_", model, "_t_uncor")
+    hemi_model_t_fdr <- paste0(hemi, "_gam_", model, "_t_fdr"
+                               )
+    t_df <- eval(substitute(as.data.frame(i), list(i = as.name(hemi_model_t_unc))))
+    names(t_df) <- c("tval")
+    t_df$tfdr <- pfdr[,3] * t_df$tval
+    hemi_model_t_fdr <- as.data.frame(t_df[,2])
+  
+    
+    #######################
+    #### write tables #####
+    #######################
+    
+    ## uncorrected ##
+    
+    ### p
+    filename <- paste0("/project/imco/baller/processed_data/regression_matrices_n831/", hemi_model_p_unc, ".csv")
+    write_table_command <- paste0("write.table(x = ", hemi_model_p_unc, ", file = \"", filename,"\", row.names = FALS
+E, col.names = FALSE)")
+    eval(parse(text=write_table_command))
+    
+    ### t
+    
+    filename <- paste0("/project/imco/baller/processed_data/regression_matrices_n831/", hemi_model_t_unc, ".csv")
+    write_table_command <- paste0("write.table(x = ", hemi_model_t_unc, ", file = \"", filename,"\", row.names = FALS
+E, col.names = FALSE)")
+    eval(parse(text=write_table_command))
+    
+    ## corrected ##
+    
+    ### p
+    filename <- paste0("/project/imco/baller/processed_data/regression_matrices_n831/", hemi, "_gam_", model, "_p_fdr
+05.csv")
+    write_table_command <- paste0("write.table(x = ", hemi_model_p_fdr, ", file = \"", filename,"\", row.names = FALS
+E, col.names = FALSE)")
+    eval(parse(text=write_table_command))
+    
+    ### t
+    filename <- paste0("/project/imco/baller/processed_data/regression_matrices_n831/", hemi, "_gam_", model, "_t_fdr
+05.csv")
+    write_table_command <- paste0("write.table(x = ", hemi_model_t_fdr, ", file = \"", filename,"\", row.names = FALS
+E, col.names = FALSE)")
+    eval(parse(text=write_table_command))
+    
+  }
+}
+
+###### age linear model alone #####
+
+#### FDR correction ####
+for (hemi in hemis) {
+    hemi_model_p_unc <- paste0(hemi, "_lm_age_p_uncor") 
+    hemi_model_p_fdr <- paste0(hemi, "_lm_age_p_fdr")    
+    
+    print(hemi_model_p_unc)
+    
+    #correct p values
+    pfdr <- eval(substitute(p.adjust(i, method="fdr"), list(i = as.name(hemi_model_p_unc))))
+    
+    #figure out which values are < 0.05 and add to pfdr matrix
+    pfdr <- as.data.frame(pfdr)
+    pfdr$sig <- ifelse(pfdr<0.05, 1, 0)
+    pfdr$sig_noNA <- ifelse(is.na(pfdr$sig), 0, pfdr$sig)
+    names(pfdr) <- c("pfdr", "sig05", "sig05_noNA")
+    hemi_model_p_fdr <- as.data.frame(pfdr[,1]) #sig05
+    
+    
+    
+    #multiply T values by fdr vector to get the list of Ts that are fdr corrected
+    hemi_model_t_unc <- paste0(hemi, "_lm_age_t_uncor")
+    hemi_model_t_fdr <- paste0(hemi, "_lm_age_t_fdr")
+    t_df <- eval(substitute(as.data.frame(i), list(i = as.name(hemi_model_t_unc))))
+    names(t_df) <- c("tval")
+    t_df$tfdr <- pfdr[,3] * t_df$tval
+    hemi_model_t_fdr <- as.data.frame(t_df[,2])
+    
+    
+    #######################
+    #### write tables #####
+    #######################
+    
+    ## uncorrected ##
+    
+    ### p
+    filename <- paste0("/project/imco/baller/processed_data/regression_matrices_n831/", hemi_model_p_unc, ".csv")
+    write_table_command <- paste0("write.table(x = ", hemi_model_p_unc, ", file = \"", filename,"\", row.names = FALS
+E, col.names = FALSE)")
+    eval(parse(text=write_table_command))
+    
+    ### t
+    
+    filename <- paste0("/project/imco/baller/processed_data/regression_matrices_n831/", hemi_model_t_unc, ".csv")
+    write_table_command <- paste0("write.table(x = ", hemi_model_t_unc, ", file = \"", filename,"\", row.names = FALS
+E, col.names = FALSE)")
+    eval(parse(text=write_table_command))
+    
+    ## corrected ##
+    
+    ### p
+    filename <- paste0("/project/imco/baller/processed_data/regression_matrices_n831/", hemi, "_lm_age_p_fdr05.csv")
+    write_table_command <- paste0("write.table(x = ", hemi_model_p_fdr, ", file = \"", filename,"\", row.names = FALS
+E, col.names = FALSE)")
+    eval(parse(text=write_table_command))
+    
+    ### t
+    filename <- paste0("/project/imco/baller/processed_data/regression_matrices_n831/", hemi, "_lm_age_t_fdr05.csv")
+    write_table_command <- paste0("write.table(x = ", hemi_model_t_fdr, ", file = \"", filename,"\", row.names = FALS
+E, col.names = FALSE)")
+    eval(parse(text=write_table_command))
+}
+
+
+```
+
+```{r matlab_t_code}
+function PBP_vertWiseEffect_Erica(LH,RH,name)% pretty picture code, AAB 4/2018 - AP 5/1/20 - Updated to threshold acc
+ording to input - 1/12/21
+% data should be vectors, 10242 in length if fsaverage5 is used
+% if using higher resolution, then change accordingly
+% depencies include: matlab freesrufer functions, subaxis.m (matlab central), inferno color scale (matlab central - f
+or Sam ;)
+
+%%% SET THRESHOLDS AS DESIRED HERE: only fill in each threshold as needed (no need to set both if you only want to th
+reshold one end)
+% Values at or above this set to gray
+%Uthresh=-2;
+% Values at or below this set to gray
+ LThresh=2;
+%%%
+
+
+addpath(genpath('/appl/freesurfer-6.0.0/matlab/'));
+addpath(genpath('/project/imco/baller/scripts/subaxis/'));
+addpath(genpath('/project/imco/baller/scripts/Colormaps/Colormaps (5)/Colormaps/'));
+%{
+addpath(genpath('/cbica/projects/alpraz_EI/scripts/tools/'));
+ProjectFolder = '/cbica/projects/pinesParcels/data/SingleParcellation';
+SubjectsFolder = '/cbica/software/external/freesurfer/centos7/5.3.0/subjects/fsaverage5';
+%}
+
+plot_text='';
+[vertices, faces] = freesurfer_read_surf('/project/imco/surfaces/fsaverage5/surf/lh.inflated');
+%using lh.gray will make more anatomical looking plot but harder to see into sulci
+right = readtable(RH,'TreatAsEmpty','NA','ReadVariableNames',false);
+datar = table2array(right);
+left = readtable(LH,'TreatAsEmpty','NA','ReadVariableNames',false);
+datal = table2array(left);
+
+%left=load(LHvec);
+%right=load(RHvec);
+%datal=left;
+%datar=right;
+minval = min(min(datal),min(datar)) %useful for colorbar later	
+
+%set NaN to 0
+%I generally have the midcut region set to NaN
+%in the csv files that I read in
+indexNaNrh = find(isnan(datar));
+indexNaNlh = find(isnan(datal));
+datar(indexNaNrh)=0;
+datal(indexNaNlh)=0;
+datalr=[datal; datar];
+%invoke thresholding 1/12/21
+if exist('Uthresh','Var') == 1;
+	AboveThresh= datalr > Uthresh;
+	datalr(AboveThresh)=0;
+end
+if exist('LThresh','Var') ==1;
+	BelowThresh= datalr < LThresh;
+	datalr(BelowThresh)=0;
+end
+%%% set color scale
+% 1/12/21 - for p values, visualizing 1/p might be more effective. comment out line below and  uncomment subsequent l
+ine to nix this approach.
+%datalr=1./datalr;
+
+
+% 12/1/21 tiny bit of code to deal with 1/0 in matlab
+InfIndex=find(datalr==Inf);
+% Infinity values to 0
+datalr(InfIndex)=0;
+
+%AP% set to make white zero on all maps
+maxabs=prctile(abs(datalr),88);
+%mincol= minval-.00001 
+%maxcol=maxabs
+%mincol=-maxabs
+maxcol=max(datalr)
+mincol=min(datalr)
+%change above to set max/min manually or by other means
+%custommap=colormap('plasma'); %or whatever
+% for white at 0
+%custommap=colormap(b2r(-1,1));
+%custommap=colormap('jet');
+custommap=colormap('plasma')
+custommap(1,:)=[0.75 0.75 0.75];
+
+
+data=datalr(1:10242);
+asub = subaxis(4,2,1, 'sh', 0, 'sv', 0, 'padding', 0, 'margin', 0);
+%asub = subplot(4,2,1)
+% note use of subaxis is to ged rid of white space around brains 
+% if you don't care about that, it's faster and less likely to cause
+% issues if you use subplot instead
+% if so, bet rid of all of the posnew stuff below
+
+aplot = trisurf(faces, vertices(:,1), vertices(:,2), vertices(:,3),data)
+view([90 0]);
+colormap(custommap)
+caxis([mincol; maxcol]);
+daspect([1 1 1]);
+axis tight;
+axis vis3d off;
+lighting gouraud; %phong; 
+material metal %shiny %metal; 
+shading flat;
+camlight;
+alpha(1)
+
+asub = subaxis(4,2,3, 'sh', 0.00, 'sv', 0.00, 'padding', 0, 'margin', 0);
+aplot = trisurf(faces, vertices(:,1), vertices(:,2), vertices(:,3),data)
+view([90 0]);
+rotate(aplot, [0 0 1], 180)
+colormap(custommap)
+caxis([mincol; maxcol]);
+daspect([1 1 1]);
+axis tight;
+axis vis3d off;
+lighting gouraud; %phong; 
+material metal %shiny %metal; 
+shading flat;
+camlight;
+alpha(1)
+set(gcf,'Color','w')
+
+asub = subaxis(4,2,5, 'sh', 0.0, 'sv', 0.0, 'padding', 0, 'margin', 0);
+aplot = trisurf(faces, vertices(:,1), vertices(:,2), vertices(:,3),data)
+view([90 0]);
+rotate(aplot, [0 0 1], 225)
+colormap(custommap)
+caxis([mincol; maxcol]);
+daspect([1 1 1]);
+axis tight;
+axis vis3d off;
+lighting gouraud; %phong; 
+material metal %shiny %metal; 
+shading flat;
+camlight;
+alpha(1)
+set(gcf,'Color','w')
+
+asub = subaxis(4,2,7, 'sh', 0.0, 'sv', 0.0, 'padding', 0, 'margin', 0, 'MT', 0.0);
+aplot = trisurf(faces, vertices(:,1), vertices(:,2), vertices(:,3),data)
+view([90 0]);
+axis vis3d off;
+rotate(aplot, [0 1 0], 270)
+colormap(custommap)
+caxis([mincol; maxcol]);
+daspect([1 1 1]);
+axis tight;
+lighting gouraud; %phong; 
+material metal %shiny %metal; 
+shading flat;
+camlight;
+alpha(1)
+set(gcf,'Color','w')
+
+ pos = get(asub, 'Position');
+ posnew = pos; posnew(2) = posnew(2) + 0.04; set(asub, 'Position', posnew);
+ %white space again
+
+%plot title 
+title(plot_text)
+set(get(gca,'title'),'Position',[332 119 3])
+
+%%% right hemisphere
+data=datalr(10243:20484);
+
+[vertices, faces] = freesurfer_read_surf('/project/imco/surfaces/fsaverage5/surf/rh.inflated');
+
+asub = subaxis(4,2,2, 'sh', 0.0, 'sv', 0.0, 'padding', 0, 'margin', 0);
+aplot = trisurf(faces, vertices(:,1), vertices(:,2), vertices(:,3),data)
+view([90 0]);
+rotate(aplot, [0 0 1], 180)
+colormap(custommap)
+caxis([mincol; maxcol]);
+%caxis([NAval; max_data])
+daspect([1 1 1]);
+axis tight;
+axis vis3d off;
+lighting phong; %gouraud
+material metal %shiny %metal; 
+shading flat;
+camlight;
+alpha(1)
+%colormap(mycol)
+
+
+ pos = get(asub, 'Position');
+ posnew = pos; posnew(1) = posnew(1) - 0.22; set(asub, 'Position', posnew);
+
+asub = subaxis(4,2,4, 'sh', 0.0, 'sv', 0.0, 'padding', 0, 'margin', 0);
+aplot = trisurf(faces, vertices(:,1), vertices(:,2), vertices(:,3),data)
+view([90 0]);
+colormap(custommap)
+caxis([mincol; maxcol]);
+daspect([1 1 1]);
+axis tight;
+axis vis3d off;
+lighting gouraud; %phong; 
+material metal %shiny %metal; 
+shading flat;
+camlight;
+alpha(1)
+set(gcf,'Color','w')
+ pos = get(asub, 'Position');
+ posnew = pos; posnew(1) = posnew(1) - 0.22; set(asub, 'Position', posnew);
+
+asub = subaxis(4,2,6, 'sh', 0.0, 'sv', 0.0, 'padding', 0, 'margin', 0);
+
+aplot = trisurf(faces, vertices(:,1), vertices(:,2), vertices(:,3),data)
+view([90 0]);
+rotate(aplot, [0 0 1], -45)
+colormap(custommap)
+caxis([mincol; maxcol]);
+daspect([1 1 1]);
+axis tight;
+axis vis3d off;
+lighting gouraud; %phong; 
+material metal %shiny %metal; 
+shading flat;
+camlight;
+alpha(1)
+set(gcf,'Color','w')
+ pos = get(asub, 'Position');
+ posnew = pos; posnew(1) = posnew(1) - 0.22; set(asub, 'Position', posnew);
+
+
+%%%
+asub = subaxis(4,2,8, 'sh', 0.0, 'sv', 0.0, 'padding', 0, 'margin', 0);
+
+aplot = trisurf(faces, vertices(:,1), vertices(:,2), vertices(:,3),data)
+view([90 0]);
+axis vis3d off;
+rotate(aplot, [0 1 0], 270)
+rotate(aplot, [1 0 0], 180)
+colormap(custommap)
+caxis([mincol; maxcol]);
+daspect([1 1 1]);
+axis tight;
+lighting gouraud; %phong; 
+material metal %shiny %metal; 
+shading flat;
+camlight;
+alpha(1)
+%set(gcf,'Color',[.2 .2 .2])
+set(gcf,'Color',[1,1,1])
+ pos = get(asub, 'Position');
+ posnew = pos; posnew(2) = posnew(2) + 0.04; set(asub, 'Position', posnew);
+ pos = get(asub, 'Position');
+ posnew = pos; posnew(1) = posnew(1) - 0.22; set(asub, 'Position', posnew);
+%%%
+
+
+acbar = colorbar('EastOutside')
+set(acbar, 'position', [0.40 0.270 0.02 0.20])
+
+
+% going lower rez for now, but giant vector rendering was beaut
+print('-dpng','-r600',['~/' char(name)])
+```
+
+
+- linear model 
+  - saved 
+  
+#### 20210121
+
+[x] do speed, efficiency?
+[x] also do linear accuracy models to see directionality of models
+[x] take out fx=T from gams - have copied test_step_by_step.R to fx_F.R and also made fx_f wrappers (test_bsub_fx_F.sh and test_wrapper_fx_F.sh)
+[x] lower accuracy threshold, do uncorrected
+
+```{bash git}
+ssh -Y eballer@sciget.pmacs.upenn.edu
+cd /project/imco/baller/git/imco_pmacs #this contains all the scripts
+git add .
+git commit -m "first commit"
+git push origin main
+#can also try
+cd /project/imco/baller/git/imco_pmacs
+source /project/imco/baller/scripts/git_script
+
+```
+
+
+#### 20210128
+
+[x] git!!!
+[x] subset and look at whether estrogen affects coupling
+
+[x] BCP
+
+  - move spreadsheets and change script names
+```{bash}
+cd /Users/eballer/BBL/BCP/results
+scp sample_age_matched_with_bcp_doses.csv eballer@transfer.pmacs.upenn.edu:/project/imco/baller/subjectLists/.
+cd /Users/eballer/BBL/BCP/results/data
+scp n1601_health_with_meds_20170421.csv eballer@transfer.pmacs.upenn.edu:/project/imco/baller/subjectLists/.
+scp -r hormone_data eballer@transfer.pmacs.upenn.edu:/project/imco/baller/subjectLists/.
+
+###### on pmacs
+cd /project/imco/baller/scripts
+cp test_step_by_step.R bcp_cbf_alff_coupling.R
+```
+
+  
+  - update bcp_cbf_alff_coupling.R
+```{r}
+### on pmacs
+xbash
+rstudio &
+  
+```
+  
+#### 20210209
+[x] read read read!, start thinking about that intro!
+[x] get remote paths so I can do my r stuff on local rstudio but on pmacs
+[x] reach out to adam re: yeo networks and spin test-
+higher coupling, higher accuracy in default mode 
+  - overlay results on yeo 7 
+    \* adam made script, will have to adapt to pmacs
+  - see where lines up visually
+    \* make a 10242 vector that only contains the Yeo network numbers (1-7) and use my visualization script with color jet.       \* Then, just make this picture 50% opacity to overlay on top of my T maps and voila, visual images.
+  - then get # sig vertices in each network and then spin. Are there are more significant vertices in a network than expected
+ 
+[x] IMCO
+  [x] do all psychopathology scores separately and look for ones that correct - all in the same model
+          script: /project/imco/baller/scripts/psychopathology_models.R
+          model: gam(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                                 osex + s(ageAtScan1, k = 4, fx = T) + overall_psychopathology + mood + psychosis + externalizing + phobias, data=rh_cbf_asl)
+          results: /project/imco/baller/results/psychopathology/
+          - *** MAKE SURE TO CHANGE THE HOME DIRECTORY BEFORE RUNNING ***
+  
+  
+  [x] do each accuracy measure separately (3), they are collinear, do them in their own models
+  
+          script: /project/imco/baller/scripts/accuracy_and_efficiency_models_fx_T.R
+          model: each accuracy/efficiency measure individually: 
+              ex: complex_res_efficiency_model <- gam(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + osex + s(ageAtScan1, k = 4, fx = T) + F1_Complex_Reasoning_Efficiency, data=lh_cbf_asl)
+          results: /project/imco/baller/results/accuracy_and_efficiency/
+          
+                 - *** MAKE SURE TO CHANGE THE HOME DIRECTORY BEFORE RUNNING ***
+  [x] do efficiency in their own models
+  
+  [x] Pictures displayed are all from linear models, not gams. gams look the same. 
+  
+  
+  
+#### 20210210
+
+[x] copied Adam's yeo script to pmacs
+
+ - located in /project/imco/baller/scripts/calc_net_grad_vals_Schef.m
+ 
+[x] downloaded yeo networks
+
+  - location: https://github.com/ThomasYeoLab/CBIG/tree/master/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal/Parcellations/FreeSurfer5.3/fsaverage5/label
+  
+[x] for intro/discussion
+    - visualize average cbf map, average alff map, average coupling map, and aerobic coupling map
+    - spin test could be later
+    - actually correlating could be later or not at all.
+  
+
+ 
+```{bash}
+
+ssh -Y eballer@scisub.pmacs.upenn.edu
+xbash
+
+#moved the files from chead
+cd /data/jux/BBL/projects/coupling/surfaceMaps/alff/
+
+#make new directories
+mkdir alff_for_pmacs
+ls */*/*_lh_fs5_surf.mgh >! lh_fs5_mgh_files
+ls */*/*_rh_fs5_surf.mgh >! rh_fs5_mgh_files
+
+#loop through file, copy into alff_for_pmacs
+foreach x (`cat lh_fs5_mgh_files`)
+cp $x alff_for_pmacs/.
+end
+
+foreach x (`cat rh_fs5_mgh_files`)
+cp $x alff_for_pmacs/.
+end
+
+#scp these directories to pmacs
+scp -r alff_for_pmacs eballer@transfer.pmacs.upenn.edu:/project/imco/surfaceMaps/.
+
+#repeat for cbf
+cd /data/jux/BBL/projects/coupling/surfaceMaps/cbf/
+
+#make new directories
+mkdir cbf_for_pmacs
+ls */*/*_lh_fs5_surf.mgh >! lh_fs5_mgh_files
+ls */*/*_rh_fs5_surf.mgh >! rh_fs5_mgh_files
+
+#loop through file, copy into alff_for_pmacs
+foreach x (`cat lh_fs5_mgh_files`)
+cp $x cbf_for_pmacs/.
+end
+
+foreach x (`cat rh_fs5_mgh_files`)
+cp $x cbf_for_pmacs/.
+end
+
+#scp these directories to pmacs
+scp -r cbf_for_pmacs eballer@transfer.pmacs.upenn.edu:/project/imco/surfaceMaps/.
+
+#change names to reflect they are FROM chead
+mv cbf_for_pmacs cbf_from_chead
+mv alff_for_pmacs alff_from_chead
+
+#convert mgh files to ascii
+cd /project/imco/baller/scripts
+csh convert_to_ascii.csh
+
+#made new directories
+#from /project/imco/
+mkdir /baller/scripts/alff
+mkdir /baller/scripts/cbf
+mkdir /baller/processed_data/alff_matrices/
+mkdir /baller/processed_data/cbf_matrices/
+mkdir /baller/results/alff_age_and_sex
+mkdir /baller/results/alff_accuracy
+mkdir /baller/results/cbf_age_and_sex
+mkdir /baller/results/cbf_accuracy
+
+#copy fx_T.R to become alff_age_sex_fx_T.R
+cp /baller/scripts/fx_T.R baller/scripts/alff/alff_age_and_sex_fx_T.R
+
+#edit to give it paths to surface maps as well as to simplify code
+
+#copy bsub and wrapper
+cp baller/scripts/test_bsub.sh baller/scripts/alff/alff_age_and_sex_fx_T_bsub.sh
+cp baller/scripts/test_wrapper.sh baller/scripts/alff/alff_age_and_sex_fx_T_wrapper.sh
+
+#edit these files
+ #run
+
+#repeat all with cbf
+
+```
+    
+      - location of surfaces: /project/imco/surfaceMaps/<bblid>/<datexscanid>/surf/[lh,rh].[alff,cbf].fsaverage5.asc
+      - 
+    [x ] rerun coupling excluding kids with meds. - don't need to. This group does not contain people on meds anyway
+  
+#### 20210212 
+  [x] Last analyses/analyses for paper
+    [x] age, sex, and executive accuracy - done
+    [x ] age, sex, exec accuracy for cbf and alff for components
+      [x] alff age and sex
+          - age looks normal, basically nothing in sex differences. is there something wrong?
+      [x] cbf age and sex
+      [x] alff accuracy
+      [x] cbf accuracy
+ [x] loosing a lot of display signal because I am only looking at positive stuff - will try to amend adam's script to look at pos and neg correlations- 
+  - solution: new PBP script: PBP_vertWiseEffect_Erica_Ts_pos_and_neg.m
+ [x] found an error - some lm renamed as gam 
+ [x] reran, images for tuesday
+
+```{bash}
+#new directories
+cd /project/imco/baller/scripts
+mkdir alff cbf coupling
+cd alff
+#accuracy scripts all contain age and sex, so you only need to run those
+source alff_accuracy_fx_T_bsub.sh
+
+cd ../cbf
+source cbf_accuracy_fx_T_bsub.sh
+
+cd ../coupling
+source coupling_accuracy_fx_T_bsub.sh
+```
+
+#### 20210216
+[x] Make alff, cbf, coupling analyses images with both positive and negative colors
+  - fixed bug- was trying to extract T values from age_sex_model when trying to get sex lm values. Made a fix and it looks good
+[x] get images from val/jakob with aerobic glycolysis
+[x] make and visualize [x] average cbf map, [x] average alff map, [x] average coupling map,
+  - do i just take all mgh files, do an average, and then display?
+
+  
+```{csh}
+#made new script to move only subjects in our analysis and do averages. The averages already existed for coupling
+
+cd /project/imco/baller/scripts/
+csh make_average_maps.csh
+```
+
+
+#### 20210217
+[x] make aerobic coupling map  -this actually looks really complicated
+  - started by speaking to Jakob. He recommended:
+   ** So here are a bunch of maps (the column you want is "glasser_GI" which is glycolytic index, the proxy for aerobic glycolysis from these papers https://www.pnas.org/content/107/41/17757. https://www.pnas.org/content/107/41/17763, https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4389678/). And here is some code for converting from CIVET vertex space to fsaverage: https://drive.google.com/drive/folders/1PX3RR1cCgN8L37j5SXuYiWGJLdNDmIBl?usp=sharing **
+   
+   - From his drive, I downloaded: convertFStoCIVET.m
+   - I also downloaded the stat_maps.csv that he attached to the slack
+   - moved convertFStoCIVET.m to /Users/eballer/BBL/imco/scripts
+   - moved stat_maps.csv to /Users/eballer/BBL/data
+   - extracted the glasser_GI column (length of the full file 81925)
+    ``` more stat_maps.csv  | cut -f9 -d ',' | tail -81924 > stat_maps_glasser_GI_only_f9.csv```
+    - checked output, looks great
+    - Then realized there are so many dang dependencies that Jakob is going to see if he can run it for me
+    
+    - next step
+      * look at average map alone
+      * somehow make a mask, multiply it x the T fdr05 masks to see what is inside the aerobic glycolysis map
+      * if I want to do yeo, i could probably do a similar mask 
+        - append the yeo cluster assignment 10242 column to the t fdr column
+        - For the T column, change values that are not 0 to 1
+        - Multiply the values (1 or 0) times the yeo cluster assignment.
+        - Now, I'll have a map of which brain regions are in which cluster, color coded
+        - could prob do the same for AG
+        - making script right now: convert_Ts_to_parcels_for_display.R
+  
+[x] Adapt adam's script to see yeo outlines
+    - first thing tomorrow morning do the yeo 7
+    
+    - first, I had to make a matlab script that went into the Yeo parcels and pulled out the rh and lh vertices with corresponding yeo 7 matrices, as well as the ID and names of the corresponding vertices
+```{matlab}
+YeoAtlasFolder = '/project/imco/baller/processed_data/yeo_network_data/YeoAtlas';
+[~, Label_lh7, ~] = read_annotation([YeoAtlasFolder '/lh.Yeo2011_7Networks_N1000.annot']);
+[~, Label_rh7, names_rh7] = read_annotation([YeoAtlasFolder '/rh.Yeo2011_7Networks_N1000.annot']);
+%Yeo_7system_Label= [Label_lh7; Label_rh7];
+NetworkID7 = names_rh7.table(2:end,5);
+NetworkName7 = {'Visual','Motor','DA','VA','Limbic','FP','DM'};
+writematrix(NetworkID7, '/project/imco/baller/processed_data/yeo_network_data/NetworkIDnumbersYeo7.csv');
+writecell(NetworkName7, '/project/imco/baller/processed_data/yeo_network_data/NetworkNamesYeo7.csv');
+writematrix(Label_lh7, '/project/imco/baller/processed_data/yeo_network_data/lh_10242_vertex_nums_Yeo7.csv'
+)
+writematrix(Label_rh7, '/project/imco/baller/processed_data/yeo_network_data/rh_10242_vertex_nums_Yeo7.csv'
+)
+```
+    - next, I worked on my convert_Ts_to_parcels_for_display.R, which takes in these values, maps them, and outputs 10242x1 vectors for use in the visualization script
+    
+```{r convert_Ts_to_parcels_for_display.R}
+################################
+## 2/16/2021 Convert Parcels ###
+################################
+
+################################
+#### Author: Erica Baller ######
+################################
+
+### This script emerged out of the desire to take vertex output and display it within different networks/parcels
+
+#pre: input: 
+    #1) a vector(n=10242) of T values, with 0s indicating vertices you don't want to include
+    #2) yeo vectors
+        #a) lh and rh 10242 matrices with the vertex #s
+        #b) the ID number matrix (length = 7 for Yeo7)
+        #c) the names of the networks (length = 7 for Yeo7)
+#post: a vector corresponding to the parcel value for the regions you want to display
+#uses: 
+  #1) Will take the input vector, convert all non-zeros to 1s. 
+    #will also do this for positive and negative only, for better visualization
+  #2) will multiple this vector with the parcel assignment
+  #3) Will save output in chosen directory
+#dependencies
+  #any R should do
+  #I am using PMACS, and R 3.2.5
+
+### get arguments if needed
+#args = commandArgs(trailingOnly=TRUE)
+
+#### set # parcels in case I want to do 7 or 17 or something else in the future
+parcel_type = "Yeo" 
+parcel_num = 7 
+input_parcel_array_length = 10242
+
+### set results path
+stat_path <- "/coupling_accuracy/"
+result_path <- "lm_sex_t_fdr05" 
+#####################
+### Read in files ###
+#####################
+
+## set abs and relative paths. Must toggle before running locally/on cluster
+homedir <- "/Users/eballer/BBL/imco/pmacs/PMACS_remote"
+#homedir <- "/project/imco"
+
+
+###set path
+lh_stat_map <- read.csv(paste0(homedir, "/baller/results/", stat_path, "lh_", result_path, ".csv"), header = F)
+rh_stat_map <- read.csv(paste0(homedir, "/baller/results/", stat_path, "rh_", result_path, ".csv"), header = F)
+
+parcelID <- read.csv(paste0(homedir, "/baller/processed_data/yeo_network_data/NetworkIDnumbers", parcel_type, parcel_num, ".csv"), header = F)
+parcelName <- t(read.csv(paste0(homedir, "/baller/processed_data/yeo_network_data/NetworkNames", parcel_type, parcel_num, ".csv"), header = F))
+
+lh_parcel_nums <- read.csv(paste0(homedir, "/baller/processed_data/yeo_network_data/lh_", input_parcel_array_length, "_vertex_nums_", parcel_type, parcel_num, ".csv"), header = F)
+rh_parcel_nums <- read.csv(paste0(homedir, "/baller/processed_data/yeo_network_data/rh_", input_parcel_array_length, "_vertex_nums_", parcel_type, parcel_num, ".csv"), header = F)
+
+#output
+lh_outdir <- paste0(homedir, "/baller/results/", stat_path, "lh_", result_path, "_", parcel_type, parcel_num, ".csv")
+rh_outdir <- paste0(homedir, "/baller/results/", stat_path, "rh_", result_path, "_", parcel_type, parcel_num, ".csv")
+
+lh_outdir_pos <- paste0(homedir, "/baller/results/", stat_path, "lh_pos_", result_path, "_", parcel_type, parcel_num, ".csv")
+rh_outdir_pos <- paste0(homedir, "/baller/results/", stat_path, "rh_pos_", result_path, "_", parcel_type, parcel_num, ".csv")
+
+lh_outdir_neg <- paste0(homedir, "/baller/results/", stat_path, "lh_neg_", result_path, "_", parcel_type, parcel_num, ".csv")
+rh_outdir_neg <- paste0(homedir, "/baller/results/", stat_path, "rh_neg_", result_path, "_", parcel_type, parcel_num, ".csv")
+
+###print output so you know what is going on
+
+print(paste0("Converting ", homedir, "/baller/results/", stat_path, "lh_", result_path, ".csv to ", parcel_type, parcel_num ))
+print("Of note, these are the parcel names and associated numbers")
+refnum_networknum_name <- cbind(parcelName, parcelID, 1:dim(parcelID)[1])
+names(refnum_networknum_name) <- c("Network_name", "Net_number", "Mapping_for_matlab_PBP")
+print(refnum_networknum_name)
+
+
+#convert stat map to boolean
+lh_stat_boolean <- ifelse(lh_stat_map == 0, 0, 1)
+rh_stat_boolean <- ifelse(rh_stat_map == 0, 0, 1)
+
+#positive and negative vectors
+lh_stat_boolean_pos <- ifelse(lh_stat_map > 0, 1, 0)
+rh_stat_boolean_pos <- ifelse(rh_stat_map > 0, 1, 0)
+
+lh_stat_boolean_neg <- ifelse(lh_stat_map < 0, 1, 0)
+rh_stat_boolean_neg <- ifelse(rh_stat_map < 0, 1, 0)
+
+#make a column of numbers for mapping
+parcelID$network_num <- c(1:dim(parcelID)[1])
+
+#add extra row to parcelID, not clear why this didn't come from Yeo labels... 8 will equal 65793
+# comment this out if not using yeo 
+parcelID<- rbind(parcelID, c(65793, 8))
+
+#make vector for lh and rh with mapping
+lh_numerical_map <- lh_parcel_nums
+
+#foreach vertex, which contains a bunch of numbers, match it to the appropriate column, and take the network num (i.e. yeo 2, which would correspond to Motor), associated with it
+lh_numerical_map[] <- lapply(lh_parcel_nums, function(x) parcelID$network_num[match(x, parcelID$V1)])
+
+rh_numerical_map <- rh_parcel_nums
+rh_numerical_map[] <- lapply(rh_parcel_nums, function(x) parcelID$network_num[match(x, parcelID$V1)])
+
+#multiply
+
+lh_stat_booleanxnetwork <- lh_stat_boolean * lh_numerical_map
+rh_stat_booleanxnetwork <- rh_stat_boolean * rh_numerical_map 
+
+lh_stat_booleanxnetwork_pos <- lh_stat_boolean_pos * lh_numerical_map
+rh_stat_booleanxnetwork_pos <- rh_stat_boolean_pos * rh_numerical_map 
+
+lh_stat_booleanxnetwork_neg <- lh_stat_boolean_neg * lh_numerical_map
+rh_stat_booleanxnetwork_neg <- rh_stat_boolean_neg * rh_numerical_map 
+
+
+#write output
+write.csv(x = lh_stat_booleanxnetwork, file = lh_outdir, quote = F, row.names = F)
+write.csv(x = rh_stat_booleanxnetwork, file = rh_outdir, quote = F, row.names = F)
+
+#write output
+write.csv(x = lh_stat_booleanxnetwork_pos, file = lh_outdir_pos, quote = F, row.names = F)
+write.csv(x = rh_stat_booleanxnetwork_pos, file = rh_outdir_pos, quote = F, row.names = F)
+
+#write output
+write.csv(x = lh_stat_booleanxnetwork_neg, file = lh_outdir_neg, quote = F, row.names = F)
+write.csv(x = rh_stat_booleanxnetwork_neg, file = rh_outdir_neg, quote = F, row.names = F)
+
+```
+
+- did some cleanup and moved PBP scripts in PBP directory
+
+
+#### 20210218
+
+- Had some toruble with my sshfs, where i was getting input/output errors. To fix
+  - pgrep -lf sshfs
+  - kill -9 <pid_of_sshfs_process>
+  - diskutil umount force pmacs/PMACS_remote/
+  - sshfs eballer@sciget.pmacs.upenn.edu:/project/imco /Users/eballer/BBL/imco/pmacs/PMACS_remote -o defer_permissions,volname=project
+  
+
+- GI - got the graphs from Jakob; 
+
+
+
+```{r, fig.height=2}
+include_graphics("/Users/eballer/Pictures/GI.png")
+```
+
+
+```{r, echo=FALSE, out.width="49%",out.height="20%", fig.cap="caption", fig.show='hold', fig.align='center'}
+
+#knitr::include_graphics(c("/Users/eballer/Pictures/GI.png","/Users/eballer/Pictures/GI.png"))
+```
+
+- now going to go through my pictures, save as pngs, move to appropriate directories, and embed in markdown
+- found a way to change paths so I can save pngs directly to the directory I want. Super cool. Will do that today. 
+
+made lots of graphics and saved them: 
+```{bash}
+ssh -Y eballer@scisub.pmacs.upenn.edu
+<pwd>
+#go into directory
+cd /project/imco/baller/scripts/PBP_graphics
+
+#source matlab to get it into your environemnt
+source ../load_matlab
+
+#open matlab
+matlab -nodesktop
+
+#run the commands below to get the images
+
+```
+
+
+#### 20210219
+
+Making GI masked maps.
+First, added code to convert_Ts_to_parcels_for_display, including adding a flag and special section if you just want to do a generic mask. The idea would be that you take your T map, and multiply it times the mask. You can then display with whatever PBP you'd like. Did not do alff/cbf GI images because - we want to see how they relate to coupling so it doesn't really matter
+
+New images made on PMACS:/project/imco/baller/scripts/PBP_graphics
+
+first, get these pics locally
+
+scp eballer@transfer.pmacs.upenn.edu:/project/imco/baller/results/images/pbp/* /Users/eballer/BBL/imco/results/images/pbp/.
+
+
+## Yeo7 (PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath.m)
+
+-----
+
+Using the following mapping of Yeo network to random coded number to num for display
+
+<img width="100%" src="/Users/eballer/BBL/imco/results/images/Yeo7_net_to_number.png"/>
+
+
+[x] coupling gam age, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05_Yeo7.csv','coupling_gam_age_yeo7_fdr05')
+
+[x] coupling lm age, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_lm_age_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_age_t_fdr05_Yeo7.csv','coupling_lm_age_yeo7_fdr05')  
+
+[x] coupling lm sex, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_lm_sex_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_sex_t_fdr05_Yeo7.csv','coupling_lm_sex_yeo7_fdr05')  
+
+[x] coupling lm exec accuracy, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05_Yeo7.csv','coupling_lm_exec_accuracy_yeo7_fdr05')   
+
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_gam_age_yeo7_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_lm_age_yeo7_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_lm_sex_yeo7_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_lm_exec_accuracy_yeo7_fdr05.png"/>
+
+
+----- 
+## Positive Direction
+-----
+
+[x] coupling lm age, T=pos, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_pos_lm_age_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_age_t_fdr05_Yeo7.csv','coupling_pos_lm_age_yeo7_fdr05')  
+
+[x] coupling lm sex, T=pos, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_pos_lm_sex_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_sex_t_fdr05_Yeo7.csv','coupling_pos_lm_sex_yeo7_fdr05') 
+
+[x] coupling lm exec accuracy, T=pos, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05_Yeo7.csv','coupling_pos_lm_exec_accuracy_yeo7_fdr05')
+
+
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_pos_lm_age_yeo7_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_pos_lm_sex_yeo7_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_pos_lm_exec_accuracy_yeo7_fdr05.png"/>
+
+----- 
+## Negative Direction
+-----
+
+[x] coupling lm age, T=neg, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_neg_lm_age_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_age_t_fdr05_Yeo7.csv','coupling_neg_lm_age_yeo7_fdr05') 
+
+[x] coupling lm sex, T=neg, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_neg_lm_sex_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_sex_t_fdr05_Yeo7.csv','coupling_neg_lm_sex_yeo7_fdr05')
+
+[x] coupling lm exec accuracy, T=neg, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05_Yeo7.csv','coupling_neg_lm_exec_accuracy_yeo7_fdr05')
+
+
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_neg_lm_age_yeo7_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_neg_lm_sex_yeo7_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_neg_lm_exec_accuracy_yeo7_fdr05.png"/>
+
+-----
+## Mean images (PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath.m)
+-----
+
+[x] mean coupling (abs(T)>2)
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('//project/imco/baller/results/mean_maps/n831_lh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv','/project/imco/baller/results/mean_maps/n831_rh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv','coupling_mean_fdr05')
+
+[x] mean alff (abs(T)>2)
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('//project/imco/baller/results/mean_maps/lh_alff_mean.csv','/project/imco/baller/results/mean_maps/rh_alff_mean.csv','alff_mean_fdr05')
+
+[x] mean cbf (abs(T)>2)
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('//project/imco/baller/results/mean_maps/lh_cbf_mean.csv','/project/imco/baller/results/mean_maps/rh_cbf_mean.csv','cbf_mean_fdr05')
+
+mean image (PBP_vertWiseEffect_Erica_GI.m)
+[x] aerobic glycolysis
+
+command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/processed_data/glycolytic_index_maps/lh_GI_fsaverage5_10242.csv','/project/imco/baller/processed_data/glycolytic_index_maps/rh_GI_fsaverage5_10242.csv','glycolytic_index_red_blue')
+
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_mean_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/alff_mean_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/cbf_mean_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_red_blue.png"/>
+
+-----
+## Blue and red coupling maps (PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath.m)
+-----
+
+[x] coupling gam age
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05.csv','coupling_gam_age_red_and_blue_fdr05')
+
+[x] coupling lm age, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_age_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_age_t_fdr05.csv','coupling_lm_age_red_and_blue_fdr05')
+
+
+[x] coupling lm sex, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_sex_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_sex_t_fdr05.csv','coupling_lm_sex_red_and_blue_fdr05')
+
+[x] coupling lm exec accuracy, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05.csv','coupling_lm_exec_accuracy_red_and_blue_fdr05')
+
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_gam_age_red_and_blue_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_lm_age_red_and_blue_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_lm_sex_red_and_blue_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_lm_exec_accuracy_red_and_blue_fdr05.png"/>
+
+-----
+Alff maps
+-----
+
+[x] alff gam age, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/alff_accuracy/lh_gam_age_t_fdr05.csv','/project/imco/baller/results/alff_accuracy/rh_gam_age_t_fdr05.csv','alff_gam_age_red_and_blue_fdr05')
+
+[x] alff lm age, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/alff_accuracy/lh_lm_age_t_fdr05.csv','/project/imco/baller/results/alff_accuracy/rh_lm_age_t_fdr05.csv','alff_lm_age_red_and_blue_fdr05')
+
+[x] alff lm sex, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/alff_accuracy/lh_lm_sex_t_fdr05.csv','/project/imco/baller/results/alff_accuracy/rh_lm_sex_t_fdr05.csv','alff_lm_sex_red_and_blue_fdr05')
+
+[x] alff lm exec accuracy, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/alff_accuracy/lh_lm_exec_accuracy_t_fdr05.csv','/project/imco/baller/results/alff_accuracy/rh_lm_exec_accuracy_t_fdr05.csv','alff_lm_exec_accuracy_red_and_blue_fdr05')
+
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/alff_gam_age_red_and_blue_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/alff_lm_age_red_and_blue_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/alff_lm_sex_red_and_blue_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/alff_lm_exec_accuracy_red_and_blue_fdr05.png"/>
+
+
+-----
+Cbf maps
+-----
+
+[x] cbf gam age, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/cbf_accuracy/lh_gam_age_t_fdr05.csv','/project/imco/baller/results/cbf_accuracy/rh_gam_age_t_fdr05.csv','cbf_gam_age_red_and_blue_fdr05')
+
+[x] cbf lm age, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/cbf_accuracy/lh_lm_age_t_fdr05.csv','/project/imco/baller/results/cbf_accuracy/rh_lm_age_t_fdr05.csv','cbf_lm_age_red_and_blue_fdr05')
+
+
+[x] cbf lm sex, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/cbf_accuracy/lh_lm_sex_t_fdr05.csv','/project/imco/baller/results/cbf_accuracy/rh_lm_sex_t_fdr05.csv','cbf_lm_sex_red_and_blue_fdr05')
+
+[x] cbf lm exec accuracy, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/cbf_accuracy/lh_lm_exec_accuracy_t_fdr05.csv','/project/imco/baller/results/cbf_accuracy/rh_lm_exec_accuracy_t_fdr05.csv','cbf_lm_exec_accuracy_red_and_blue_fdr05')
+
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/cbf_gam_age_red_and_blue_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/cbf_lm_age_red_and_blue_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/cbf_lm_sex_red_and_blue_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/cbf_lm_exec_accuracy_red_and_blue_fdr05.png"/>
+
+-----
+## Gam using the nice plasma (PBP_vertWiseEffect_Erica_Ts_results_outpath.m)
+-----
+
+[x] coupling gam age, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05.csv','coupling_gam_age_plasma_fdr05')
+
+[x] alff lm age, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_results_outpath('/project/imco/baller/results/alff_accuracy/lh_gam_age_t_fdr05.csv','/project/imco/baller/results/alff_accuracy/rh_gam_age_t_fdr05.csv','alff_gam_age_plasma_fdr05')
+
+[x] cbf gam age, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_results_outpath('/project/imco/baller/results/cbf_accuracy/lh_gam_age_t_fdr05.csv','/project/imco/baller/results/cbf_accuracy/rh_gam_age_t_fdr05.csv','cbf_gam_age_plasma_fdr05')
+
+[x] coupling gam exec accuracy, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_exec_accuracy_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_exec_accuracy_t_fdr05.csv','coupling_gam_exec_accuracy_plasma_fdr05')
+
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_gam_age_plasma_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/alff_gam_age_plasma_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/cbf_gam_age_plasma_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_gam_exec_accuracy_plasma_fdr05.png"/>
+
+-----
+## Glycolytic index plasma (PBP_vertWiseEffect_Erica_GI_plasma_results_outpath.m)
+-----
+
+[x] GI
+
+command: PBP_vertWiseEffect_Erica_GI_plasma_results_outpath('/project/imco/baller/processed_data/glycolytic_index_maps/lh_GI_fsaverage5_10242.csv','/project/imco/baller/processed_data/glycolytic_index_maps/rh_GI_fsaverage5_10242.csv','glycolytic_index_plasma')
+
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_plasma.png"/>
+
+-----
+## Glycolytic index red and blue, masking the T maps (PBP_vertWiseEffect_Erica_GI_results_outpath.m)
+-----
+
+-----
+## bidirectional
+-----
+
+[x] gam age, pfdr05
+
+command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_gam_age')
+
+[x] lm age, pfdr05
+
+command:PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_lm_age')
+
+[x] lm sex, pfdr05
+
+command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_lm_sex')
+
+[] lm exec accuracy, pfdr05
+
+command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_lm_exec_accuracy')
+
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_gam_age.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_lm_age.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_lm_sex.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_lm_exec_accuracy.png"/>
+
+-----
+## positive direction
+-----
+
+[x] gam age, pfdr05
+
+command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_gam_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_gam_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_pos_gam_age')
+
+[x] lm age, pfdr05
+
+command:PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_pos_lm_age')
+
+[x] lm sex, pfdr05
+
+command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_pos_lm_sex')
+
+[x] lm exec accuracy, pfdr05
+
+command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_pos_lm_exec_accuracy')
+
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_pos_gam_age.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_pos_lm_age.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_pos_lm_sex.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_pos_lm_exec_accuracy.png"/>
+
+-----
+## negative direction
+-----
+
+
+[x] gam age, pfdr05
+
+command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_gam_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_gam_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_neg_gam_age')
+
+[x] lm age, pfdr05
+
+command:PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_neg_lm_age')
+
+[x] lm sex, pfdr05
+
+command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_neg_lm_sex')
+
+[x] lm exec accuracy, pfdr05
+
+command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_neg_lm_exec_accuracy')
+
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_neg_gam_age.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_neg_lm_age.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_neg_lm_sex.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_neg_lm_exec_accuracy.png"/>
+
+
+sent these to pmacs and git'd
+
+scp /Users/eballer/BBL/imco/results/rmarkdowns/* eballer@transfer.pmacs.upenn.edu:/project/imco/baller/git/imco_pmacs/.
+--------
+[] really clarify mechanism of aerobic glycolysis
+    - problem. for AG, we actually want places where there is less coupling. May want to split girls and boys separately, because now we only see places girls have more, and places boys have more. AG would be places where they have less
+[] images
+  - demo table
+  - coupling age
+  - coupling sex
+  - coupling exec accuracy
+  - alff, cbf, coupling, aerobic glycolysis map?
+[] Jneurosci specs
+  - Abstract (250 words maximum, including citations)
+  - Significance Statement (120 words maximum)
+  - Introduction (650 words maximum, including citations)
+  - Materials and methods:
+  - include an Experimental Design and Statistical Analysis section as a subsection of the   -Materials and Methods that describes the experimental design and the statistical tests used in the study.
+  -Discussion (1,500 words maximum, including citations)
+  -No reference limit?
+  -No table limit/figure limit?
+
+[] pnas specs
+- Research reports describe the results of original research of exceptional importance. The preferred length of these articles is 6 pages, but PNAS allows articles up to a maximum of 12 pages. A standard 6-page article is approximately 4,000 words, 50 references, and 4 medium-size graphical elements (i.e., figures and tables).
+  - title < 135 Characters
+  -Abstract - 250 words
+  -sig statement - 120 words
+
+#### Future ####  
+[] BCP one day
+  [] alff separately
+  [] cbf separately
+  [] coupling
+  [] accuracy
+  

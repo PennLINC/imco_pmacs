@@ -1,0 +1,1609 @@
+---
+title: "IMCO 2021 Project - Age, Sex, and Accuracy"
+author: "Erica Baller"
+date: "2/23/2021"
+output: html_document
+params:
+  args: myarg
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+### Set up your paths
+homedir = '/Users/eballer/BBL/imco/pmacs/PMACS_remote'
+#homedir = '/project/imco'
+mydirec = '/baller'
+subListPath = '/subjectLists'
+scriptsPath = '/scripts'
+
+## include external functions
+source(paste0(homedir, mydirec, scriptsPath, '/imco_functions.R'))
+
+```
+
+## IMCO Project
+
+Welcome to IMCO 2021! This project is a culmination of many years of work and a beautiful collaboration between Ted Satterthwaite and Taki Shinohara. Its many iterations have taken us from structural to functional data, chead to pmacs, fsl to freesurfer to R to matlab. Many trainees have been a part of the project, including Lauren Beard, Ali Valcarcel, Kristin Linn, Tinashe Tapera. This last (and final) round of analyses has been run by Erica Baller, with incredible support from Azeez Adebimpe. A big thank you to Bart Larsen for advising on modeling, and Adam Pines for his tireless help with taking my graphics to the next level. Thank you to Val Sydnor and Jakob Seidlitz for providing maps for our fancier visualization. In the remaining part of this document, I will take you on a step by step journey through the analysis, code, and visualizations. Though I would ideally like this to be a one and done markdown, some things will have to be done manually (mostly the visualizations in Matlab). I'll provide the code as well as the image it produced for me so you can double check it. Enjoy!
+
+Git for this project can be found at: https://github.com/PennLINC/imco_pmacs
+
+Lab notebook (with day by day documentation): 
+
+Erica Baller local computer and github script: Replicating_LB_2D_imco_started_20200911.Rmd
+
+To run this from command line ** on PMACS**: 
+
+```{bash run_markdown, eval=FALSE}
+Rscript -e "rmarkdown::render('/project/imco/baller/Project_markdown/IMCO_2021_Project_Age_Sex_Accuracy.Rmd')"
+```
+
+  
+
+---
+
+### IMCO Analysis overview
+
+This project was started on 20200911 
+
+IMCO, or intermodal coupling (or "coupling"), was a project that begun in 2018 and has had numerous data anaylists/managers on the project. It is based on work by Simon 's work in 2016 (Paper: Vandekar, S. N., Shinohara, R. T., Raznahan, A., Hopson, R. D., Roalf, D. R., Ruparel, K., … Satterthwaite, T. D. (2016). Subject-level Measurement of Local Cortical Coupling. NeuroImage, 133, 88–97.), which looked at the relationship between cortical thickness and sulcal depth, and demonstrated regional differences, non-linear trajectories, as well as sex differences. His work used surface gray matter maps. The general process was the brain was divided into vertices and a neighborhood around each vertex was defined. For each neighborhood, the relationship between cortical thickness and sulcal depth was calculated using local weighted regression, with a variety of covariates. 
+
+In 2018, Lauren Beard replicated this work, studying cbf (ASL) with ALFF (rs-fmri). This was all done in 2D at the surface. Ali and Kristin then developed a 3D method (using volumes rather than surface), but ran into significant partial volume effects given white matter flanking edges of GM. As such, we have decided to move forward with Lauren Beard's main analyses in 2D (surface) space.
+
+The steps for coupling are as follows - 
+
+1) Sample construction
+2) Taking each subject's alff and cbf voxelwise maps and projecting to the surface 
+    - In fsaverage5 space (10242 vertices per hemisphere). Image type: .mgh
+3) Running the locally weighted regression to obtain 1 coupling map per hemisphere per person (each person will end up with a left and right hemisphere map). Image type: .mgh
+4) Converting these .mgh files to .asc
+5) Reading in the .asc files into R, as well as demographic and accuracy information, and running coupling ~ age, sex, motion, and accuracy regressions
+6) Correcting and masking these findings for display
+7) Displaying in matlab
+
+Coupling was initially completed on chead, and replicated by Azeez using updated freesurfer and R directories. Once we verified that the coupling maps were equivalent to the original maps created in 2018, we moved the maps over to PMACS and started our group level analyses from there. 
+
+For reference, I have included the wikis used to make the maps on chead can be found below. The first part of this script will also run through **exactly** what we did to set up pmacs from chead. The second part will go through pmacs code and will hopefully run directly from this markdown.
+
+
+#####                               Part 1 - from chead to PMACS 
+
+---
+
+**Relevant Coupling Wikis from chead, all written by Lauren Beard:**
+
+  1) how to generate 2D coupling maps: https://github.com/PennBBL/tutorials/wiki/Surface-Coupling
+ 
+  2) CBF-ALFF specifically (single subject): https://github.com/PennBBL/imcoScripts/wiki/Rest-CBF-Coupling
+ 
+     *Links to* https://github.com/PennBBL/tutorials/wiki/3D-Volume-to-Surface-Projection-(FS)
+     
+  3) group analysis: https://github.com/PennBBL/imcoScripts/wiki/AlffCbf-RehoCbf-GLM-Summary
+
+  4) Vertex wise group analysis:  https://github.com/PennBBL/tutorials/wiki/FreeSurfer-Vertex-Wise-Group-Level-Analyses
+  
+  5) results: https://github.com/PennBBL/imcoScripts/blob/master/alffCbf_rehoCbf_effects_20180607%20(1).pdf
+ 
+*** Be aware that there are a few steps left out of these wikis, including some manual moving of files from one format to another that makes running this coupling in series impossible. That being said, once we tracked everything down, we verified that the files are correct.
+
+---
+
+ **In order to do this, Azeez did/confirmed the following:**
+
+  - Step 1) Surface projection
+    + Surface projection scripts worked (vol2surf)
+    + One step to consider adding to the end of the projection scrips is a change in the names of the files. Coupling needs files names rh.cbf rather than rh.cbf.mgh (which is what comes out of surface projection)
+    + To accomplish this, a simple: cp rh.cbf.mgh rh.cbf works just fine
+    + Azeez okay with me adding this last piece to the projection scripts themselves so it does not have to be done manually
+  
+  - Step 2) Coupling (to write to a user specified directory rather than frozen) *all done in bash, this code can be directly copied)
+```{bash azeez_replication, eval=FALSE}
+ mkdir /data/jag/aadebimpe/subjecdir #make your own directory
+ cp -r /data/joy/BBL/studies/pnc/processedData/structural/freesurfer53/99991 . #copy one subject
+ cp -r /data/joy/BBL/studies/pnc/processeddata/structural/freesurfer53/fsaverage5 . #copy fsaverage5 directory locally
+ cd /data/jux/BBL/projects/coupling/imcoScripts/surfCoupling/R
+ Rscript coupling_v2.R -h
+```
+  
+    
+  - Step 3) Make sure you change these files in coupling_v2.R
+```{r coupling_v2_changes, eval=FALSE}
+  ## check these specifications are correct
+   # -m MEASURES cbf,alff - 
+   # -t fsaverage5
+   # -fwhm 15
+
+  ##make these directory changes 
+  scripts="/data/joag/aadebimpe/surfCoupling/R" #this contains the coupling_v2.R and kth_neighbor_v3.R, change full path for kth_neightbor script
+  export SUBJECT_DIR=/data/jag/aadebimpe/subjecdir #this is the directory you make
+```
+
+  - Step 4) Change SUBJECT_DIR in bash profile
+```{bash change_bash_profile, eval=FALSE}
+gedit ~/.bash_profile
+export SUBJECT_DIR=/data/jag/aadebimpe/subjecdir #this is the directory you make
+```
+  
+---
+
+--- 
+
+**Location of files on chead **
+
+    - Surface projection maps in chead: /data/jux/BBL/projects/coupling/surfaceMaps/<alff,cbf,reho>
+
+    - Coupling surface maps: /data/jux/BBL/projects/coupling/couplingSurfaceMaps/<alffCbf,cbfAlff,cbfReho,rehoCbf>
+    
+    - LB's directory was scp'ed directly to pmacs (with each item in <> run separately:
+        + from chead:
+```{bash copy, eval=FALSE}
+
+#Each were done separately: couplingMaps,couplingSurfaceMaps,fsGLM,imcoScripts,subjectsLists,surfaceMaps
+ scp -r /data/jux/BBL/projects/coupling/<couplingMaps,couplingSurfaceMaps,fsGLM,imcoScripts,subjectsLists,surfaceMaps> eballer@transfer.pmacs.upenn.edu:/project/imco/old_amv_and_lb_direcs/from_lb/coupling/. 
+
+```
+        
+       
+---
+
+##### Setting up PMACS
+
+**From chead, there is a script to move data. Everything else done on PMACS: ** /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/code/to_move
+    - This can be sourced in bash. It contains the following commands:
+
+```{bash move_files, eval=FALSE}
+
+scp /data/joy/BBL/studies/pnc/n1601_dataFreeze/neuroimaging/asl/n1601_PcaslQaData_20170403.csv eballer@transfer.pmacs.upenn.edu:/project/imco/pnc/neuroimaging/asl/.
+scp /data/joy/BBL/studies/pnc/n1601_dataFreeze/neuroimaging/rest/n1601_RestQAData_20170714.csv eballer@transfer.pmacs.upenn.edu:/project/imco/pnc/neuroimaging/rest/.
+scp /data/joy/BBL/studies/pnc/n1601_dataFreeze/neuroimaging/t1struct/n1601_t1QaData_20170306.csv eballer@transfer.pmacs.upenn.edu:/project/imco/pnc/neuroimaging/t1struct/.
+scp /data/joy/BBL/studies/pnc/n1601_dataFreeze/clinical/n1601_goassess_itemwise_bifactor_scores_20161219.csv eballer@transfer.pmacs.upenn.edu:/project/imco/pnc/clinical/.
+scp /data/joy/BBL/studies/pnc/n1601_dataFreeze/health/n1601_health_20170421.csv eballer@transfer.pmacs.upenn.edu:/project/imco/pnc/health/.
+scp /data/joy/BBL/studies/pnc/n1601_dataFreeze/demographics/n1601_demographics_go1_20161212.csv eballer@transfer.pmacs.upenn.edu:/project/imco/pnc/demographics/.
+scp /data/joy/BBL/studies/pnc/n1601_dataFreeze/cnb/n1601_cnb_factor_scores_tymoore_20151006.csv eballer@transfer.pmacs.upenn.edu:/project/imco/pnc/cnb/.
+scp /data/jux/BBL/projects/coupling/imcoScripts/restCbf/n831_alff_cbf_makeSample.R eballer@transfer.pmacs.upenn.edu:/project/imco/baller/scripts/
+scp /data/jux/BBL/projects/coupling/subjectsLists/n1601_bblid_datexscanid.csv eballer@transfer.pmacs.upenn.edu:/project/imco/baller/subjectLists/.
+scp /data/jux/BBL/projects/coupling/subjectsLists/n831_imageOrder.csv eballer@transfer.pmacs.upenn.edu:/project/imco/baller/subjectLists/.
+scp /data/jux/BBL/projects/coupling/coupling_test_eb_20200918/code/restCbf_R/make_831x10242_matrices.R eballer@transfer.pmacs.upenn.edu:/project/imco/baller/scripts/.    
+
+```
+
+
+---
+
+#####                               Part 2 - On PMACS
+
+For this next section, I'll walk you through sample construction, analysis, and visualization. Scripts are found in **/project/imco/baller/scripts**. Code will be embeded and runnable where able. Links to code will also be embedded. One challenge of PMACS is needing to initialize a bunch of libraries so you can run matlab, rstudio, etc. I start off by initializing these libraries.
+
+```{bash initialize_libraries, eval=FALSE}
+cd /project/imco/baller/scripts
+xbash
+source load_matlab
+source load_rstudio
+```
+
+  
+**Sample Construction **
+
+*script: /project/imco/baller/scripts/from_chead/n831_alff_cbf_makeSample.R*
+
+Code: 
+```{r make_sample}
+###########################################
+#### PMACS Adapted sample construction ####
+###########################################
+
+## Replicated LB sample construction from 2018 ##
+#### Date: 01/14/2021
+###### Author: Erica Baller
+
+### pre: pnc QA, health, demographics files: 
+
+# 1) /project/imco/pnc/neuroimaging/asl/n1601_PcaslQaData_20170403.csv
+# 2) /project/imco/pnc/neuroimaging/rest/n1601_RestQAData_20170714.csv
+# 3) project/imco/pnc/neuroimaging/t1struct/n1601_t1QaData_20170306.csv
+# 4) /project/imco/pnc/health/n1601_health_20170421.csv
+# 5) /project/imco/pnc/demographics/n1601_demographics_go1_20161212.csv
+
+### post: 
+
+# 1) final sample .csv [/project/imco/baller/subjectLists/n831_alff_cbf_finalSample.csv]
+# 2) image order .csv [/project/imco/baller/subjectLists/n831_alff_cbf_finalSample_imageOrder.csv]
+
+### uses:
+
+## This script takes the PNC 1601 sample, and goes through a variety of exclusions to get the final n. 
+# 1) removes subjects with poor QA data (t1Exclude, pcaslVoxelwiseExclude, restExcludeVoxelwise
+# 2) uses ltnExcludev2 for health - "Particiapants with no medical co-morbidity, abnormal brain structure on radiology read, or current use of psychoactive medications (Excludes those with medical rating 3/4, major incidental findings that distort anatomy, psychoactive medical and psych medications, inpatient hospitalizations)"   1=Yes; 0=No     Calculated Field using data from goassess       A few medications that were previously missed or not categorized in the right medical class were updated on 10/4/16 that resulted in version change.
+
+## It then factorizes race and sex, and adds a new column datexscanid - this is great because some subjects have multiple scans
+
+### dependencies: Any R should do. We used 3.2.5
+
+###########set homedir so you can use local or remote
+#1) set homedir before you run this
+#2) set my_path to be your own path
+
+#homedir = '/Users/eballer/BBL/imco/pmacs/PMACS_remote'
+#homedir = '/project/imco'
+#mydirec = '/baller/subjectLists'
+
+# Load in files 
+pcaslQA <- read.csv(paste0(homedir, "/pnc/neuroimaging/asl/n1601_PcaslQaData_20170403.csv"))
+restQA <- read.csv(paste0(homedir, "/pnc/neuroimaging/rest/n1601_RestQAData_20170714.csv"))
+t1QA <- read.csv(paste0(homedir, "/pnc/neuroimaging/t1struct/n1601_t1QaData_20170306.csv"))
+healthQA <- read.csv(paste0(homedir, "/pnc/health/n1601_health_20170421.csv"))
+demos <- read.csv(paste0(homedir, "/pnc/demographics/n1601_demographics_go1_20161212.csv"))
+
+#these two are premade, do not need to be done for r, but do need to be done for fsGLM, can be commented out
+datexscan <- read.csv(paste0(homedir, mydirec, subListPath, "/n1601_bblid_datexscanid.csv"))
+order <- read.csv(paste0(homedir, mydirec, subListPath, "/n831_imageOrder.csv"))
+
+# T1 and LTN subsets
+t1QA <- subset(t1QA, select = c("bblid","scanid","t1Exclude"))
+healthQA <- subset(healthQA, select = c("bblid","scanid","ltnExcludev2"))
+
+# CBF sample
+## Merge all CBF QA files
+pcaslQA <- subset(pcaslQA, select = c("bblid","scanid","pcaslVoxelwiseExclude","pcaslRelMeanRMSMotion"))
+pcaslQa_t1 <- merge(pcaslQA, t1QA, by=c("bblid","scanid"))
+pcaslQa_t1_health <- merge(pcaslQa_t1, healthQA, by=c("bblid","scanid"))
+
+## Apply exclusions to CBF
+pcasl_exclude <- pcaslQa_t1_health[!grepl("1", pcaslQa_t1_health$pcaslVoxelwiseExclude),]
+pcasl_t1_exclude <- pcasl_exclude[!grepl("1", pcasl_exclude$t1Exclude),]
+pcasl_t1_health_exclude <- pcasl_t1_exclude[!grepl("1", pcasl_t1_exclude$ltnExcludev2),]
+pcasl_final <- subset(pcasl_t1_health_exclude, select = c("bblid","scanid","pcaslRelMeanRMSMotion"))
+
+# Rest sample
+## Merge all rest QA files
+restQA <- subset(restQA, select = c("bblid","scanid","restExcludeVoxelwise","restRelMeanRMSMotion"))
+restQa_t1 <- merge(restQA, t1QA, by=c("bblid","scanid"))
+restQa_t1_health <- merge(restQa_t1, healthQA, by=c("bblid","scanid"))
+
+## Apply exclusions to rest
+rest_exclude <- restQa_t1_health[!grepl("1", restQa_t1_health$restExcludeVoxelwise),]
+rest_t1_exclude <- rest_exclude[!grepl("1", rest_exclude$t1Exclude),]
+rest_t1_health_exclude <- rest_t1_exclude[!grepl("1", rest_t1_exclude$ltnExcludev2),]
+rest_final <- subset(rest_t1_health_exclude, select = c("bblid","scanid","restRelMeanRMSMotion"))
+
+# Get final overall sample
+final_sample <- merge(rest_final, pcasl_final, by=c("bblid","scanid"))
+
+# Merge with demographics
+final <- merge(demos, final_sample, by = c("bblid","scanid"))
+final <- merge(datexscan, final, by="bblid") 
+
+## Clean demos
+final$ageAtScan1 <- (final$ageAtScan1)/12
+final$sex <- as.factor(final$sex)
+final$race <- as.factor(final$race)
+final$race2 <- as.factor(final$race2)
+
+# Get correct image order for GLM
+finalOrdered <- merge(order,final,by=c("bblid","datexscanid")) #only if you want to do this
+
+# Write out final demos for sample
+write.csv(final, paste0(homedir, mydirec, subListPath, "/n831_alff_cbf_finalSample.csv"), row.names=FALSE, quote = FALSE) #added
+write.csv(finalOrdered,paste0(homedir, mydirec, subListPath, "/n831_alff_cbf_finalSample_imageOrder.csv"),row.names=FALSE, quote = FALSE)
+
+```
+
+Demographics summary 
+```{r make_demographics_table}
+make_demographics_table(finalOrdered)
+```
+
+**Coupling regressions **
+
+This needs to be bsubbed unfortunately, so cannot be run directly from here. As such, it is wrapped.
+
+To run: 
+```{bash run_coupling, eval=FALSE}
+
+cd /project/imco/baller/scripts/coupling
+xbash
+source coupling_accuracy_fx_T_bsub.sh
+
+```
+
+    
+    
+ *script: /project/imco/baller/scripts/coupling/coupling_accuracy_fx_T_bsub.sh* 
+ 
+```{bash bsub, eval=FALSE}
+bsub -o /project/imco/baller/scripts/coupling/logfiles/outputlogjob.out -e /project/imco/baller/scripts/coupling/logfiles/outputlogjob.error -R "rusage[mem=128G]" < /project/imco/baller/scripts/coupling/coupling_accuracy_fx_T_wrapper.sh
+```
+ 
+ *script: /project/imco/baller/scripts/coupling/coupling_accuracy_fx_T_wrapper.sh* 
+```{bash wrapper, eval=FALSE}
+#!/bin/bash
+echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc
+Rscript coupling_accuracy_fx_T.R
+```
+
+ *script: /project/imco/baller/scripts/coupling/coupling_accuracy_fx_T.R* 
+```{r coupling_analysis, eval=FALSE}
+##################################################
+### Accuracy Scripts 02/09/2021 ###
+##################################################
+
+####################
+##### Summary ######
+####################
+
+#input: asc files, and pnc demographics, cnb, clinical files
+#output: 10242 length vector csvs with T and/or p values for vertex-wide regression
+#uses: goes vertex by vertex and does regression (coupling by age, sex, cognition, etc), pulls out T and p from these values and sticks it in a vector. The vector can then be used for visualization in matlab
+#dependencies: R (3.6.3 is my current default in pmacs)
+
+####################
+###  Libraries   ###
+####################
+
+library(mgcv)
+library(dplyr)
+library(ggplot2)
+
+#####################################################################################
+####              Makes the 831x10242 matrices, both left and right              ####
+#####################################################################################
+
+#set home directory, switch this depending on whether running from PMACS or from home directory
+#homedir <- "/Users/eballer/BBL/imco/pmacs/PMACS_remote/"
+homedir <- "/project/imco/"
+
+# read in demos
+subjDemos <- read.csv(paste0(homedir, "/baller/subjectLists/n831_alff_cbf_finalSample_imageOrder.csv"))
+
+#some verification preprocessing
+subjDemos$sex <- as.factor(subjDemos$sex)
+subjDemos$race <- as.factor(subjDemos$race)
+subjDemos$race2 <- as.factor(subjDemos$race2)
+
+#add osex category for use in gam later
+subjDemos$osex <- ordered(subjDemos$sex)
+
+#add psych bifactor scores
+psych <- read.csv(paste0(homedir, "/pnc/clinical/n1601_goassess_itemwise_bifactor_scores_20161219.csv"), header = TRUE)
+
+#remove 4factorv2 from title
+names(psych) <-gsub("_4factorv2", "", names(psych))
+
+#merge
+subjDemos <- merge(subjDemos, psych, by = "bblid")
+
+#cognitive data
+cog <- read.csv(paste0(homedir, "/pnc/cnb/n1601_cnb_factor_scores_tymoore_20151006.csv"))
+accuracy <- subset(cog, select = c("bblid", 
+                                   "Overall_Accuracy", 
+                                   "F1_Exec_Comp_Res_Accuracy", 
+                                   "F2_Social_Cog_Accuracy", 
+                                   "F3_Memory_Accuracy"))
+#merge
+subjDemos <- merge(subjDemos, accuracy, by = "bblid")
+
+#drop the scanid.y
+subjDemos <- subset(subjDemos, select = -scanid.y)
+
+#rename scanid.x to scanid
+names(subjDemos) <- gsub("scanid.x", "scanid", names(subjDemos)) 
+
+#make list of bblid/scanid
+bblid_scanid <- paste0(subjDemos$bblid, "_", subjDemos$datexscanid)
+
+#####################
+##### Left Side #####
+#####################
+
+#initiate matrix for storage
+numrows <- dim(subjDemos)[1]
+lh_matrix <- matrix(nrow = numrows, ncol = 10242)
+
+#go through each subject, grab 5th column in asc, transpose and stick in matrix
+# output is 831 x 10242 matrix
+for (subj in 1:831) {
+  
+  bblid <- subjDemos$bblid[subj]
+  datexscanid <- subjDemos$datexscanid[subj]
+  file_path <- paste0(homedir, "/couplingSurfaceMaps/alffCbf/lh/stat/", bblid, "_", datexscanid, "_lh.coupling_coef_alff_cbf.fwhm15.fsaverage5.asc")
+  alff_data <- read.table(file_path, stringsAsFactors = FALSE)
+  lh_matrix[subj,] <- t(alff_data$V5)
+  
+}
+
+#append with demographics
+subjDemos_with_lh_matrix <- cbind(subjDemos, lh_matrix)
+
+#write output
+write.table(subjDemos_with_lh_matrix, file = paste0(homedir, "/baller/results/coupling_accuracy/subjDemos_with_lh_", numrows, "x10242.csv"), sep = ",")
+
+#####################
+#### Right Side #####
+#####################
+#initiate matrix for storage
+numrows <- dim(subjDemos)[1]
+rh_matrix <- matrix(nrow = numrows, ncol = 10242)
+
+#go through each subject, grab 5th column in asc, transpose and stick in matrix
+# output is 831 x 10242 matrix
+for (subj in 1:831) {
+  
+  bblid <- subjDemos$bblid[subj]
+  datexscanid <- subjDemos$datexscanid[subj]
+  file_path <- paste0(homedir, "/couplingSurfaceMaps/alffCbf/rh/stat/", bblid, "_", datexscanid, "_rh.coupling_coef_alff_cbf.fwhm15.fsaverage5.asc")
+  alff_data <- read.table(file_path, stringsAsFactors = FALSE)
+  rh_matrix[subj,] <- t(alff_data$V5)
+  
+}
+
+#append with demographics
+subjDemos_with_rh_matrix <- cbind(subjDemos, rh_matrix)
+
+#write output
+write.table(subjDemos_with_rh_matrix, file = paste0(homedir, "/baller/results/coupling_accuracy/subjDemos_with_rh_", numrows, "x10242.csv"), sep = ",")
+
+####-----------------------------------------------------------------------------####
+####---------------------------End of Part 1- Making matrices---_----------------####
+####-----------------------------------------------------------------------------####
+
+#####################################################################################
+####                   Run regression, both left and right                       ####
+#####################################################################################
+
+#make easier to reference names
+lh_alff <- subjDemos_with_lh_matrix #can also read directly from files if you'd like
+rh_alff <- subjDemos_with_rh_matrix
+
+
+#####################################################
+#                       lm/gams                     #
+#####################################################
+
+#initialize vectors for models
+
+hemis <- c("lh", "rh") #hemispheres
+models <- c("age", "sex", "accuracy", "exec_accuracy", "soc_accuracy", "mem_accuracy")
+
+coeffs <- c("p", "t") #p or t value
+corrs <- c("uncor", "fdr") #correction
+
+for (hemi in hemis){
+  for (model in models) {
+    for (coeff in coeffs) {
+      for (corr in corrs) {
+        vector_init_cmd <- paste0(hemi, "_gam_", model, "_", coeff, "_", corrs, " <- vector(length = 10242)")
+        print(vector_init_cmd)
+        eval(parse(text=as.name(vector_init_cmd)))
+      }
+    }
+  }
+}
+
+
+#make linear models as well
+#lm_models <- c("age", "accuracy", "speed", "efficiency")
+lm_models <- c("age", "sex", "accuracy", "exec_accuracy", "soc_accuracy", "mem_accuracy")
+for (hemi in hemis) {
+  for (model in lm_models) {
+    for (coeff in coeffs) {
+      for (corr in corrs) {
+        vector_init_cmd <- paste0(hemi, "_lm_", model, "_", coeff, "_", corrs, "<- vector(length= 10242)")
+        eval(parse(text=as.name(vector_init_cmd)))
+      }
+    }
+  }
+}
+
+
+#######################
+######## Left #########
+#######################
+
+#get # of items in df for calculation of column)
+numcolumns <- dim(lh_alff)[2]
+#run gams models and store info in respective vectors
+for (i in 1:10242) {
+  curcol = (numcolumns - 10242 + i) # will start you counting at the right part of the df
+  age_sex_model <- gam(lh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                         osex + s(ageAtScan1, k = 4, fx = T), data=lh_alff)
+  
+  ## accuracy
+  accuracy_model <- gam(lh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                          osex + s(ageAtScan1, k = 4, fx = T) + Overall_Accuracy, data=lh_alff)
+  
+  exec_accuracy_model <- gam(lh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                               osex + s(ageAtScan1, k = 4, fx = T) + F1_Exec_Comp_Res_Accuracy, data=lh_alff)
+  
+  soc_accuracy_model <- gam(lh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                              osex + s(ageAtScan1, k = 4, fx = T) + F2_Social_Cog_Accuracy, data=lh_alff)
+  
+  mem_accuracy_model <- gam(lh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                              osex + s(ageAtScan1, k = 4, fx = T) + F3_Memory_Accuracy, data=lh_alff)
+  
+  
+  
+  #lm
+  age_lm_model <- lm(lh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1, 
+                     data=lh_alff)
+  sex_lm_model <- lm(lh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + osex, 
+                     data=lh_alff)
+  
+  ## acc
+  accuracy_lm_model <- lm(lh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + Overall_Accuracy, 
+                          data=lh_alff)
+  
+  exec_accuracy_lm_model <- lm(lh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + F1_Exec_Comp_Res_Accuracy, 
+                               data=lh_alff)
+  
+  soc_accuracy_lm_model <- lm(lh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + F2_Social_Cog_Accuracy, 
+                              data=lh_alff)
+  
+  mem_accuracy_lm_model <- lm(lh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + F3_Memory_Accuracy, 
+                              data=lh_alff)
+  
+  
+  #put pvalue in it's appropriate lm
+  lh_gam_age_p_uncor[i] <- summary(age_sex_model)$s.table[1,4] #smooth term for ageAtScan1
+  lh_gam_sex_p_uncor[i] <- summary(age_sex_model)$p.table[4,4] #linear term
+  
+  lh_gam_accuracy_p_uncor[i] <- summary(accuracy_model)$p.table[5,4] #accuracy term
+  lh_gam_exec_accuracy_p_uncor[i] <- summary(exec_accuracy_model)$p.table[5,4] #accuracy term
+  lh_gam_soc_accuracy_p_uncor[i] <- summary(soc_accuracy_model)$p.table[5,4] #accuracy term
+  lh_gam_mem_accuracy_p_uncor[i] <- summary(mem_accuracy_model)$p.table[5,4] #accuracy term
+  
+  #lm to assess directionality
+  lh_lm_age_p_uncor[i] <- summary(age_lm_model)$coeff[4,4]
+  lh_lm_sex_p_uncor[i] <- summary(sex_lm_model)$coeff[4,4]
+  
+  lh_lm_accuracy_p_uncor[i] <- summary(accuracy_lm_model)$coeff[5,4]
+  lh_lm_exec_accuracy_p_uncor[i] <- summary(exec_accuracy_lm_model)$coeff[5,4]
+  lh_lm_soc_accuracy_p_uncor[i] <- summary(soc_accuracy_lm_model)$coeff[5,4]
+  lh_lm_mem_accuracy_p_uncor[i] <- summary(mem_accuracy_lm_model)$coeff[5,4]
+  
+  #put tvalue in it's appropriate lm
+  lh_gam_age_t_uncor[i] <- summary(age_sex_model)$s.table[1,3] #smooth term for ageAtScan1
+  lh_gam_sex_t_uncor[i] <- summary(age_sex_model)$p.table[4,3] #linear term
+  
+  lh_gam_accuracy_t_uncor[i] <- summary(accuracy_model)$p.table[5,3] #accuracy term
+  lh_gam_exec_accuracy_t_uncor[i] <- summary(exec_accuracy_model)$p.table[5,3] #accuracy term
+  lh_gam_soc_accuracy_t_uncor[i] <- summary(soc_accuracy_model)$p.table[5,3] #accuracy term
+  lh_gam_mem_accuracy_t_uncor[i] <- summary(mem_accuracy_model)$p.table[5,3] #accuracy term
+  
+  #lm to assess directionality
+  lh_lm_age_t_uncor[i] <- summary(age_lm_model)$coeff[4,3]
+  lh_lm_sex_t_uncor[i] <- summary(sex_lm_model)$coeff[4,3] #linear term
+  
+  lh_lm_accuracy_t_uncor[i] <- summary(accuracy_lm_model)$coeff[5,3]
+  lh_lm_exec_accuracy_t_uncor[i] <- summary(exec_accuracy_lm_model)$coeff[5,3]
+  lh_lm_soc_accuracy_t_uncor[i] <- summary(soc_accuracy_lm_model)$coeff[5,3]
+  lh_lm_mem_accuracy_t_uncor[i] <- summary(mem_accuracy_lm_model)$coeff[5,3]
+  
+}
+
+#####################
+###### RIGHT ########
+#####################
+#get # of items in df for calculation of column)
+numcolumns <- dim(rh_alff)[2]
+#run gams models and store info in respective vectors
+for (i in 1:10242) {
+  curcol = (numcolumns - 10242 + i) # will start you counting at the right part of the df
+  age_sex_model <- gam(rh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                         osex + s(ageAtScan1, k = 4, fx = T), data=rh_alff)
+  
+  ## accuracy
+  accuracy_model <- gam(rh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                          osex + s(ageAtScan1, k = 4, fx = T) + Overall_Accuracy, data=rh_alff)
+  
+  exec_accuracy_model <- gam(rh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                               osex + s(ageAtScan1, k = 4, fx = T) + F1_Exec_Comp_Res_Accuracy, data=rh_alff)
+  
+  soc_accuracy_model <- gam(rh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                              osex + s(ageAtScan1, k = 4, fx = T) + F2_Social_Cog_Accuracy, data=rh_alff)
+  
+  mem_accuracy_model <- gam(rh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                              osex + s(ageAtScan1, k = 4, fx = T) + F3_Memory_Accuracy, data=rh_alff)
+  
+  
+  
+  #lm
+  age_lm_model <- lm(rh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1, 
+                     data=rh_alff)
+  sex_lm_model <- lm(rh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + osex, 
+                     data=rh_alff)
+  
+  ## acc
+  accuracy_lm_model <- lm(rh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + Overall_Accuracy, 
+                          data=rh_alff)
+  
+  exec_accuracy_lm_model <- lm(rh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + F1_Exec_Comp_Res_Accuracy, 
+                               data=rh_alff)
+  
+  soc_accuracy_lm_model <- lm(rh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + F2_Social_Cog_Accuracy, 
+                              data=rh_alff)
+  
+  mem_accuracy_lm_model <- lm(rh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + F3_Memory_Accuracy, 
+                              data=rh_alff)
+  
+  
+  #put pvalue in it's appropriate lm
+  rh_gam_age_p_uncor[i] <- summary(age_sex_model)$s.table[1,4] #smooth term for ageAtScan1
+  rh_gam_sex_p_uncor[i] <- summary(age_sex_model)$p.table[4,4] #linear term
+  
+  rh_gam_accuracy_p_uncor[i] <- summary(accuracy_model)$p.table[5,4] #accuracy term
+  rh_gam_exec_accuracy_p_uncor[i] <- summary(exec_accuracy_model)$p.table[5,4] #accuracy term
+  rh_gam_soc_accuracy_p_uncor[i] <- summary(soc_accuracy_model)$p.table[5,4] #accuracy term
+  rh_gam_mem_accuracy_p_uncor[i] <- summary(mem_accuracy_model)$p.table[5,4] #accuracy term
+  
+  #lm to assess directionality
+  rh_lm_age_p_uncor[i] <- summary(age_lm_model)$coeff[4,4]
+  rh_lm_sex_p_uncor[i] <- summary(sex_lm_model)$coeff[4,4]
+  
+  rh_lm_accuracy_p_uncor[i] <- summary(accuracy_lm_model)$coeff[5,4]
+  rh_lm_exec_accuracy_p_uncor[i] <- summary(exec_accuracy_lm_model)$coeff[5,4]
+  rh_lm_soc_accuracy_p_uncor[i] <- summary(soc_accuracy_lm_model)$coeff[5,4]
+  rh_lm_mem_accuracy_p_uncor[i] <- summary(mem_accuracy_lm_model)$coeff[5,4]
+  
+  #put tvalue in it's appropriate lm
+  rh_gam_age_t_uncor[i] <- summary(age_sex_model)$s.table[1,3] #smooth term for ageAtScan1
+  rh_gam_sex_t_uncor[i] <- summary(age_sex_model)$p.table[4,3] #linear term
+  
+  rh_gam_accuracy_t_uncor[i] <- summary(accuracy_model)$p.table[5,3] #accuracy term
+  rh_gam_exec_accuracy_t_uncor[i] <- summary(exec_accuracy_model)$p.table[5,3] #accuracy term
+  rh_gam_soc_accuracy_t_uncor[i] <- summary(soc_accuracy_model)$p.table[5,3] #accuracy term
+  rh_gam_mem_accuracy_t_uncor[i] <- summary(mem_accuracy_model)$p.table[5,3] #accuracy term
+  
+  #lm to assess directionality
+  rh_lm_age_t_uncor[i] <- summary(age_lm_model)$coeff[4,3]
+  rh_lm_sex_t_uncor[i] <- summary(sex_lm_model)$coeff[4,3] #linear term
+  
+  rh_lm_accuracy_t_uncor[i] <- summary(accuracy_lm_model)$coeff[5,3]
+  rh_lm_exec_accuracy_t_uncor[i] <- summary(exec_accuracy_lm_model)$coeff[5,3]
+  rh_lm_soc_accuracy_t_uncor[i] <- summary(soc_accuracy_lm_model)$coeff[5,3]
+  rh_lm_mem_accuracy_t_uncor[i] <- summary(mem_accuracy_lm_model)$coeff[5,3]
+  
+}
+
+
+
+
+
+#################################################################################
+#################################################################################
+
+#####################################################
+#                     results                       #
+#####################################################
+
+#### FDR correction ####
+for (hemi in hemis) {
+  for (model in models) {
+    hemi_model_p_unc <- paste0(hemi, "_gam_", model, "_p_uncor") 
+    hemi_model_p_fdr <- paste0(hemi, "_gam_", model, "_p_fdr")    
+    
+    print(hemi_model_p_unc)
+    
+    #correct p values
+    pfdr <- eval(substitute(p.adjust(i, method="fdr"), list(i = as.name(hemi_model_p_unc))))
+    
+    #figure out which values are < 0.05 and add to pfdr matrix
+    pfdr <- as.data.frame(pfdr)
+    pfdr$sig <- ifelse(pfdr<0.05, 1, 0)
+    pfdr$sig_noNA <- ifelse(is.na(pfdr$sig), 0, pfdr$sig)
+    names(pfdr) <- c("pfdr", "sig05", "sig05_noNA")
+    hemi_model_p_fdr <- as.data.frame(pfdr[,1]) #sig05
+    
+    
+    
+    #multiply T values by fdr vector to get the list of Ts that are fdr corrected
+    hemi_model_t_unc <- paste0(hemi, "_gam_", model, "_t_uncor")
+    hemi_model_t_fdr <- paste0(hemi, "_gam_", model, "_t_fdr")
+    t_df <- eval(substitute(as.data.frame(i), list(i = as.name(hemi_model_t_unc))))
+    names(t_df) <- c("tval")
+    t_df$tfdr <- pfdr[,3] * t_df$tval
+    hemi_model_t_fdr <- as.data.frame(t_df[,2])
+    
+    
+    #######################
+    #### write tables #####
+    #######################
+    
+    ## uncorrected ##
+    
+    ### p
+    filename <- paste0(homedir, "/baller/results/coupling_accuracy/", hemi_model_p_unc, ".csv")
+    write_table_command <- paste0("write.table(x = ", hemi_model_p_unc, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
+    eval(parse(text=write_table_command))
+    
+    ### t
+    
+    filename <- paste0(homedir, "/baller/results/coupling_accuracy/", hemi_model_t_unc, ".csv")
+    write_table_command <- paste0("write.table(x = ", hemi_model_t_unc, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
+    eval(parse(text=write_table_command))
+    
+    ## corrected ##
+    
+    ### p
+    filename <- paste0(homedir, "/baller/results/coupling_accuracy/", hemi, "_gam_", model, "_p_fdr05.csv")
+    write_table_command <- paste0("write.table(x = ", hemi_model_p_fdr, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
+    eval(parse(text=write_table_command))
+    
+    ### t
+    filename <- paste0(homedir, "/baller/results/coupling_accuracy/", hemi, "_gam_", model, "_t_fdr05.csv")
+    write_table_command <- paste0("write.table(x = ", hemi_model_t_fdr, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
+    eval(parse(text=write_table_command))
+    
+  }
+}
+
+######  linear model alone #####
+
+#### FDR correction ####
+for (hemi in hemis) {
+  for (model in lm_models) {
+    hemi_model_p_unc <- paste0(hemi, "_lm_", model, "_p_uncor") 
+    hemi_model_p_fdr <- paste0(hemi, "_lm_", model, "_p_fdr")    
+    
+    print(hemi_model_p_unc)
+    
+    #correct p values
+    pfdr <- eval(substitute(p.adjust(i, method="fdr"), list(i = as.name(hemi_model_p_unc))))
+    
+    #figure out which values are < 0.05 and add to pfdr matrix
+    pfdr <- as.data.frame(pfdr)
+    pfdr$sig <- ifelse(pfdr<0.05, 1, 0)
+    pfdr$sig_noNA <- ifelse(is.na(pfdr$sig), 0, pfdr$sig)
+    names(pfdr) <- c("pfdr", "sig05", "sig05_noNA")
+    hemi_model_p_fdr <- as.data.frame(pfdr[,1]) #sig05
+    
+    
+    
+    #multiply T values by fdr vector to get the list of Ts that are fdr corrected
+    hemi_model_t_unc <- paste0(hemi, "_lm_", model, "_t_uncor")
+    hemi_model_t_fdr <- paste0(hemi, "_lm_", model, "_t_fdr")
+    t_df <- eval(substitute(as.data.frame(i), list(i = as.name(hemi_model_t_unc))))
+    names(t_df) <- c("tval")
+    t_df$tfdr <- pfdr[,3] * t_df$tval
+    hemi_model_t_fdr <- as.data.frame(t_df[,2])
+    
+    
+    #######################
+    #### write tables #####
+    #######################
+    
+    ## uncorrected ##
+    
+    ### p
+    filename <- paste0(homedir, "/baller/results/coupling_accuracy/", hemi_model_p_unc, ".csv")
+    write_table_command <- paste0("write.table(x = ", hemi_model_p_unc, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
+    eval(parse(text=write_table_command))
+    
+    ### t
+    
+    filename <- paste0(homedir, "/baller/results/coupling_accuracy/", hemi_model_t_unc, ".csv")
+    write_table_command <- paste0("write.table(x = ", hemi_model_t_unc, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
+    eval(parse(text=write_table_command))
+    
+    ## corrected ##
+    
+    ### p
+    filename <- paste0(homedir, "/baller/results/coupling_accuracy/", hemi, "_lm_", model, "_p_fdr05.csv")
+    write_table_command <- paste0("write.table(x = ", hemi_model_p_fdr, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
+    eval(parse(text=write_table_command))
+    
+    ### t
+    filename <- paste0(homedir, "/baller/results/coupling_accuracy/", hemi, "_lm_", model, "_t_fdr05.csv")
+    write_table_command <- paste0("write.table(x = ", hemi_model_t_fdr, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
+    eval(parse(text=write_table_command))
+  }
+}
+```
+
+##### Extra- Part 3- repeating these analyses for CBF and ALFF alone 
+Similar to above, navigate to appropriate directory and run the code
+```{bash run_alff, eval=FALSE}
+
+cd /project/imco/baller/scripts/alff
+xbash
+source alff_accuracy_fx_T_bsub.sh
+
+```
+
+```{bash run_cbf, eval=FALSE}
+
+cd /project/imco/baller/scripts/cbf
+xbash
+source cbf_accuracy_fx_T_bsub.sh
+
+```
+
+It is not too hard to add extra analyses
+  1) Make sure you include additional columns in the first part where you are selecting columns to include
+  2) Update the gam and lm loop variables
+  3) Make sure within the loops you specific the new models you'd like
+ 
+**Making extra files for visualization (including yeo network maps or glycolysis maps) **  
+```{r convert_Ts_to_parcels_for_display, eval=FALSE}
+################################
+## 2/19/2021 Convert Parcels ###
+################################
+
+################################
+#### Author: Erica Baller ######
+################################
+
+### This script emerged out of the desire to take vertex output and display it within different networks/parcels
+
+#pre: input: 
+    #1) a vector(n=10242) of T values, with 0s indicating vertices you don't want to include
+        #- the default is to make maps for ALL interesting analyses (coupling, alff, cbf; lm and gam; uncor and fdr05 corrected). 
+       #If you would like to change it, please do so in the following section by commenting out:
+         #analyses <- c("coupling_accuracy", "cbf_accuracy", "alff_accuracy") 
+         #models <- c("gam_age", "lm_age", "lm_sex", "lm_accuracy", "lm_exec_accuracy")
+         #corrs <- c("uncor", "fdr05") #correction
+    #2) yeo vectors
+        #a) lh and rh 10242 matrices with the vertex #s
+        #b) the ID number matrix (length = 7 for Yeo7)
+        #c) the names of the networks (length = 7 for Yeo7)
+    #3) this is optional second mask, I am using glycolytic index so I don't have to rewrite the script
+
+#post: 
+  #1) a vector corresponding to the parcel value for the regions you want to display
+  #2) Optional - a vector corresponding to second map
+
+#uses: 
+  #1) Will take the input vector, convert all non-zeros to 1s. 
+    #will also do this for positive and negative only, for better visualization
+  #2) will multiple this vector with the parcel assignment (or second mask)
+  #3) Will save output in chosen directory
+
+#dependencies
+  #any R should do
+  #I am using PMACS, and R 3.2.5
+
+### get arguments if needed
+#args = commandArgs(trailingOnly=TRUE)
+
+#### set # parcels in case I want to do 7 or 17 or something else in the future
+parcel_type = "Yeo" 
+parcel_num = 7 
+input_parcel_array_length = 10242
+
+##### Alternative second mask
+make_second_mask_flag = TRUE #i.e. I want to make an additional mask
+second_mask_path = "/baller/processed_data/glycolytic_index_maps/"
+mask = "GI_fsaverage5"
+mask_length = 10242
+
+## set abs and relative paths. Must toggle before running locally/on cluster
+homedir <- "/Users/eballer/BBL/imco/pmacs/PMACS_remote"
+#homedir <- "/project/imco"
+
+
+#will loop through each of these
+analyses <- c("coupling_accuracy", "cbf_accuracy", "alff_accuracy") 
+models <- c("gam_age", "lm_age", "lm_sex", "lm_accuracy", "lm_exec_accuracy")
+corrs <- c("uncor", "fdr05") #correction
+
+
+
+for (analysis in analyses) {
+  for (model in models) {
+    for (corr in corrs) {  
+      
+  ### set results path
+       stat_path <- paste0("/", analysis, "/")
+       #print(stat_path)
+       result_path <- paste0(model, "_t_", corr)
+       #print(result_path)
+  
+  ### set paths
+    ## input
+      lh_stat_map <- read.csv(paste0(homedir, "/baller/results/", stat_path, "lh_", result_path, ".csv"), header = F)
+      rh_stat_map <- read.csv(paste0(homedir, "/baller/results/", stat_path, "rh_", result_path, ".csv"), header = F)
+      
+      parcelID <- read.csv(paste0(homedir, "/baller/processed_data/yeo_network_data/NetworkIDnumbers", parcel_type, parcel_num, ".csv"), header = F)
+      parcelName <- t(read.csv(paste0(homedir, "/baller/processed_data/yeo_network_data/NetworkNames", parcel_type, parcel_num, ".csv"), header = F))
+      
+      lh_parcel_nums <- read.csv(paste0(homedir, "/baller/processed_data/yeo_network_data/lh_", input_parcel_array_length, "_vertex_nums_", parcel_type, parcel_num, ".csv"), header = F)
+      rh_parcel_nums <- read.csv(paste0(homedir, "/baller/processed_data/yeo_network_data/rh_", input_parcel_array_length, "_vertex_nums_", parcel_type, parcel_num, ".csv"), header = F)
+      
+    ## output
+      lh_outdir <- paste0(homedir, "/baller/results/", stat_path, "lh_", result_path, "_", parcel_type, parcel_num, ".csv")
+      rh_outdir <- paste0(homedir, "/baller/results/", stat_path, "rh_", result_path, "_", parcel_type, parcel_num, ".csv")
+      
+      lh_outdir_pos <- paste0(homedir, "/baller/results/", stat_path, "lh_pos_", result_path, "_", parcel_type, parcel_num, ".csv")
+      rh_outdir_pos <- paste0(homedir, "/baller/results/", stat_path, "rh_pos_", result_path, "_", parcel_type, parcel_num, ".csv")
+      
+      lh_outdir_neg <- paste0(homedir, "/baller/results/", stat_path, "lh_neg_", result_path, "_", parcel_type, parcel_num, ".csv")
+      rh_outdir_neg <- paste0(homedir, "/baller/results/", stat_path, "rh_neg_", result_path, "_", parcel_type, parcel_num, ".csv")
+      
+    ### print output so you know what is going on
+      
+      print(paste0("Converting ", homedir, "/baller/results/", stat_path, "lh_", result_path, ".csv to ", parcel_type, parcel_num ))
+      print("Of note, these are the parcel names and associated numbers")
+      refnum_networknum_name <- cbind(parcelName, parcelID, 1:dim(parcelID)[1])
+      names(refnum_networknum_name) <- c("Network_name", "Net_number", "Mapping_for_matlab_PBP")
+      print(refnum_networknum_name)
+      
+      
+    #convert stat map to boolean
+      lh_stat_boolean <- ifelse(lh_stat_map == 0, 0, 1)
+      rh_stat_boolean <- ifelse(rh_stat_map == 0, 0, 1)
+      
+    #positive and negative vectors
+      lh_stat_boolean_pos <- ifelse(lh_stat_map > 0, 1, 0)
+      rh_stat_boolean_pos <- ifelse(rh_stat_map > 0, 1, 0)
+      
+      lh_stat_boolean_neg <- ifelse(lh_stat_map < 0, 1, 0)
+      rh_stat_boolean_neg <- ifelse(rh_stat_map < 0, 1, 0)
+      
+    #make a column of numbers for mapping
+      parcelID$network_num <- c(1:dim(parcelID)[1])
+      
+    #add extra row to parcelID, not clear why this didn't come from Yeo labels, maybe cerebellum?... 8 will equal 65793
+      # comment this out if not using yeo 
+      parcelID<- rbind(parcelID, c(65793, 8))
+      
+    #make vector for lh and rh with mapping
+      lh_numerical_map <- lh_parcel_nums
+      rh_numerical_map <- rh_parcel_nums
+      
+    #foreach vertex, which contains a bunch of numbers, match it to the appropriate column, and take the network num (i.e. yeo 2, which would correspond to Motor), associated with it
+      lh_numerical_map[] <- lapply(lh_parcel_nums, function(x) parcelID$network_num[match(x, parcelID$V1)])
+      rh_numerical_map[] <- lapply(rh_parcel_nums, function(x) parcelID$network_num[match(x, parcelID$V1)])
+      
+      #multiply
+      
+      lh_stat_booleanxnetwork <- lh_stat_boolean * lh_numerical_map
+      rh_stat_booleanxnetwork <- rh_stat_boolean * rh_numerical_map 
+      
+      lh_stat_booleanxnetwork_pos <- lh_stat_boolean_pos * lh_numerical_map
+      rh_stat_booleanxnetwork_pos <- rh_stat_boolean_pos * rh_numerical_map 
+      
+      lh_stat_booleanxnetwork_neg <- lh_stat_boolean_neg * lh_numerical_map
+      rh_stat_booleanxnetwork_neg <- rh_stat_boolean_neg * rh_numerical_map 
+      
+      
+      #write output
+      write.csv(x = lh_stat_booleanxnetwork, file = lh_outdir, quote = F, row.names = F)
+      write.csv(x = rh_stat_booleanxnetwork, file = rh_outdir, quote = F, row.names = F)
+      
+      #write output
+      write.csv(x = lh_stat_booleanxnetwork_pos, file = lh_outdir_pos, quote = F, row.names = F)
+      write.csv(x = rh_stat_booleanxnetwork_pos, file = rh_outdir_pos, quote = F, row.names = F)
+      
+      #write output
+      write.csv(x = lh_stat_booleanxnetwork_neg, file = lh_outdir_neg, quote = F, row.names = F)
+      write.csv(x = rh_stat_booleanxnetwork_neg, file = rh_outdir_neg, quote = F, row.names = F)
+      
+      
+      ##############################################
+      ######### Optional Second Mask Code ##########
+      ##############################################
+      
+      ##### Alternative second mask
+      
+      if (make_second_mask_flag == TRUE){
+        lh_mask_nums <- read.csv(paste0(homedir, second_mask_path, "lh_", mask, "_", mask_length, ".csv"), header = F)
+        rh_mask_nums <- read.csv(paste0(homedir, second_mask_path, "rh_", mask, "_", mask_length, ".csv"), header = F)
+       
+        #output
+        lh_outdir <- paste0(homedir, "/baller/results/", stat_path, "lh_", result_path, "_", mask, "_", mask_length, ".csv")
+        rh_outdir <- paste0(homedir, "/baller/results/", stat_path, "rh_", result_path, "_", mask, "_", mask_length, ".csv")
+        
+        lh_outdir_pos <- paste0(homedir, "/baller/results/", stat_path, "lh_pos_", result_path, "_", mask, "_", mask_length, ".csv")
+        rh_outdir_pos <- paste0(homedir, "/baller/results/", stat_path, "rh_pos_", result_path, "_", mask, "_", mask_length, ".csv")
+        
+        lh_outdir_neg <- paste0(homedir, "/baller/results/", stat_path, "lh_neg_", result_path, "_", mask, "_", mask_length, ".csv")
+        rh_outdir_neg <- paste0(homedir, "/baller/results/", stat_path, "rh_neg_", result_path, "_", mask, "_", mask_length, ".csv")
+        
+        ## multiply
+        lh_stat_booleanxnetwork <- lh_stat_boolean * lh_mask_nums
+        rh_stat_booleanxnetwork <- rh_stat_boolean * rh_mask_nums
+        
+        lh_stat_booleanxnetwork_pos <- lh_stat_boolean_pos * lh_mask_nums
+        rh_stat_booleanxnetwork_pos <- rh_stat_boolean_pos * rh_mask_nums 
+        
+        lh_stat_booleanxnetwork_neg <- lh_stat_boolean_neg * lh_mask_nums
+        rh_stat_booleanxnetwork_neg <- rh_stat_boolean_neg * rh_mask_nums
+        
+        #write output
+        write.csv(x = lh_stat_booleanxnetwork, file = lh_outdir, quote = F, row.names = F)
+        write.csv(x = rh_stat_booleanxnetwork, file = rh_outdir, quote = F, row.names = F)
+        
+        #write output
+        write.csv(x = lh_stat_booleanxnetwork_pos, file = lh_outdir_pos, quote = F, row.names = F)
+        write.csv(x = rh_stat_booleanxnetwork_pos, file = rh_outdir_pos, quote = F, row.names = F)
+        
+        #write output
+        write.csv(x = lh_stat_booleanxnetwork_neg, file = lh_outdir_neg, quote = F, row.names = F)
+        write.csv(x = rh_stat_booleanxnetwork_neg, file = rh_outdir_neg, quote = F, row.names = F)
+        
+        
+      }
+    }
+  }
+}
+
+
+```
+
+
+**Making actual visualization **
+
+This must be done in matlab unfortunately. First, log in to pmacs, and navigate to the PBP_Graphics directory, which contains all the scripts I have made to make pretty visualizations. This will get the right version of matlab for you as well. 
+
+```{bash prepare_and_run_matlab, eval=FALSE}
+cd /project/imco/baller/scripts/PBP_Graphics
+source ../load_matlab #contains the following line of code: bsub -Is -XF -q matlab_interactive 'bash'
+matlab -nodesktop
+
+```
+
+Now that you are at the matlab prompt, you will go through and run a series of commands below. I have included the command as well as a local path to the image for viewing. This is mostly because it takes forever to run the code if you remotely try to load all of the images into your script. If you are running, just search and replace the path and it should work just fine. You give paths to right and left hemisphere vectors, as well as the output path of where you'd like your image stored.
+
+Sample code (from PBP_vertWiseEffect_Erica_Ts_results_outpath.m)
+
+```{bash this_is_actually_matlab_code, eval=FALSE}
+function PBP_vertWiseEffect_Erica(LH,RH,name)% pretty picture code, AAB 4/2018 - AP 5/1/20 - Updated to threshold according to inp
+ut - 1/12/21
+% data should be vectors, 10242 in length if fsaverage5 is used
+% if using higher resolution, then change accordingly
+% depencies include: matlab freesrufer functions, subaxis.m (matlab central), inferno color scale (matlab central - for Sam ;)
+
+%%% SET THRESHOLDS AS DESIRED HERE: only fill in each threshold as needed (no need to set both if you only want to threshold one e
+nd)
+% Values at or above this set to gray
+ %Uthresh=-2;
+% Values at or below this set to gray
+ LThresh=2;
+%%%
+
+
+addpath(genpath('/appl/freesurfer-6.0.0/matlab/'));
+addpath(genpath('/project/imco/baller/scripts/subaxis/'));
+addpath(genpath('/project/imco/baller/scripts/Colormaps/Colormaps (5)/Colormaps/'));
+%{
+addpath(genpath('/cbica/projects/alpraz_EI/scripts/tools/'));
+ProjectFolder = '/cbica/projects/pinesParcels/data/SingleParcellation';
+SubjectsFolder = '/cbica/software/external/freesurfer/centos7/5.3.0/subjects/fsaverage5';
+%}
+
+plot_text='';
+[vertices, faces] = freesurfer_read_surf('/project/imco/surfaces/fsaverage5/surf/lh.inflated');
+%using lh.gray will make more anatomical looking plot but harder to see into sulci
+right = readtable(RH,'TreatAsEmpty','NA','ReadVariableNames',false);
+datar = table2array(right);
+left = readtable(LH,'TreatAsEmpty','NA','ReadVariableNames',false);
+datal = table2array(left);
+
+%left=load(LHvec);
+%right=load(RHvec);
+%datal=left;
+%datar=right;
+minval = min(min(datal),min(datar)) %useful for colorbar later	
+
+%set NaN to 0
+%I generally have the midcut region set to NaN
+%in the csv files that I read in
+indexNaNrh = find(isnan(datar));
+indexNaNlh = find(isnan(datal));
+datar(indexNaNrh)=0;
+datal(indexNaNlh)=0;
+datalr=[datal; datar];
+%invoke thresholding 1/12/21
+if exist('Uthresh','Var') == 1;
+	AboveThresh= datalr > Uthresh;
+	datalr(AboveThresh)=0;
+end
+if exist('LThresh','Var') ==1;
+	BelowThresh= datalr < LThresh;
+	datalr(BelowThresh)=0;
+end
+%%% set color scale
+% 1/12/21 - for p values, visualizing 1/p might be more effective. comment out line below and  uncomment subsequent line to nix th
+is approach.
+%datalr=1./datalr;
+
+
+% 12/1/21 tiny bit of code to deal with 1/0 in matlab
+InfIndex=find(datalr==Inf);
+% Infinity values to 0
+datalr(InfIndex)=0;
+
+%AP% set to make white zero on all maps
+maxabs=prctile(abs(datalr),88);
+%mincol= minval-.00001 
+%maxcol=maxabs
+%mincol=-maxabs
+maxcol=max(datalr)
+mincol=min(datalr)
+%change above to set max/min manually or by other means
+%custommap=colormap('plasma'); %or whatever
+% for white at 0
+%custommap=colormap(b2r(-1,1));
+%custommap=colormap('jet');
+custommap=colormap('plasma')
+custommap(1,:)=[0.75 0.75 0.75];
+
+
+data=datalr(1:10242);
+asub = subaxis(4,2,1, 'sh', 0, 'sv', 0, 'padding', 0, 'margin', 0);
+%asub = subplot(4,2,1)
+% note use of subaxis is to ged rid of white space around brains 
+% if you don't care about that, it's faster and less likely to cause
+% issues if you use subplot instead
+% if so, bet rid of all of the posnew stuff below
+
+aplot = trisurf(faces, vertices(:,1), vertices(:,2), vertices(:,3),data)
+view([90 0]);
+colormap(custommap)
+caxis([mincol; maxcol]);
+daspect([1 1 1]);
+axis tight;
+axis vis3d off;
+lighting gouraud; %phong; 
+material metal %shiny %metal; 
+shading flat;
+camlight;
+alpha(1)
+
+asub = subaxis(4,2,3, 'sh', 0.00, 'sv', 0.00, 'padding', 0, 'margin', 0);
+aplot = trisurf(faces, vertices(:,1), vertices(:,2), vertices(:,3),data)
+view([90 0]);
+rotate(aplot, [0 0 1], 180)
+colormap(custommap)
+caxis([mincol; maxcol]);
+daspect([1 1 1]);
+axis tight;
+axis vis3d off;
+lighting gouraud; %phong; 
+material metal %shiny %metal; 
+shading flat;
+camlight;
+alpha(1)
+set(gcf,'Color','w')
+
+asub = subaxis(4,2,5, 'sh', 0.0, 'sv', 0.0, 'padding', 0, 'margin', 0);
+aplot = trisurf(faces, vertices(:,1), vertices(:,2), vertices(:,3),data)
+view([90 0]);
+rotate(aplot, [0 0 1], 225)
+colormap(custommap)
+caxis([mincol; maxcol]);
+daspect([1 1 1]);
+axis tight;
+axis vis3d off;
+lighting gouraud; %phong; 
+material metal %shiny %metal; 
+shading flat;
+camlight;
+alpha(1)
+set(gcf,'Color','w')
+
+asub = subaxis(4,2,7, 'sh', 0.0, 'sv', 0.0, 'padding', 0, 'margin', 0, 'MT', 0.0);
+aplot = trisurf(faces, vertices(:,1), vertices(:,2), vertices(:,3),data)
+view([90 0]);
+axis vis3d off;
+rotate(aplot, [0 1 0], 270)
+colormap(custommap)
+caxis([mincol; maxcol]);
+daspect([1 1 1]);
+axis tight;
+lighting gouraud; %phong; 
+material metal %shiny %metal; 
+shading flat;
+camlight;
+alpha(1)
+set(gcf,'Color','w')
+
+ pos = get(asub, 'Position');
+ posnew = pos; posnew(2) = posnew(2) + 0.04; set(asub, 'Position', posnew);
+ %white space again
+
+%plot title 
+title(plot_text)
+set(get(gca,'title'),'Position',[332 119 3])
+
+%%% right hemisphere
+data=datalr(10243:20484);
+
+[vertices, faces] = freesurfer_read_surf('/project/imco/surfaces/fsaverage5/surf/rh.inflated');
+
+asub = subaxis(4,2,2, 'sh', 0.0, 'sv', 0.0, 'padding', 0, 'margin', 0);
+aplot = trisurf(faces, vertices(:,1), vertices(:,2), vertices(:,3),data)
+view([90 0]);
+rotate(aplot, [0 0 1], 180)
+colormap(custommap)
+caxis([mincol; maxcol]);
+%caxis([NAval; max_data])
+daspect([1 1 1]);
+axis tight;
+axis vis3d off;
+lighting phong; %gouraud
+material metal %shiny %metal; 
+shading flat;
+camlight;
+alpha(1)
+%colormap(mycol)
+
+
+ pos = get(asub, 'Position');
+ posnew = pos; posnew(1) = posnew(1) - 0.22; set(asub, 'Position', posnew);
+
+asub = subaxis(4,2,4, 'sh', 0.0, 'sv', 0.0, 'padding', 0, 'margin', 0);
+aplot = trisurf(faces, vertices(:,1), vertices(:,2), vertices(:,3),data)
+view([90 0]);
+colormap(custommap)
+caxis([mincol; maxcol]);
+daspect([1 1 1]);
+axis tight;
+axis vis3d off;
+lighting gouraud; %phong; 
+material metal %shiny %metal; 
+shading flat;
+camlight;
+alpha(1)
+set(gcf,'Color','w')
+ pos = get(asub, 'Position');
+ posnew = pos; posnew(1) = posnew(1) - 0.22; set(asub, 'Position', posnew);
+
+asub = subaxis(4,2,6, 'sh', 0.0, 'sv', 0.0, 'padding', 0, 'margin', 0);
+
+aplot = trisurf(faces, vertices(:,1), vertices(:,2), vertices(:,3),data)
+view([90 0]);
+rotate(aplot, [0 0 1], -45)
+colormap(custommap)
+caxis([mincol; maxcol]);
+daspect([1 1 1]);
+axis tight;
+axis vis3d off;
+lighting gouraud; %phong; 
+material metal %shiny %metal; 
+shading flat;
+camlight;
+alpha(1)
+set(gcf,'Color','w')
+ pos = get(asub, 'Position');
+ posnew = pos; posnew(1) = posnew(1) - 0.22; set(asub, 'Position', posnew);
+
+
+%%%
+asub = subaxis(4,2,8, 'sh', 0.0, 'sv', 0.0, 'padding', 0, 'margin', 0);
+
+aplot = trisurf(faces, vertices(:,1), vertices(:,2), vertices(:,3),data)
+view([90 0]);
+axis vis3d off;
+rotate(aplot, [0 1 0], 270)
+rotate(aplot, [1 0 0], 180)
+colormap(custommap)
+caxis([mincol; maxcol]);
+daspect([1 1 1]);
+axis tight;
+lighting gouraud; %phong; 
+material metal %shiny %metal; 
+shading flat;
+camlight;
+alpha(1)
+%set(gcf,'Color',[.2 .2 .2])
+set(gcf,'Color',[1,1,1])
+ pos = get(asub, 'Position');
+ posnew = pos; posnew(2) = posnew(2) + 0.04; set(asub, 'Position', posnew);
+ pos = get(asub, 'Position');
+ posnew = pos; posnew(1) = posnew(1) - 0.22; set(asub, 'Position', posnew);
+%%%
+
+
+acbar = colorbar('EastOutside')
+set(acbar, 'position', [0.40 0.270 0.02 0.20])
+
+
+% going lower rez for now, but giant vector rendering was beaut
+print('-dpng','-r600',['/project/imco/baller/results/images/pbp/' char(name)])
+```
+
+
+New images made on PMACS:/project/imco/baller/scripts/PBP_graphics
+
+First, get these pics locally
+
+scp eballer@transfer.pmacs.upenn.edu:/project/imco/baller/results/images/pbp/* /Users/eballer/BBL/imco/results/images/pbp/.
+
+
+** Yeo7 (PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath.m) **
+
+-----
+
+Using the following mapping of Yeo network to random coded number to num for display
+
+<img width="100%" src="/Users/eballer/BBL/imco/results/images/Yeo7_net_to_number.png"/>
+
+
+[x] coupling gam age, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05_Yeo7.csv','coupling_gam_age_yeo7_fdr05')
+
+[x] coupling lm age, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_lm_age_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_age_t_fdr05_Yeo7.csv','coupling_lm_age_yeo7_fdr05')  
+
+[x] coupling lm sex, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_lm_sex_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_sex_t_fdr05_Yeo7.csv','coupling_lm_sex_yeo7_fdr05')  
+
+[x] coupling lm exec accuracy, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05_Yeo7.csv','coupling_lm_exec_accuracy_yeo7_fdr05')   
+
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_gam_age_yeo7_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_lm_age_yeo7_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_lm_sex_yeo7_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_lm_exec_accuracy_yeo7_fdr05.png"/>
+
+
+----- 
+** Positive Direction **
+-----
+
+[x] coupling lm age, T=pos, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_pos_lm_age_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_age_t_fdr05_Yeo7.csv','coupling_pos_lm_age_yeo7_fdr05')  
+
+[x] coupling lm sex, T=pos, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_pos_lm_sex_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_sex_t_fdr05_Yeo7.csv','coupling_pos_lm_sex_yeo7_fdr05') 
+
+[x] coupling lm exec accuracy, T=pos, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05_Yeo7.csv','coupling_pos_lm_exec_accuracy_yeo7_fdr05')
+
+
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_pos_lm_age_yeo7_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_pos_lm_sex_yeo7_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_pos_lm_exec_accuracy_yeo7_fdr05.png"/>
+
+----- 
+** Negative Direction **
+-----
+
+[x] coupling lm age, T=neg, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_neg_lm_age_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_age_t_fdr05_Yeo7.csv','coupling_neg_lm_age_yeo7_fdr05') 
+
+[x] coupling lm sex, T=neg, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_neg_lm_sex_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_sex_t_fdr05_Yeo7.csv','coupling_neg_lm_sex_yeo7_fdr05')
+
+[x] coupling lm exec accuracy, T=neg, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05_Yeo7.csv','coupling_neg_lm_exec_accuracy_yeo7_fdr05')
+
+
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_neg_lm_age_yeo7_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_neg_lm_sex_yeo7_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_neg_lm_exec_accuracy_yeo7_fdr05.png"/>
+
+-----
+** Mean images (PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath.m) **
+-----
+
+[x] mean coupling (abs(T)>2)
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('//project/imco/baller/results/mean_maps/n831_lh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv','/project/imco/baller/results/mean_maps/n831_rh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv','coupling_mean_fdr05')
+
+[x] mean alff (abs(T)>2)
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('//project/imco/baller/results/mean_maps/lh_alff_mean.csv','/project/imco/baller/results/mean_maps/rh_alff_mean.csv','alff_mean_fdr05')
+
+[x] mean cbf (abs(T)>2)
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('//project/imco/baller/results/mean_maps/lh_cbf_mean.csv','/project/imco/baller/results/mean_maps/rh_cbf_mean.csv','cbf_mean_fdr05')
+
+mean image (PBP_vertWiseEffect_Erica_GI.m)
+[x] aerobic glycolysis
+
+command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/processed_data/glycolytic_index_maps/lh_GI_fsaverage5_10242.csv','/project/imco/baller/processed_data/glycolytic_index_maps/rh_GI_fsaverage5_10242.csv','glycolytic_index_red_blue')
+
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_mean_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/alff_mean_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/cbf_mean_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_red_blue.png"/>
+
+-----
+** Blue and red coupling maps (PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath.m) **
+-----
+
+[x] coupling gam age
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05.csv','coupling_gam_age_red_and_blue_fdr05')
+
+[x] coupling lm age, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_age_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_age_t_fdr05.csv','coupling_lm_age_red_and_blue_fdr05')
+
+
+[x] coupling lm sex, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_sex_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_sex_t_fdr05.csv','coupling_lm_sex_red_and_blue_fdr05')
+
+[x] coupling lm exec accuracy, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05.csv','coupling_lm_exec_accuracy_red_and_blue_fdr05')
+
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_gam_age_red_and_blue_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_lm_age_red_and_blue_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_lm_sex_red_and_blue_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_lm_exec_accuracy_red_and_blue_fdr05.png"/>
+
+-----
+** Alff maps **
+-----
+
+[x] alff gam age, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/alff_accuracy/lh_gam_age_t_fdr05.csv','/project/imco/baller/results/alff_accuracy/rh_gam_age_t_fdr05.csv','alff_gam_age_red_and_blue_fdr05')
+
+[x] alff lm age, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/alff_accuracy/lh_lm_age_t_fdr05.csv','/project/imco/baller/results/alff_accuracy/rh_lm_age_t_fdr05.csv','alff_lm_age_red_and_blue_fdr05')
+
+[x] alff lm sex, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/alff_accuracy/lh_lm_sex_t_fdr05.csv','/project/imco/baller/results/alff_accuracy/rh_lm_sex_t_fdr05.csv','alff_lm_sex_red_and_blue_fdr05')
+
+[x] alff lm exec accuracy, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/alff_accuracy/lh_lm_exec_accuracy_t_fdr05.csv','/project/imco/baller/results/alff_accuracy/rh_lm_exec_accuracy_t_fdr05.csv','alff_lm_exec_accuracy_red_and_blue_fdr05')
+
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/alff_gam_age_red_and_blue_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/alff_lm_age_red_and_blue_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/alff_lm_sex_red_and_blue_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/alff_lm_exec_accuracy_red_and_blue_fdr05.png"/>
+
+
+-----
+** Cbf maps **
+-----
+
+[x] cbf gam age, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/cbf_accuracy/lh_gam_age_t_fdr05.csv','/project/imco/baller/results/cbf_accuracy/rh_gam_age_t_fdr05.csv','cbf_gam_age_red_and_blue_fdr05')
+
+[x] cbf lm age, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/cbf_accuracy/lh_lm_age_t_fdr05.csv','/project/imco/baller/results/cbf_accuracy/rh_lm_age_t_fdr05.csv','cbf_lm_age_red_and_blue_fdr05')
+
+
+[x] cbf lm sex, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/cbf_accuracy/lh_lm_sex_t_fdr05.csv','/project/imco/baller/results/cbf_accuracy/rh_lm_sex_t_fdr05.csv','cbf_lm_sex_red_and_blue_fdr05')
+
+[x] cbf lm exec accuracy, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/cbf_accuracy/lh_lm_exec_accuracy_t_fdr05.csv','/project/imco/baller/results/cbf_accuracy/rh_lm_exec_accuracy_t_fdr05.csv','cbf_lm_exec_accuracy_red_and_blue_fdr05')
+
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/cbf_gam_age_red_and_blue_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/cbf_lm_age_red_and_blue_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/cbf_lm_sex_red_and_blue_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/cbf_lm_exec_accuracy_red_and_blue_fdr05.png"/>
+
+-----
+** Gam using the nice plasma (PBP_vertWiseEffect_Erica_Ts_results_outpath.m) **
+-----
+
+[x] coupling gam age, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05.csv','coupling_gam_age_plasma_fdr05')
+
+[x] alff lm age, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_results_outpath('/project/imco/baller/results/alff_accuracy/lh_gam_age_t_fdr05.csv','/project/imco/baller/results/alff_accuracy/rh_gam_age_t_fdr05.csv','alff_gam_age_plasma_fdr05')
+
+[x] cbf gam age, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_results_outpath('/project/imco/baller/results/cbf_accuracy/lh_gam_age_t_fdr05.csv','/project/imco/baller/results/cbf_accuracy/rh_gam_age_t_fdr05.csv','cbf_gam_age_plasma_fdr05')
+
+[x] coupling gam exec accuracy, fdr05
+
+command: PBP_vertWiseEffect_Erica_Ts_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_exec_accuracy_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_exec_accuracy_t_fdr05.csv','coupling_gam_exec_accuracy_plasma_fdr05')
+
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_gam_age_plasma_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/alff_gam_age_plasma_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/cbf_gam_age_plasma_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_gam_exec_accuracy_plasma_fdr05.png"/>
+
+-----
+** Glycolytic index plasma (PBP_vertWiseEffect_Erica_GI_plasma_results_outpath.m) **
+-----
+
+[x] GI
+
+command: PBP_vertWiseEffect_Erica_GI_plasma_results_outpath('/project/imco/baller/processed_data/glycolytic_index_maps/lh_GI_fsaverage5_10242.csv','/project/imco/baller/processed_data/glycolytic_index_maps/rh_GI_fsaverage5_10242.csv','glycolytic_index_plasma')
+
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_plasma.png"/>
+
+-----
+** Glycolytic index red and blue, masking the T maps (PBP_vertWiseEffect_Erica_GI_results_outpath.m) **
+-----
+
+-----
+** bidirectional **
+-----
+
+[x] gam age, pfdr05
+
+command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_gam_age')
+
+[x] lm age, pfdr05
+
+command:PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_lm_age')
+
+[x] lm sex, pfdr05
+
+command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_lm_sex')
+
+[] lm exec accuracy, pfdr05
+
+command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_lm_exec_accuracy')
+
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_gam_age.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_lm_age.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_lm_sex.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_lm_exec_accuracy.png"/>
+
+-----
+** positive direction **
+-----
+
+[x] gam age, pfdr05
+
+command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_gam_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_gam_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_pos_gam_age')
+
+[x] lm age, pfdr05
+
+command:PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_pos_lm_age')
+
+[x] lm sex, pfdr05
+
+command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_pos_lm_sex')
+
+[x] lm exec accuracy, pfdr05
+
+command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_pos_lm_exec_accuracy')
+
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_pos_gam_age.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_pos_lm_age.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_pos_lm_sex.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_pos_lm_exec_accuracy.png"/>
+
+-----
+** negative direction **
+-----
+
+
+[x] gam age, pfdr05
+
+command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_gam_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_gam_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_neg_gam_age')
+
+[x] lm age, pfdr05
+
+command:PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_neg_lm_age')
+
+[x] lm sex, pfdr05
+
+command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_neg_lm_sex')
+
+[x] lm exec accuracy, pfdr05
+
+command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_neg_lm_exec_accuracy')
+
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_neg_gam_age.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_neg_lm_age.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_neg_lm_sex.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_neg_lm_exec_accuracy.png"/>
+
+
+
+
+
+
