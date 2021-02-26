@@ -1,18 +1,20 @@
 ---
 title: "IMCO 2021 Project - Age, Sex, and Accuracy"
 author: "Erica Baller"
-date: "2/23/2021"
+date: "2/26/2021"
 output: html_document
 params:
   args: myarg
 ---
 
 ```{r setup, include=TRUE}
+#install.packages("knitr")
+#library(knitr)
 knitr::opts_chunk$set(echo = TRUE)
 
 ### Set up your paths
-homedir = '/Users/eballer/BBL/imco/pmacs/PMACS_remote'
-#homedir = '/project/imco'
+#homedir = '/Users/eballer/BBL/imco/pmacs/PMACS_remote'
+homedir = '/project/imco'
 mydirec = '/baller'
 subListPath = '/subjectLists'
 scriptsPath = '/scripts'
@@ -24,7 +26,8 @@ source(paste0(homedir, mydirec, scriptsPath, '/imco_functions.R'))
 
 ## IMCO Project
 
-Welcome to IMCO 2021! This project is a culmination of many years of work and a beautiful collaboration between Ted Satterthwaite and Taki Shinohara. Its many iterations have taken us from structural to functional data, chead to pmacs, fsl to freesurfer to R to matlab. Many trainees have been a part of the project, including Lauren Beard, Ali Valcarcel, Kristin Linn, Tinashe Tapera. This last (and final) round of analyses has been run by Erica Baller, with incredible support from Azeez Adebimpe. A big thank you to Bart Larsen for advising on modeling, and Adam Pines for his tireless help with taking my graphics to the next level. Thank you to Val Sydnor and Jakob Seidlitz for providing maps for our fancier visualization. In the remaining part of this document, I will take you on a step by step journey through the analysis, code, and visualizations. Though I would ideally like this to be a one and done markdown, some things will have to be done manually (mostly the visualizations in Matlab). I'll provide the code as well as the image it produced for me so you can double check it. Enjoy!
+Welcome to IMCO 2021! This project is a culmination of many years of work and a beautiful collaboration between Ted Satterthwaite and Taki Shinohara. Its many iterations have taken us from structural to functional data, chead to pmacs, fsl to freesurfer to R to matlab. Many trainees have been a part of the project, including Lauren Beard, Ali Valcarcel, Kristin Linn, Tinashe Tapera. This last (and final) round of analyses has been run by Erica Baller, with incredible support from Azeez Adebimpe. A big thank you to Bart Larsen for advising on modeling, and Adam Pines for his tireless help with taking my graphics to the next level. Thank you to Val Sydnor and Jakob Seidlitz for providing maps for our fancier visualization. In the remaining part of this document, I will take you on a step by step journey through the analysis, code, and visualizations. I'll provide the code as well as the image it produced for me so you can double check it. Enjoy!
+
 
 Git for this project can be found at: https://github.com/PennLINC/imco_pmacs
 
@@ -32,9 +35,15 @@ Lab notebook (with day by day documentation):
 
 Erica Baller local computer and github script: Replicating_LB_2D_imco_started_20200911.Rmd
 
+** Notes before you get started **
+ 1) Please make sure you have appropriately specified your home directory above
+ 2) Please make sure to **xbash** 
+ 3) After that, things should run just fine
+
 To run this from command line ** on PMACS**: 
 
 ```{bash run_markdown, eval=FALSE}
+xbash #you must do this first!!!
 Rscript -e "rmarkdown::render('/project/imco/baller/Project_markdown/IMCO_2021_Project_Age_Sex_Accuracy.Rmd')"
 ```
 
@@ -200,7 +209,7 @@ Code:
 
 # 1) /project/imco/pnc/neuroimaging/asl/n1601_PcaslQaData_20170403.csv
 # 2) /project/imco/pnc/neuroimaging/rest/n1601_RestQAData_20170714.csv
-# 3) project/imco/pnc/neuroimaging/t1struct/n1601_t1QaData_20170306.csv
+# 3) /project/imco/pnc/neuroimaging/t1struct/n1601_t1QaData_20170306.csv
 # 4) /project/imco/pnc/health/n1601_health_20170421.csv
 # 5) /project/imco/pnc/demographics/n1601_demographics_go1_20161212.csv
 
@@ -823,6 +832,10 @@ It is not too hard to add extra analyses
   3) Make sure within the loops you specific the new models you'd like
  
 **Making extra files for visualization (including yeo network maps or glycolysis maps) **  
+
+As part of our analysis, I wanted to make extra maps that allowed me to see the overlap between our fdr corrected values and well known masks (yeo, GI, cmrglu). I developed the script below. It runs fast and creates tons of masks that you can look at.
+
+
 ```{r convert_Ts_to_parcels_for_display, eval=FALSE}
 ################################
 ## 2/19/2021 Convert Parcels ###
@@ -835,31 +848,32 @@ It is not too hard to add extra analyses
 ### This script emerged out of the desire to take vertex output and display it within different networks/parcels
 
 #pre: input: 
-    #1) a vector(n=10242) of T values, with 0s indicating vertices you don't want to include
-        #- the default is to make maps for ALL interesting analyses (coupling, alff, cbf; lm and gam; uncor and fdr05 corrected). 
-       #If you would like to change it, please do so in the following section by commenting out:
-         #analyses <- c("coupling_accuracy", "cbf_accuracy", "alff_accuracy") 
-         #models <- c("gam_age", "lm_age", "lm_sex", "lm_accuracy", "lm_exec_accuracy")
-         #corrs <- c("uncor", "fdr05") #correction
-    #2) yeo vectors
-        #a) lh and rh 10242 matrices with the vertex #s
-        #b) the ID number matrix (length = 7 for Yeo7)
-        #c) the names of the networks (length = 7 for Yeo7)
-    #3) this is optional second mask, I am using glycolytic index so I don't have to rewrite the script
+#1) a vector(n=10242) of T values, with 0s indicating vertices you don't want to include
+#- the default is to make maps for ALL interesting analyses (coupling, alff, cbf; lm and gam; uncor and fdr05 corrected). 
+#If you would like to change it, please do so in the following section by commenting out:
+#analyses <- c("coupling_accuracy", "cbf_accuracy", "alff_accuracy") 
+#models <- c("gam_age", "lm_age", "lm_sex", "lm_accuracy", "lm_exec_accuracy")
+#corrs <- c("uncor", "fdr05") #correction
+#2) mask vectors
+#a) lh and rh 10242 matrices with the vertex #s
+#b) the ID number matrix (length = 7 for Yeo7)
+#c) the names of the networks (length = 7 for Yeo7)
+#3) this is optional second mask (or masks), I am running through all options so I don't have to rewrite the script
+   #- if you do not want the other masks, set it to FALSE. If you would like to change which masks they are, do so in the %masks line
 
 #post: 
-  #1) a vector corresponding to the parcel value for the regions you want to display
-  #2) Optional - a vector corresponding to second map
+#1) a vector corresponding to the parcel value for the regions you want to display
+#2) Optional - a vector corresponding to second map
 
 #uses: 
-  #1) Will take the input vector, convert all non-zeros to 1s. 
-    #will also do this for positive and negative only, for better visualization
-  #2) will multiple this vector with the parcel assignment (or second mask)
-  #3) Will save output in chosen directory
+#1) Will take the input vector, convert all non-zeros to 1s. 
+#will also do this for positive and negative only, for better visualization
+#2) will multiple this vector with the parcel assignment (or second mask)
+#3) Will save output in chosen directory
 
 #dependencies
-  #any R should do
-  #I am using PMACS, and R 3.2.5
+#any R should do
+#I am using PMACS, and R 3.2.5
 
 ### get arguments if needed
 #args = commandArgs(trailingOnly=TRUE)
@@ -870,14 +884,14 @@ parcel_num = 7
 input_parcel_array_length = 10242
 
 ##### Alternative second mask
-make_second_mask_flag = TRUE #i.e. I want to make an additional mask
-second_mask_path = "/baller/processed_data/glycolytic_index_maps/"
-mask = "GI_fsaverage5"
+make_second_mask_flag = TRUE #i.e. I want to make an additional mask(s)
+second_mask_path = "/baller/processed_data/zaixu_maps/fsaverage5/"
+masks = c("GI_fsaverage5_10242.csv", "AllometricScaling_fsaverage5.csv", "CMRGlu_fsaverage5.csv", "Hill2010_evo_fsaverage5.csv","MeanCBF.fsaverage5.csv")
 mask_length = 10242
 
 ## set abs and relative paths. Must toggle before running locally/on cluster
-homedir <- "/Users/eballer/BBL/imco/pmacs/PMACS_remote"
-#homedir <- "/project/imco"
+#homedir <- "/Users/eballer/BBL/imco/pmacs/PMACS_remote"
+homedir <- "/project/imco"
 
 
 #will loop through each of these
@@ -891,14 +905,14 @@ for (analysis in analyses) {
   for (model in models) {
     for (corr in corrs) {  
       
-  ### set results path
-       stat_path <- paste0("/", analysis, "/")
-       #print(stat_path)
-       result_path <- paste0(model, "_t_", corr)
-       #print(result_path)
-  
-  ### set paths
-    ## input
+      ### set results path
+      stat_path <- paste0("/", analysis, "/")
+      print(stat_path)
+      result_path <- paste0(model, "_t_", corr)
+      print(result_path)
+      
+      ### set paths
+      ## input
       lh_stat_map <- read.csv(paste0(homedir, "/baller/results/", stat_path, "lh_", result_path, ".csv"), header = F)
       rh_stat_map <- read.csv(paste0(homedir, "/baller/results/", stat_path, "rh_", result_path, ".csv"), header = F)
       
@@ -908,7 +922,7 @@ for (analysis in analyses) {
       lh_parcel_nums <- read.csv(paste0(homedir, "/baller/processed_data/yeo_network_data/lh_", input_parcel_array_length, "_vertex_nums_", parcel_type, parcel_num, ".csv"), header = F)
       rh_parcel_nums <- read.csv(paste0(homedir, "/baller/processed_data/yeo_network_data/rh_", input_parcel_array_length, "_vertex_nums_", parcel_type, parcel_num, ".csv"), header = F)
       
-    ## output
+      ## output
       lh_outdir <- paste0(homedir, "/baller/results/", stat_path, "lh_", result_path, "_", parcel_type, parcel_num, ".csv")
       rh_outdir <- paste0(homedir, "/baller/results/", stat_path, "rh_", result_path, "_", parcel_type, parcel_num, ".csv")
       
@@ -918,7 +932,7 @@ for (analysis in analyses) {
       lh_outdir_neg <- paste0(homedir, "/baller/results/", stat_path, "lh_neg_", result_path, "_", parcel_type, parcel_num, ".csv")
       rh_outdir_neg <- paste0(homedir, "/baller/results/", stat_path, "rh_neg_", result_path, "_", parcel_type, parcel_num, ".csv")
       
-    ### print output so you know what is going on
+      ### print output so you know what is going on
       
       print(paste0("Converting ", homedir, "/baller/results/", stat_path, "lh_", result_path, ".csv to ", parcel_type, parcel_num ))
       print("Of note, these are the parcel names and associated numbers")
@@ -927,29 +941,29 @@ for (analysis in analyses) {
       print(refnum_networknum_name)
       
       
-    #convert stat map to boolean
+      #convert stat map to boolean
       lh_stat_boolean <- ifelse(lh_stat_map == 0, 0, 1)
       rh_stat_boolean <- ifelse(rh_stat_map == 0, 0, 1)
       
-    #positive and negative vectors
+      #positive and negative vectors
       lh_stat_boolean_pos <- ifelse(lh_stat_map > 0, 1, 0)
       rh_stat_boolean_pos <- ifelse(rh_stat_map > 0, 1, 0)
       
       lh_stat_boolean_neg <- ifelse(lh_stat_map < 0, 1, 0)
       rh_stat_boolean_neg <- ifelse(rh_stat_map < 0, 1, 0)
       
-    #make a column of numbers for mapping
+      #make a column of numbers for mapping
       parcelID$network_num <- c(1:dim(parcelID)[1])
       
-    #add extra row to parcelID, not clear why this didn't come from Yeo labels, maybe cerebellum?... 8 will equal 65793
+      #add extra row to parcelID, not clear why this didn't come from Yeo labels, maybe cerebellum?... 8 will equal 65793
       # comment this out if not using yeo 
       parcelID<- rbind(parcelID, c(65793, 8))
       
-    #make vector for lh and rh with mapping
+      #make vector for lh and rh with mapping
       lh_numerical_map <- lh_parcel_nums
       rh_numerical_map <- rh_parcel_nums
       
-    #foreach vertex, which contains a bunch of numbers, match it to the appropriate column, and take the network num (i.e. yeo 2, which would correspond to Motor), associated with it
+      #foreach vertex, which contains a bunch of numbers, match it to the appropriate column, and take the network num (i.e. yeo 2, which would correspond to Motor), associated with it
       lh_numerical_map[] <- lapply(lh_parcel_nums, function(x) parcelID$network_num[match(x, parcelID$V1)])
       rh_numerical_map[] <- lapply(rh_parcel_nums, function(x) parcelID$network_num[match(x, parcelID$V1)])
       
@@ -966,16 +980,16 @@ for (analysis in analyses) {
       
       
       #write output
-      write.csv(x = lh_stat_booleanxnetwork, file = lh_outdir, quote = F, row.names = F)
-      write.csv(x = rh_stat_booleanxnetwork, file = rh_outdir, quote = F, row.names = F)
+      write.table(x = lh_stat_booleanxnetwork, file = lh_outdir, quote = F, row.names = F, col.names = F)
+      write.table(x = rh_stat_booleanxnetwork, file = rh_outdir, quote = F, row.names = F, col.names = F)
       
       #write output
-      write.csv(x = lh_stat_booleanxnetwork_pos, file = lh_outdir_pos, quote = F, row.names = F)
-      write.csv(x = rh_stat_booleanxnetwork_pos, file = rh_outdir_pos, quote = F, row.names = F)
+      write.table(x = lh_stat_booleanxnetwork_pos, file = lh_outdir_pos, quote = F, row.names = F, col.names = F)
+      write.table(x = rh_stat_booleanxnetwork_pos, file = rh_outdir_pos, quote = F, row.names = F, col.names = F)
       
       #write output
-      write.csv(x = lh_stat_booleanxnetwork_neg, file = lh_outdir_neg, quote = F, row.names = F)
-      write.csv(x = rh_stat_booleanxnetwork_neg, file = rh_outdir_neg, quote = F, row.names = F)
+      write.table(x = lh_stat_booleanxnetwork_neg, file = lh_outdir_neg, quote = F, row.names = F, col.names = F)
+      write.table(x = rh_stat_booleanxnetwork_neg, file = rh_outdir_neg, quote = F, row.names = F, col.names = F)
       
       
       ##############################################
@@ -985,41 +999,45 @@ for (analysis in analyses) {
       ##### Alternative second mask
       
       if (make_second_mask_flag == TRUE){
-        lh_mask_nums <- read.csv(paste0(homedir, second_mask_path, "lh_", mask, "_", mask_length, ".csv"), header = F)
-        rh_mask_nums <- read.csv(paste0(homedir, second_mask_path, "rh_", mask, "_", mask_length, ".csv"), header = F)
-       
-        #output
-        lh_outdir <- paste0(homedir, "/baller/results/", stat_path, "lh_", result_path, "_", mask, "_", mask_length, ".csv")
-        rh_outdir <- paste0(homedir, "/baller/results/", stat_path, "rh_", result_path, "_", mask, "_", mask_length, ".csv")
+        for (mask in masks) {
+          lh_mask_nums <- read.csv(paste0(homedir, second_mask_path, "lh.", mask), header = F)
+          rh_mask_nums <- read.csv(paste0(homedir, second_mask_path, "rh.", mask), header = F)
+          print(paste0(homedir, second_mask_path, "lh.", mask), header = F)
+          print(paste0(homedir, second_mask_path, "rh.", mask), header = F)
         
-        lh_outdir_pos <- paste0(homedir, "/baller/results/", stat_path, "lh_pos_", result_path, "_", mask, "_", mask_length, ".csv")
-        rh_outdir_pos <- paste0(homedir, "/baller/results/", stat_path, "rh_pos_", result_path, "_", mask, "_", mask_length, ".csv")
-        
-        lh_outdir_neg <- paste0(homedir, "/baller/results/", stat_path, "lh_neg_", result_path, "_", mask, "_", mask_length, ".csv")
-        rh_outdir_neg <- paste0(homedir, "/baller/results/", stat_path, "rh_neg_", result_path, "_", mask, "_", mask_length, ".csv")
-        
-        ## multiply
-        lh_stat_booleanxnetwork <- lh_stat_boolean * lh_mask_nums
-        rh_stat_booleanxnetwork <- rh_stat_boolean * rh_mask_nums
-        
-        lh_stat_booleanxnetwork_pos <- lh_stat_boolean_pos * lh_mask_nums
-        rh_stat_booleanxnetwork_pos <- rh_stat_boolean_pos * rh_mask_nums 
-        
-        lh_stat_booleanxnetwork_neg <- lh_stat_boolean_neg * lh_mask_nums
-        rh_stat_booleanxnetwork_neg <- rh_stat_boolean_neg * rh_mask_nums
-        
-        #write output
-        write.csv(x = lh_stat_booleanxnetwork, file = lh_outdir, quote = F, row.names = F)
-        write.csv(x = rh_stat_booleanxnetwork, file = rh_outdir, quote = F, row.names = F)
-        
-        #write output
-        write.csv(x = lh_stat_booleanxnetwork_pos, file = lh_outdir_pos, quote = F, row.names = F)
-        write.csv(x = rh_stat_booleanxnetwork_pos, file = rh_outdir_pos, quote = F, row.names = F)
-        
-        #write output
-        write.csv(x = lh_stat_booleanxnetwork_neg, file = lh_outdir_neg, quote = F, row.names = F)
-        write.csv(x = rh_stat_booleanxnetwork_neg, file = rh_outdir_neg, quote = F, row.names = F)
-        
+          
+          #output
+          lh_outdir <- paste0(homedir, "/baller/results/", stat_path, "lh_", result_path, "_", mask, "_", mask_length, ".csv")
+          rh_outdir <- paste0(homedir, "/baller/results/", stat_path, "rh_", result_path, "_", mask, "_", mask_length, ".csv")
+          
+          lh_outdir_pos <- paste0(homedir, "/baller/results/", stat_path, "lh_pos_", result_path, "_", mask, "_", mask_length, ".csv")
+          rh_outdir_pos <- paste0(homedir, "/baller/results/", stat_path, "rh_pos_", result_path, "_", mask, "_", mask_length, ".csv")
+          
+          lh_outdir_neg <- paste0(homedir, "/baller/results/", stat_path, "lh_neg_", result_path, "_", mask, "_", mask_length, ".csv")
+          rh_outdir_neg <- paste0(homedir, "/baller/results/", stat_path, "rh_neg_", result_path, "_", mask, "_", mask_length, ".csv")
+          
+          ## multiply
+          lh_stat_booleanxnetwork <- lh_stat_boolean * lh_mask_nums
+          rh_stat_booleanxnetwork <- rh_stat_boolean * rh_mask_nums
+          
+          lh_stat_booleanxnetwork_pos <- lh_stat_boolean_pos * lh_mask_nums
+          rh_stat_booleanxnetwork_pos <- rh_stat_boolean_pos * rh_mask_nums 
+          
+          lh_stat_booleanxnetwork_neg <- lh_stat_boolean_neg * lh_mask_nums
+          rh_stat_booleanxnetwork_neg <- rh_stat_boolean_neg * rh_mask_nums
+          
+          #write output
+          write.table(x = lh_stat_booleanxnetwork, file = lh_outdir, quote = F, row.names = F, col.names = F)
+          write.table(x = rh_stat_booleanxnetwork, file = rh_outdir, quote = F, row.names = F, col.names = F)
+          
+          #write output
+          write.table(x = lh_stat_booleanxnetwork_pos, file = lh_outdir_pos, quote = F, row.names = F, col.names = F)
+          write.table(x = rh_stat_booleanxnetwork_pos, file = rh_outdir_pos, quote = F, row.names = F, col.names = F)
+          
+          #write output
+          write.table(x = lh_stat_booleanxnetwork_neg, file = lh_outdir_neg, quote = F, row.names = F, col.names = F)
+          write.table(x = rh_stat_booleanxnetwork_neg, file = rh_outdir_neg, quote = F, row.names = F, col.names = F)
+        }
         
       }
     }
@@ -1027,21 +1045,146 @@ for (analysis in analyses) {
 }
 
 
+
 ```
 
 
 **Making actual visualization **
 
-This must be done in matlab unfortunately. First, log in to pmacs, and navigate to the PBP_Graphics directory, which contains all the scripts I have made to make pretty visualizations. This will get the right version of matlab for you as well. 
+The visualizations are done in matlab, unfortunately, but I have made a bash script that can call matlab, so you no longer have to go into matlab and do it manually. Log in to PMACS, navigate to PBP_graphics directory, which contains all the scripts I have made to make pretty visualizations. This will get the right version of matlab for you as well. 
 
 ```{bash prepare_and_run_matlab, eval=FALSE}
-cd /project/imco/baller/scripts/PBP_Graphics
+cd /project/imco/baller/scripts/PBP_graphics
 source ../load_matlab #contains the following line of code: bsub -Is -XF -q matlab_interactive 'bash'
-matlab -nodesktop
+sh run_visualization_scripts_from_command_line.sh
 
 ```
 
-Now that you are at the matlab prompt, you will go through and run a series of commands below. I have included the command as well as a local path to the image for viewing. This is mostly because it takes forever to run the code if you remotely try to load all of the images into your script. If you are running, just search and replace the path and it should work just fine. You give paths to right and left hemisphere vectors, as well as the output path of where you'd like your image stored.
+The actual code in run_visualization_scripts_from_command_line.sh is below:
+```{bash run_visualization_scripts_from_command_line, eval=FALSE}
+#!/bin/sh
+
+##################################
+### PBP visualizations Wrapper ###
+##################################
+
+###### Author: Erica Baller ######
+######   Date: 2/26/2021    ######
+
+## pre: commands_for_matlab (in same directory as PBP scripts
+   #- contains all the commands we want to pass to matlab to run visualizations automaticall
+## post: images in /project/imco/baller/results/images/pbp
+## uses: I was getting tired of having to open matlab and run each of these commands manually. This script takes a bunch of commands and just feeds them to matlab, no muss, no fuss
+## dependencies: Matlab 2020b, please run "source /project/imco/baller/scripts/load_matlab before starting this
+
+
+#set directories
+homedir='/project/imco'
+#set homedir = '/Users/eballer/BBL/imco/pmacs/PMACS_remote/'
+wking_dir='/baller/scripts/PBP_graphics'
+command_file="$homedir/$wking_dir/commands_for_matlab"
+echo $command_file
+
+#initialize matlab
+
+
+#######
+### loop ###
+while IFS= read -r line; do
+        echo "$line"
+        matlab -nosplash -nodesktop -nodisplay -r "$line; exit"
+
+done < $command_file
+
+```
+
+The command files contain paths to the PBP* visualization scripts. At any time, you can run one or all of them by changing the inputs in /project/imco/baller/scripts/PBP_graphics/commands_for_matlab. Currently, these are the commands in that file. Of note, if you ever want to run a command independently, just go into matlab, copy the command, and run it within matlab. This just takes forever.
+
+```{bash commands_for_matlab, eval=FALSE}
+PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05_Yeo7.csv','coupling_gam_age_yeo7_fdr05')
+PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_lm_age_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_age_t_fdr05_Yeo7.csv','coupling_lm_age_yeo7_fdr05')
+PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_lm_sex_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_sex_t_fdr05_Yeo7.csv','coupling_lm_sex_yeo7_fdr05')
+PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05_Yeo7.csv','coupling_lm_exec_accuracy_yeo7_fdr05')
+PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_pos_lm_age_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_age_t_fdr05_Yeo7.csv','coupling_pos_lm_age_yeo7_fdr05')
+PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_pos_lm_sex_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_sex_t_fdr05_Yeo7.csv','coupling_pos_lm_sex_yeo7_fdr05')
+PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05_Yeo7.csv','coupling_pos_lm_exec_accuracy_yeo7_fdr05')
+PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_neg_lm_age_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_age_t_fdr05_Yeo7.csv','coupling_neg_lm_age_yeo7_fdr05')
+PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_neg_lm_sex_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_sex_t_fdr05_Yeo7.csv','coupling_neg_lm_sex_yeo7_fdr05')
+PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05_Yeo7.csv','coupling_neg_lm_exec_accuracy_yeo7_fdr05')
+BP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('//project/imco/baller/results/mean_maps/n831_lh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv','/project/imco/baller/results/mean_maps/n831_rh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv','coupling_mean_fdr05')
+PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('//project/imco/baller/results/mean_maps/lh_alff_mean.csv','/project/imco/baller/results/mean_maps/rh_alff_mean.csv','alff_mean_fdr05')
+PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('//project/imco/baller/results/mean_maps/lh_cbf_mean.csv','/project/imco/baller/results/mean_maps/rh_cbf_mean.csv','cbf_mean_fdr05')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/processed_data/glycolytic_index_maps/lh_GI_fsaverage5_10242.csv','/project/imco/baller/processed_data/glycolytic_index_maps/rh_GI_fsaverage5_10242.csv','glycolytic_index_red_blue')
+PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05.csv','coupling_gam_age_red_and_blue_fdr05')
+PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_age_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_age_t_fdr05.csv','coupling_lm_age_red_and_blue_fdr05')
+PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_sex_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_sex_t_fdr05.csv','coupling_lm_sex_red_and_blue_fdr05')
+PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05.csv','coupling_lm_exec_accuracy_red_and_blue_fdr05')
+PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/alff_accuracy/lh_gam_age_t_fdr05.csv','/project/imco/baller/results/alff_accuracy/rh_gam_age_t_fdr05.csv','alff_gam_age_red_and_blue_fdr05')
+PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/alff_accuracy/lh_lm_age_t_fdr05.csv','/project/imco/baller/results/alff_accuracy/rh_lm_age_t_fdr05.csv','alff_lm_age_red_and_blue_fdr05')
+PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/alff_accuracy/lh_lm_sex_t_fdr05.csv','/project/imco/baller/results/alff_accuracy/rh_lm_sex_t_fdr05.csv','alff_lm_sex_red_and_blue_fdr05')
+PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/alff_accuracy/lh_lm_exec_accuracy_t_fdr05.csv','/project/imco/baller/results/alff_accuracy/rh_lm_exec_accuracy_t_fdr05.csv','alff_lm_exec_accuracy_red_and_blue_fdr05')
+PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/cbf_accuracy/lh_gam_age_t_fdr05.csv','/project/imco/baller/results/cbf_accuracy/rh_gam_age_t_fdr05.csv','cbf_gam_age_red_and_blue_fdr05')
+PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/cbf_accuracy/lh_lm_age_t_fdr05.csv','/project/imco/baller/results/cbf_accuracy/rh_lm_age_t_fdr05.csv','cbf_lm_age_red_and_blue_fdr05')
+PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/cbf_accuracy/lh_lm_sex_t_fdr05.csv','/project/imco/baller/results/cbf_accuracy/rh_lm_sex_t_fdr05.csv','cbf_lm_sex_red_and_blue_fdr05')
+PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/cbf_accuracy/lh_lm_exec_accuracy_t_fdr05.csv','/project/imco/baller/results/cbf_accuracy/rh_lm_exec_accuracy_t_fdr05.csv','cbf_lm_exec_accuracy_red_and_blue_fdr05')
+PBP_vertWiseEffect_Erica_Ts_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05.csv','coupling_gam_age_plasma_fdr05')
+PBP_vertWiseEffect_Erica_Ts_results_outpath('/project/imco/baller/results/alff_accuracy/lh_gam_age_t_fdr05.csv','/project/imco/baller/results/alff_accuracy/rh_gam_age_t_fdr05.csv','alff_gam_age_plasma_fdr05')
+PBP_vertWiseEffect_Erica_Ts_results_outpath('/project/imco/baller/results/cbf_accuracy/lh_gam_age_t_fdr05.csv','/project/imco/baller/results/cbf_accuracy/rh_gam_age_t_fdr05.csv','cbf_gam_age_plasma_fdr05')
+PBP_vertWiseEffect_Erica_Ts_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_exec_accuracy_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_exec_accuracy_t_fdr05.csv','coupling_gam_exec_accuracy_plasma_fdr05')
+PBP_vertWiseEffect_Erica_GI_plasma_results_outpath('/project/imco/baller/processed_data/glycolytic_index_maps/lh_GI_fsaverage5_10242.csv','/project/imco/baller/processed_data/glycolytic_index_maps/rh_GI_fsaverage5_10242.csv','glycolytic_index_plasma')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_gam_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_gam_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_gam_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_pos_gam_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_pos_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_pos_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_pos_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_gam_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_gam_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_neg_gam_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_neg_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_neg_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_neg_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_gam_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_age_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_age_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_sex_t_fdr05_AllometricScaling_fsaverage5.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_sex_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05_AllometricScaling_fsaverage5.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_age_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_age_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_pos_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_sex_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_sex_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_pos_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_pos_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_age_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_age_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_neg_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_sex_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_sex_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_neg_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_neg_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_gam_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_age_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_age_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_sex_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_sex_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_age_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_age_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_pos_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_sex_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_sex_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_pos_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_pos_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_age_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_age_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_neg_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_sex_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_sex_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_neg_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_neg_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_gam_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_age_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_age_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_sex_t_fdr05_Hill2010_evo_fsaverage5.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_sex_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05_Hill2010_evo_fsaverage5.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_age_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_age_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_pos_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_sex_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_sex_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_pos_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_pos_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_age_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_age_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_neg_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_sex_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_sex_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_neg_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_neg_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_gam_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_age_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_age_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_sex_t_fdr05_MeanCBF.fsaverage5.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_sex_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05_MeanCBF.fsaverage5.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_age_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_age_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_pos_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_sex_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_sex_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_pos_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_pos_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_age_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_age_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_neg_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_sex_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_sex_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_neg_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_MeanCBF_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_neg_lm_exec_accuracy')
+```
 
 Sample code (from PBP_vertWiseEffect_Erica_Ts_results_outpath.m)
 
@@ -1302,10 +1445,81 @@ set(acbar, 'position', [0.40 0.270 0.02 0.20])
 print('-dpng','-r600',['/project/imco/baller/results/images/pbp/' char(name)])
 ```
 
+#### Checking to see which of the previously defined maps have the most overlap with our coupling  maps
+
+ - There are many masks that are available and we have previously used to understand brain dynamics. Here, I look at the correlation between coupling and glycolytic index map, hill2010_evo map, allometric_scaling map, cerebral metabolic rate of glucose map, and cbf map. It turns out, the cerebral metabolic rate of glucose map is the one with the highest overlap. 
+```{r correlations_with_masks.R}
+
+#########################################
+## Correlations of coupling with masks ##
+#########################################
+
+### Author: Erica Baller
+## Date: 2/26/2021
+
+### This script emerged out of the desire to take vertex output and display it within different networks/parcels
+
+#pre: input: 
+#1) mean coupling map, r and l side
+#2) masks, GI, Hill, CBF, etc
+
+#post - matrix of correlations for each of the maps
+
+#uses - We want to see which of the masks best correlates with mean coupling. To do this, will correlate the uncorrected mean map with the GI map, Hill2010, and all the others
+
+#dependencies: Any R will do, I used 3.2.5
+
+# set home directory
+#homedir = '/Users/eballer/BBL/imco/pmacs/PMACS_remote/'
+homedir = '/project/imco'
+
+#mean coupling maps
+mean_coupling_map <- rbind(read.csv(paste0(homedir, "/baller/results/mean_maps/n831_lh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv"), header = F),
+                           read.csv(paste0(homedir, "/baller/results/mean_maps/n831_rh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv"), header = F))
+
+#gi maps
+gi_map <- rbind(read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/lh.GI_fsaverage5_10242.csv"), header = F),
+                read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/rh.GI_fsaverage5_10242.csv"), header = F))
+
+#hill2010
+hill_map <- rbind(read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/lh.Hill2010_evo_fsaverage5.csv"), header = F),
+                  read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/rh.Hill2010_evo_fsaverage5.csv"), header = F))
+
+#allometric scaling
+as_map <- rbind(read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/lh.AllometricScaling_fsaverage5.csv"), header = F),
+                read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/rh.AllometricScaling_fsaverage5.csv"), header = F))
+
+#cmrglu
+cmrglu_map <- rbind(read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/lh.CMRGlu_fsaverage5.csv"), header = F),
+                    read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/rh.CMRGlu_fsaverage5.csv"), header = F))
+
+#meancbf
+meancbf_map <- rbind(read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/lh.MeanCBF.fsaverage5.csv"), header = F),
+                     read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/rh.MeanCBF.fsaverage5.csv"), header = F))
+
+maps <- c('mean_coupling_map','gi_map', 'hill_map', 'as_map', 'cmrglu_map', 'meancbf_map')
+
+correlations <- data.frame(matrix(0, nrow = 1, ncol = 6))
+names(correlations) <- maps
+row.names(correlations) <- "mean_coupling_map"
+
+i = 1
+for (map in maps) {
+    map_to_corr <- map
+    corr_cmd <- paste0("cor(x = mean_coupling_map, ", "y =", map_to_corr, ", method=c(\"pearson\"))")
+    corr_results <- eval(parse(text = as.character(corr_cmd)))
+    print(paste0("mean_coupling_map:", map_to_corr, "--> R = ", corr_results))
+    correlations[1,i] = corr_results
+    i <- i + 1
+
+}
+
+write.csv(correlations, file = paste0(homedir, "/baller/results/mean_coupling_x_mask_correlations/mean_coupling_map_x_mask_correlations.csv"), quote = F)
+```
 
 New images made on PMACS:/project/imco/baller/scripts/PBP_graphics
 
-First, get these pics locally
+First, get these pics locally if you want an easier time visualizing. Right now, paths are set up to run off pmacs
 
 scp eballer@transfer.pmacs.upenn.edu:/project/imco/baller/results/images/pbp/* /Users/eballer/BBL/imco/results/images/pbp/.
 
@@ -1316,7 +1530,7 @@ scp eballer@transfer.pmacs.upenn.edu:/project/imco/baller/results/images/pbp/* /
 
 Using the following mapping of Yeo network to random coded number to num for display
 
-<img width="100%" src="/Users/eballer/BBL/imco/results/images/Yeo7_net_to_number.png"/>
+<img width="100%" src="/project/imco/baller/results/images/Yeo7_net_to_number.png"/>
 
 
 [x] coupling gam age, fdr05
@@ -1335,10 +1549,10 @@ command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco
 
 command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05_Yeo7.csv','coupling_lm_exec_accuracy_yeo7_fdr05')   
 
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_gam_age_yeo7_fdr05.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_lm_age_yeo7_fdr05.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_lm_sex_yeo7_fdr05.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_lm_exec_accuracy_yeo7_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/coupling_gam_age_yeo7_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/coupling_lm_age_yeo7_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/coupling_lm_sex_yeo7_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/coupling_lm_exec_accuracy_yeo7_fdr05.png"/>
 
 
 ----- 
@@ -1358,9 +1572,9 @@ command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco
 command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05_Yeo7.csv','coupling_pos_lm_exec_accuracy_yeo7_fdr05')
 
 
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_pos_lm_age_yeo7_fdr05.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_pos_lm_sex_yeo7_fdr05.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_pos_lm_exec_accuracy_yeo7_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/coupling_pos_lm_age_yeo7_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/coupling_pos_lm_sex_yeo7_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/coupling_pos_lm_exec_accuracy_yeo7_fdr05.png"/>
 
 ----- 
 ** Negative Direction **
@@ -1379,9 +1593,9 @@ command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco
 command: PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05_Yeo7.csv','coupling_neg_lm_exec_accuracy_yeo7_fdr05')
 
 
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_neg_lm_age_yeo7_fdr05.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_neg_lm_sex_yeo7_fdr05.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_neg_lm_exec_accuracy_yeo7_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/coupling_neg_lm_age_yeo7_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/coupling_neg_lm_sex_yeo7_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/coupling_neg_lm_exec_accuracy_yeo7_fdr05.png"/>
 
 -----
 ** Mean images (PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath.m) **
@@ -1404,10 +1618,10 @@ mean image (PBP_vertWiseEffect_Erica_GI.m)
 
 command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/processed_data/glycolytic_index_maps/lh_GI_fsaverage5_10242.csv','/project/imco/baller/processed_data/glycolytic_index_maps/rh_GI_fsaverage5_10242.csv','glycolytic_index_red_blue')
 
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_mean_fdr05.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/alff_mean_fdr05.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/cbf_mean_fdr05.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_red_blue.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/coupling_mean_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/alff_mean_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/cbf_mean_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/glycolytic_index_red_blue.png"/>
 
 -----
 ** Blue and red coupling maps (PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath.m) **
@@ -1430,10 +1644,10 @@ command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/
 
 command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05.csv','coupling_lm_exec_accuracy_red_and_blue_fdr05')
 
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_gam_age_red_and_blue_fdr05.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_lm_age_red_and_blue_fdr05.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_lm_sex_red_and_blue_fdr05.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_lm_exec_accuracy_red_and_blue_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/coupling_gam_age_red_and_blue_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/coupling_lm_age_red_and_blue_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/coupling_lm_sex_red_and_blue_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/coupling_lm_exec_accuracy_red_and_blue_fdr05.png"/>
 
 -----
 ** Alff maps **
@@ -1455,10 +1669,10 @@ command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/
 
 command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/alff_accuracy/lh_lm_exec_accuracy_t_fdr05.csv','/project/imco/baller/results/alff_accuracy/rh_lm_exec_accuracy_t_fdr05.csv','alff_lm_exec_accuracy_red_and_blue_fdr05')
 
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/alff_gam_age_red_and_blue_fdr05.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/alff_lm_age_red_and_blue_fdr05.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/alff_lm_sex_red_and_blue_fdr05.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/alff_lm_exec_accuracy_red_and_blue_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/alff_gam_age_red_and_blue_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/alff_lm_age_red_and_blue_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/alff_lm_sex_red_and_blue_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/alff_lm_exec_accuracy_red_and_blue_fdr05.png"/>
 
 
 -----
@@ -1482,10 +1696,10 @@ command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/
 
 command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/cbf_accuracy/lh_lm_exec_accuracy_t_fdr05.csv','/project/imco/baller/results/cbf_accuracy/rh_lm_exec_accuracy_t_fdr05.csv','cbf_lm_exec_accuracy_red_and_blue_fdr05')
 
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/cbf_gam_age_red_and_blue_fdr05.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/cbf_lm_age_red_and_blue_fdr05.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/cbf_lm_sex_red_and_blue_fdr05.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/cbf_lm_exec_accuracy_red_and_blue_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/cbf_gam_age_red_and_blue_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/cbf_lm_age_red_and_blue_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/cbf_lm_sex_red_and_blue_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/cbf_lm_exec_accuracy_red_and_blue_fdr05.png"/>
 
 -----
 ** Gam using the nice plasma (PBP_vertWiseEffect_Erica_Ts_results_outpath.m) **
@@ -1507,10 +1721,10 @@ command: PBP_vertWiseEffect_Erica_Ts_results_outpath('/project/imco/baller/resul
 
 command: PBP_vertWiseEffect_Erica_Ts_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_exec_accuracy_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_exec_accuracy_t_fdr05.csv','coupling_gam_exec_accuracy_plasma_fdr05')
 
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_gam_age_plasma_fdr05.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/alff_gam_age_plasma_fdr05.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/cbf_gam_age_plasma_fdr05.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_gam_exec_accuracy_plasma_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/coupling_gam_age_plasma_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/alff_gam_age_plasma_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/cbf_gam_age_plasma_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/coupling_gam_exec_accuracy_plasma_fdr05.png"/>
 
 -----
 ** Glycolytic index plasma (PBP_vertWiseEffect_Erica_GI_plasma_results_outpath.m) **
@@ -1520,7 +1734,7 @@ command: PBP_vertWiseEffect_Erica_Ts_results_outpath('/project/imco/baller/resul
 
 command: PBP_vertWiseEffect_Erica_GI_plasma_results_outpath('/project/imco/baller/processed_data/glycolytic_index_maps/lh_GI_fsaverage5_10242.csv','/project/imco/baller/processed_data/glycolytic_index_maps/rh_GI_fsaverage5_10242.csv','glycolytic_index_plasma')
 
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_plasma.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/glycolytic_index_plasma.png"/>
 
 -----
 ** Glycolytic index red and blue, masking the T maps (PBP_vertWiseEffect_Erica_GI_results_outpath.m) **
@@ -1546,10 +1760,10 @@ command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/resul
 
 command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_lm_exec_accuracy')
 
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_gam_age.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_lm_age.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_lm_sex.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_lm_exec_accuracy.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/glycolytic_index_gam_age.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/glycolytic_index_lm_age.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/glycolytic_index_lm_sex.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/glycolytic_index_lm_exec_accuracy.png"/>
 
 -----
 ** positive direction **
@@ -1571,10 +1785,10 @@ command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/resul
 
 command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_pos_lm_exec_accuracy')
 
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_pos_gam_age.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_pos_lm_age.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_pos_lm_sex.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_pos_lm_exec_accuracy.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/glycolytic_index_pos_gam_age.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/glycolytic_index_pos_lm_age.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/glycolytic_index_pos_lm_sex.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/glycolytic_index_pos_lm_exec_accuracy.png"/>
 
 -----
 ** negative direction **
@@ -1597,12 +1811,55 @@ command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/resul
 
 command: PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_neg_lm_exec_accuracy')
 
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_neg_gam_age.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_neg_lm_age.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_neg_lm_sex.png"/>
-<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/glycolytic_index_neg_lm_exec_accuracy.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/glycolytic_index_neg_gam_age.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/glycolytic_index_neg_lm_age.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/glycolytic_index_neg_lm_sex.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/glycolytic_index_neg_lm_exec_accuracy.png"/>
 
 
+
+#### Paper figures
+
+There are a selection of pictures that we will likely use for the paper. I am including them here. 
+
+#### Demographics
+<img width="30%" src="/project/imco/baller/results/images/Demographics_from_original_ms.png"/>
+
+#### Yeo info
+
+<img width="100%" src="/project/imco/baller/results/images/Yeo7_net_to_number.png"/>
+
+#### Mean Coupling, Alff, CBF
+
+<img width="30%" src="/project/imco/baller/results/images/pbp/coupling_mean_fdr05.png"/>
+<img width="30%" src="/project/imco/baller/results/images/pbp/alff_mean_fdr05.png"/>
+<img width="30%" src="/project/imco/baller/results/images/pbp/cbf_mean_fdr05.png"/>
+
+#### Coupling Age
+
+**gam age plasma/ lm red/blue, yeo +, yeo -**
+
+<img width="40%" src="/project/imco/baller/results/images/pbp/coupling_gam_age_plasma_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/coupling_lm_age_red_and_blue_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/coupling_pos_lm_age_yeo7_fdr05.png"/>
+<img width="40%" src="/project/imco/baller/results/images/pbp/coupling_neg_lm_age_yeo7_fdr05.png"/>
+
+
+#### Coupling Sex
+
+**lm red/blue, yeo +, yeo -**
+
+<img width="30%" src="/project/imco/baller/results/images/pbp/coupling_lm_sex_red_and_blue_fdr05.png"/>
+<img width="30%" src="/project/imco/baller/results/images/pbp/coupling_pos_lm_sex_yeo7_fdr05.png"/>
+<img width="30%" src="/project/imco/baller/results/images/pbp/coupling_neg_lm_sex_yeo7_fdr05.png"/>
+
+#### Coupling Exec Accuracy
+
+**lm red/blue, yeo +, yeo -**
+
+<img width="30%" src="/project/imco/baller/results/images/pbp/coupling_lm_exec_accuracy_red_and_blue_fdr05.png"/>
+<img width="30%" src="/project/imco/baller/results/images/pbp/coupling_pos_lm_exec_accuracy_yeo7_fdr05.png"/>
+<img width="30%" src="/project/imco/baller/results/images/pbp/coupling_neg_lm_exec_accuracy_yeo7_fdr05.png"/>
 
 
 

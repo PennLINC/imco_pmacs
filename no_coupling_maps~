@@ -1,0 +1,5 @@
+!#/bin/csh
+set cnt = 1
+foreach x (`cat /project/imco/baller/subjectLists/n831_imageOrder.csv`)
+	if ($cnt > 1) then
+	   set bblid = `echo $x | 

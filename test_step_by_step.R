@@ -128,7 +128,7 @@ rh_cbf_asl <- alffCbf_subjDemos_with_rh_831x10242
 #initialize vectors for models
 
 hemis <- c("lh", "rh") #hemispheres
-models <- c("age", "sex", "age_sex", "accuracy", "mood", "psychopathology") #models of interest
+models <- c("age", "sex", "age_sex", "accuracy", "speed", "efficiency", "mood", "psychopathology") #models of interest
 coeffs <- c("p", "t") #p or t value
 corrs <- c("uncor", "fdr") #correction
 
@@ -144,13 +144,17 @@ for (hemi in hemis){
   }
 }
 
+
 #make linear models as well
+lm_models <- c("age", "accuracy", "speed", "efficiency")
 for (hemi in hemis) {
-  for (coeff in coeffs) {
+  for (model in lm_models) {
+   for (coeff in coeffs) {
     for (corr in corrs) {
-      vector_init_cmd <- paste0(hemi, "_lm_age_", coeff, "_", corrs, "<- vector(length= 10242)")
+      vector_init_cmd <- paste0(hemi, "_lm_", model, "_", coeff, "_", corrs, "<- vector(length= 10242)")
       eval(parse(text=as.name(vector_init_cmd)))
     }
+   }
   }
 }
 
@@ -179,8 +183,23 @@ for (i in 1:10242) {
   accuracy_model <- gam(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
                           osex + s(ageAtScan1, k = 4, fx = T) + Overall_Accuracy, data=lh_cbf_asl)
   
+  speed_model <- gam(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                          osex + s(ageAtScan1, k = 4, fx = T) + Overall_Speed, data=lh_cbf_asl)
+  
+  efficiency_model <- gam(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                          osex + s(ageAtScan1, k = 4, fx = T) + Overall_Efficiency, data=lh_cbf_asl)
+  
   
   age_lm_model <- lm(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1, 
+                     data=lh_cbf_asl)
+  
+  accuracy_lm_model <- lm(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + Overall_Accuracy, 
+                     data=lh_cbf_asl)
+  
+  speed_lm_model <- lm(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + Overall_Speed, 
+                     data=lh_cbf_asl)
+  
+  efficiency_lm_model <- lm(lh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + Overall_Efficiency, 
                      data=lh_cbf_asl)
   
   #put pvalue in it's appropriate lm
@@ -191,9 +210,14 @@ for (i in 1:10242) {
   lh_gam_mood_p_uncor[i] <- summary(mood_model)$p.table[5,4]
   lh_gam_psychopathology_p_uncor[i] <- summary(psychopathology_model)$p.table[5,4]
   lh_gam_accuracy_p_uncor[i] <- summary(accuracy_model)$p.table[5,4] #accuracy term
+  lh_gam_speed_p_uncor[i] <- summary(speed_model)$p.table[5,4] #speed term
+  lh_gam_efficiency_p_uncor[i] <- summary(efficiency_model)$p.table[5,4] #efficiency term
   
-  #lm age
+  #lm to assess directionality
   lh_lm_age_p_uncor[i] <- summary(age_lm_model)$coeff[4,4]
+  lh_lm_accuracy_p_uncor[i] <- summary(accuracy_lm_model)$coeff[5,4]
+  lh_lm_speed_p_uncor[i] <- summary(speed_lm_model)$coeff[5,4]
+  lh_lm_efficiency_p_uncor[i] <- summary(efficiency_lm_model)$coeff[5,4]
   
   #pull tvalue into its appropriate lm
   lh_gam_age_t_uncor[i] <- summary(age_sex_model)$s.table[1,3] #smooth term for ageAtScan1
@@ -203,9 +227,14 @@ for (i in 1:10242) {
   lh_gam_mood_t_uncor[i] <- summary(mood_model)$p.table[5,3]
   lh_gam_psychopathology_t_uncor[i] <- summary(psychopathology_model)$p.table[5,3]
   lh_gam_accuracy_t_uncor[i] <- summary(accuracy_model)$p.table[5,3] #accuracy term
+  lh_gam_speed_t_uncor[i] <- summary(speed_model)$p.table[5,3] #accuracy term
+  lh_gam_efficiency_t_uncor[i] <- summary(efficiency_model)$p.table[5,3] #accuracy term
   
-  #lm age
+  #lm to assess directionality
   lh_lm_age_t_uncor[i] <- summary(age_lm_model)$coeff[4,3]
+  lh_lm_accuracy_t_uncor[i] <- summary(accuracy_lm_model)$coeff[5,3]
+  lh_lm_speed_t_uncor[i] <- summary(speed_lm_model)$coeff[5,3]
+  lh_lm_efficiency_t_uncor[i] <- summary(efficiency_lm_model)$coeff[5,3]
 }
 
 #####################
@@ -233,10 +262,25 @@ for (i in 1:10242) {
   accuracy_model <- gam(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
                           osex + s(ageAtScan1, k = 4, fx = T) + Overall_Accuracy, data=rh_cbf_asl)
   
+  speed_model <- gam(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                       osex + s(ageAtScan1, k = 4, fx = T) + Overall_Speed, data=rh_cbf_asl)
+  
+  efficiency_model <- gam(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                            osex + s(ageAtScan1, k = 4, fx = T) + Overall_Efficiency, data=rh_cbf_asl)
   
   age_lm_model <- lm(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1, data=rh_cbf_asl)
  
-   #put pvalue in it's appropriate lm
+
+  accuracy_lm_model <- lm(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + Overall_Accuracy, 
+                          data=rh_cbf_asl)
+  
+  speed_lm_model <- lm(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + Overall_Speed, 
+                       data=rh_cbf_asl)
+  
+  efficiency_lm_model <- lm(rh_cbf_asl[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + Overall_Efficiency, 
+                            data=rh_cbf_asl)
+  
+  #put pvalue in it's appropriate lm
   rh_gam_age_p_uncor[i] <- summary(age_sex_model)$s.table[1,4] #smooth term for ageAtScan1
   rh_gam_sex_p_uncor[i] <- summary(age_sex_model)$p.table[4,4] #linear term
   rh_gam_age_sex_p_uncor[i] <- summary(age_sex_intx_model)$s.table[2,4] #smooth term for interaction, this was changed
@@ -244,9 +288,14 @@ for (i in 1:10242) {
   rh_gam_mood_p_uncor[i] <- summary(mood_model)$p.table[5,4]
   rh_gam_psychopathology_p_uncor[i] <- summary(psychopathology_model)$p.table[5,4]
   rh_gam_accuracy_p_uncor[i] <- summary(accuracy_model)$p.table[5,4] #accuracy term
+  rh_gam_speed_p_uncor[i] <- summary(speed_model)$p.table[5,4] #speed term
+  rh_gam_efficiency_p_uncor[i] <- summary(efficiency_model)$p.table[5,4] #efficiency term
   
-  #lm age
+  #lm to assess directionality
   rh_lm_age_p_uncor[i] <- summary(age_lm_model)$coeff[4,4]
+  rh_lm_accuracy_p_uncor[i] <- summary(accuracy_lm_model)$coeff[5,4]
+  rh_lm_speed_p_uncor[i] <- summary(speed_lm_model)$coeff[5,4]
+  rh_lm_efficiency_p_uncor[i] <- summary(efficiency_lm_model)$coeff[5,4]
   
   #pull tvalue into its appropriate lm
   rh_gam_age_t_uncor[i] <- summary(age_sex_model)$s.table[1,3] #smooth term for ageAtScan1
@@ -256,9 +305,14 @@ for (i in 1:10242) {
   rh_gam_mood_t_uncor[i] <- summary(mood_model)$p.table[5,3]
   rh_gam_psychopathology_t_uncor[i] <- summary(psychopathology_model)$p.table[5,3]
   rh_gam_accuracy_t_uncor[i] <- summary(accuracy_model)$p.table[5,3] #accuracy term
+  rh_gam_speed_t_uncor[i] <- summary(speed_model)$p.table[5,3] #accuracy term
+  rh_gam_efficiency_t_uncor[i] <- summary(efficiency_model)$p.table[5,3] #accuracy term
   
-  #lm age
+  #lm to assess directionality
   rh_lm_age_t_uncor[i] <- summary(age_lm_model)$coeff[4,3]
+  rh_lm_accuracy_t_uncor[i] <- summary(accuracy_lm_model)$coeff[5,3]
+  rh_lm_speed_t_uncor[i] <- summary(speed_lm_model)$coeff[5,3]
+  rh_lm_efficiency_t_uncor[i] <- summary(efficiency_lm_model)$coeff[5,3]
 }
 #################################################################################
 #################################################################################
@@ -329,12 +383,13 @@ for (hemi in hemis) {
   }
 }
 
-###### age linear model alone #####
+######  linear model alone #####
 
 #### FDR correction ####
 for (hemi in hemis) {
-    hemi_model_p_unc <- paste0(hemi, "_lm_age_p_uncor") 
-    hemi_model_p_fdr <- paste0(hemi, "_lm_age_p_fdr")    
+  for (model in lm_models) {
+    hemi_model_p_unc <- paste0(hemi, "_lm_", model, "_p_uncor") 
+    hemi_model_p_fdr <- paste0(hemi, "_lm_", model, "_p_fdr")    
     
     print(hemi_model_p_unc)
     
@@ -351,8 +406,8 @@ for (hemi in hemis) {
     
     
     #multiply T values by fdr vector to get the list of Ts that are fdr corrected
-    hemi_model_t_unc <- paste0(hemi, "_lm_age_t_uncor")
-    hemi_model_t_fdr <- paste0(hemi, "_lm_age_t_fdr")
+    hemi_model_t_unc <- paste0(hemi, "_lm_", model, "_t_uncor")
+    hemi_model_t_fdr <- paste0(hemi, "_lm_", model, "_t_fdr")
     t_df <- eval(substitute(as.data.frame(i), list(i = as.name(hemi_model_t_unc))))
     names(t_df) <- c("tval")
     t_df$tfdr <- pfdr[,3] * t_df$tval
@@ -379,12 +434,13 @@ for (hemi in hemis) {
     ## corrected ##
     
     ### p
-    filename <- paste0("/project/imco/baller/processed_data/regression_matrices_n831/", hemi, "_lm_age_p_fdr05.csv")
+    filename <- paste0("/project/imco/baller/processed_data/regression_matrices_n831/", hemi, "_lm_", model, "_p_fdr05.csv")
     write_table_command <- paste0("write.table(x = ", hemi_model_p_fdr, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
     eval(parse(text=write_table_command))
     
     ### t
-    filename <- paste0("/project/imco/baller/processed_data/regression_matrices_n831/", hemi, "_lm_age_t_fdr05.csv")
+    filename <- paste0("/project/imco/baller/processed_data/regression_matrices_n831/", hemi, "_lm_", model, "_t_fdr05.csv")
     write_table_command <- paste0("write.table(x = ", hemi_model_t_fdr, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
     eval(parse(text=write_table_command))
+  }
 }

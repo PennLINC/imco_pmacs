@@ -1,19 +1,21 @@
 % derive gradient values for each network at each scale
-addpath(genpath('/cbica/projects/pinesParcels/multiscale/scripts/derive_parcels/Toolbox'));
+%addpath(genpath('/cbica/projects/pinesParcels/multiscale/scripts/derive_parcels/Toolbox'));
 
-ProjectFolder = '/cbica/projects/pinesParcels/data/princ_gradients';
+ProjectFolder = '/project/imco/baller/processed_data/yeo_network_data/eb_analyses';
 
 % get gradients
 % 2/5/21 - change this to group-level coupling*Age or coupling*Sex maps. These are in gifti format, but get converted to 10242-length vectors anwyays.
-pgl = gifti([ProjectFolder '/Gradients.lh.fsaverage5.func.gii']);
-pgr = gifti([ProjectFolder '/Gradients.rh.fsaverage5.func.gii']);
+%pgl = gifti([ProjectFolder '/Gradients.lh.fsaverage5.func.gii']);
+%pgr = gifti([ProjectFolder '/Gradients.rh.fsaverage5.func.gii']);
+pgl = ''
+pgr = ''
 
 % extract unimodal-transmodal gradient
 grad_lh = pgl.cdata(:,1);
 grad_rh = pgr.cdata(:,1);
 
 % get group atlases from here
-atlasdir='/cbica/projects/pinesParcels/data/YeoAtlas/Schaef/';
+atlasdir='/project/imco/baller/processed_data/yeo_network_data/CBIG/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal/Parcellations/FreeSurfer5.3/fsaverage5/label/';
 
 % load in schaef annotations (from CBIG)
 [v,schaef200L,ct2L]=read_annotation([atlasdir 'lh.Schaefer2018_200Parcels_7Networks_order.annot']);
@@ -73,14 +75,14 @@ for N=1:length(unique(schaef400L))
         RH400V(ROIverts_r)=meanpg1val_r;
 end
 
-writetable(cell2table(LH200),'/cbica/projects/pinesParcels/data/SchaefLH200_transmodality7.csv');
-writetable(cell2table(RH200),'/cbica/projects/pinesParcels/data/SchaefRH200_transmodality7.csv');
-writetable(cell2table(LH400),'/cbica/projects/pinesParcels/data/SchaefLH400_transmodality7.csv');
-writetable(cell2table(RH400),'/cbica/projects/pinesParcels/data/SchaefRH400_transmodality7.csv');
+writetable(cell2table(LH200),'/project/imco/baller/results/yeo_schaef/SchaefLH200_transmodality7.csv');
+writetable(cell2table(RH200),'/project/imco/baller/results/yeo_schaef/SchaefRH200_transmodality7.csv');
+writetable(cell2table(LH400),'/project/imco/baller/results/yeo_schaef/SchaefLH400_transmodality7.csv');
+writetable(cell2table(RH400),'/project/imco/baller/results/yeo_schaef/SchaefRH400_transmodality7.csv');
 
 
 %% write out vectors of schaef parcellated values
-save('/gpfs/fs001/cbica/projects/pinesParcels/results/viz/Schaef200_TM_L.mat','LH200V');
-save('/gpfs/fs001/cbica/projects/pinesParcels/results/viz/Schaef200_TM_R.mat','RH200V');
-save('/gpfs/fs001/cbica/projects/pinesParcels/results/viz/Schaef400_TM_L.mat','LH400V');
-save('/gpfs/fs001/cbica/projects/pinesParcels/results/viz/Schaef400_TM_R.mat','RH400V');
+save('/project/imco/baller/results/yeo_schaef/viz/Schaef200_TM_L.mat','LH200V');
+save('/project/imco/baller/results/yeo_schaef/viz/Schaef200_TM_R.mat','RH200V');
+save('/project/imco/baller/results/yeo_schaef/viz/Schaef400_TM_L.mat','LH400V');
+save('/project/imco/baller/results/yeo_schaef/viz/Schaef400_TM_R.mat','RH400V');

@@ -1,5 +1,5 @@
 ################################
-## 2/19/2021 Convert Parcels ###
+## 2/26/2021 Convert Parcels ###
 ################################
 
 ################################
@@ -19,7 +19,8 @@
 #a) lh and rh 10242 matrices with the vertex #s
 #b) the ID number matrix (length = 7 for Yeo7)
 #c) the names of the networks (length = 7 for Yeo7)
-#3) this is optional second mask, I am using glycolytic index so I don't have to rewrite the script
+#3) this is optional second mask (or masks), I am running through all options so I don't have to rewrite the script
+   #- if you do not want the other masks, set it to FALSE. If you would like to change which masks they are, do so in the %masks line
 
 #post: 
 #1) a vector corresponding to the parcel value for the regions you want to display

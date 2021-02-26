@@ -1,0 +1,50 @@
+---
+title: "just_pics"
+author: "Erica Baller"
+date: "2/26/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Demographics
+<img width="30%" src="/Users/eballer/BBL/imco/results/images/Demographics_from_original_ms.png"/>
+
+#### Yeo info
+
+<img width="100%" src="/Users/eballer/BBL/imco/results/images/Yeo7_net_to_number.png"/>
+
+#### Mean Coupling, Alff, CBF
+
+<img width="30%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_mean_fdr05.png"/>
+<img width="30%" src="/Users/eballer/BBL/imco/results/images/pbp/alff_mean_fdr05.png"/>
+<img width="30%" src="/Users/eballer/BBL/imco/results/images/pbp/cbf_mean_fdr05.png"/>
+
+#### Coupling Age
+
+**gam age plasma/ lm red/blue, yeo +, yeo -**
+
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_gam_age_plasma_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_lm_age_red_and_blue_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_pos_lm_age_yeo7_fdr05.png"/>
+<img width="40%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_neg_lm_age_yeo7_fdr05.png"/>
+
+
+#### Coupling Sex
+
+**lm red/blue, yeo +, yeo -**
+
+<img width="30%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_lm_sex_red_and_blue_fdr05.png"/>
+<img width="30%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_pos_lm_sex_yeo7_fdr05.png"/>
+<img width="30%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_neg_lm_sex_yeo7_fdr05.png"/>
+
+#### Coupling Exec Accuracy
+
+**lm red/blue, yeo +, yeo -**
+
+<img width="30%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_lm_exec_accuracy_red_and_blue_fdr05.png"/>
+<img width="30%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_pos_lm_exec_accuracy_yeo7_fdr05.png"/>
+<img width="30%" src="/Users/eballer/BBL/imco/results/images/pbp/coupling_neg_lm_exec_accuracy_yeo7_fdr05.png"/>
+
