@@ -359,7 +359,7 @@ library(ggplot2)
 
 #set home directory, switch this depending on whether running from PMACS or from home directory
 #homedir <- "/Users/eballer/BBL/imco/pmacs/PMACS_remote/"
-homedir <- "/project/imco/"
+#homedir <- "/project/imco/"
 
 # read in demos
 subjDemos <- read.csv(paste0(homedir, "/baller/subjectLists/n831_alff_cbf_finalSample_imageOrder.csv"))
@@ -891,7 +891,7 @@ mask_length = 10242
 
 ## set abs and relative paths. Must toggle before running locally/on cluster
 #homedir <- "/Users/eballer/BBL/imco/pmacs/PMACS_remote"
-homedir <- "/project/imco"
+#homedir <- "/project/imco"
 
 
 #will loop through each of these
@@ -1448,7 +1448,7 @@ print('-dpng','-r600',['/project/imco/baller/results/images/pbp/' char(name)])
 #### Checking to see which of the previously defined maps have the most overlap with our coupling  maps
 
  - There are many masks that are available and we have previously used to understand brain dynamics. Here, I look at the correlation between coupling and glycolytic index map, hill2010_evo map, allometric_scaling map, cerebral metabolic rate of glucose map, and cbf map. It turns out, the cerebral metabolic rate of glucose map is the one with the highest overlap. 
-```{r correlations_with_masks.R}
+```{r correlations_with_masks}
 
 #########################################
 ## Correlations of coupling with masks ##
@@ -1471,7 +1471,7 @@ print('-dpng','-r600',['/project/imco/baller/results/images/pbp/' char(name)])
 
 # set home directory
 #homedir = '/Users/eballer/BBL/imco/pmacs/PMACS_remote/'
-homedir = '/project/imco'
+#homedir = '/project/imco'
 
 #mean coupling maps
 mean_coupling_map <- rbind(read.csv(paste0(homedir, "/baller/results/mean_maps/n831_lh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv"), header = F),
@@ -1514,7 +1514,45 @@ for (map in maps) {
 
 }
 
+### correlations only using nonzero values in mean coupling map
+mean_coupling_map_nonzero <- mean_coupling_map$V1
+mean_coupling_map_nonzero[mean_coupling_map_nonzero==0] <- NA #set the 0s to NA so we can drop them in the next step
+
+correlations_nonzero <- data.frame(matrix(0, nrow = 2, ncol = 6))
+names(correlations_nonzero) <- maps
+row.names(correlations_nonzero) <- c("mean_coupling_map_nonzero_cor", "mean_coupling_map_nonzero_lm")
+
+i = 1
+for (map in maps) {
+    map_to_corr <- map
+    
+
+    # do correlations
+    corr_cmd <- paste0("cor(x = mean_coupling_map_nonzero, ", "y =", map_to_corr, "$V1, method=c(\"pearson\"), use=\"complete.obs\")")
+    corr_results <- eval(parse(text=as.character(corr_cmd)))
+  
+    lm_cmd <- paste0("round(summary(lm(mean_coupling_map_nonzero ~ ", map_to_corr, "$V1))$coefficients[2,4], 3)")
+    lm_results <- eval(parse(text=as.character(lm_cmd)))
+    
+    ###plots
+    plot_cmd <- paste0("plot(mean_coupling_map_nonzero, ", map_to_corr, "$V1, ylab = \"", map_to_corr,"\")")
+    eval(parse(text=as.character(plot_cmd)))
+    
+    print(paste0("mean_coupling_map:", map_to_corr, "--> R = ", corr_results))
+    correlations_nonzero[1,i] = corr_results
+    correlations_nonzero[2,i] = lm_results
+    i <- i + 1
+
+}
+
+print(correlations)
+
+print(correlations_nonzero)
+
+####### write output
 write.csv(correlations, file = paste0(homedir, "/baller/results/mean_coupling_x_mask_correlations/mean_coupling_map_x_mask_correlations.csv"), quote = F)
+
+write.csv(correlations_nonzero, file = paste0(homedir, "/baller/results/mean_coupling_x_mask_correlations/mean_coupling_map_non_zeros_x_mask_correlations.csv"), quote = F)
 ```
 
 New images made on PMACS:/project/imco/baller/scripts/PBP_graphics
