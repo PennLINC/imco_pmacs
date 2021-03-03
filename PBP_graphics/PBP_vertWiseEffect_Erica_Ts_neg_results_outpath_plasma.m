@@ -5,9 +5,9 @@ function PBP_vertWiseEffect_Erica(LH,RH,name)% pretty picture code, AAB 4/2018 -
 
 %%% SET THRESHOLDS AS DESIRED HERE: only fill in each threshold as needed (no need to set both if you only want to threshold one end)
 % Values at or above this set to gray
- Uthresh=-2;
+Uthresh=-2;
 % Values at or below this set to gray
- %LThresh=2;
+% LThresh=2;
 %%%
 
 
@@ -74,7 +74,8 @@ mincol=min(datalr)
 %custommap=colormap(b2r(-1,1));
 %custommap=colormap('jet');
 custommap=colormap('plasma')
-custommap(1,:)=[0.75 0.75 0.75];
+custommap(1,:)=[-0.75 -0.75 -0.75];
+
 
 data=datalr(1:10242);
 asub = subaxis(4,2,1, 'sh', 0, 'sv', 0, 'padding', 0, 'margin', 0);
@@ -243,8 +244,8 @@ set(gcf,'Color',[1,1,1])
 
 
 acbar = colorbar('EastOutside')
-%set(acbar, 'position', [0.40 0.270 0.02 0.20])
-set(acbar, 'position', [0.3 0.1 0.37 0.028])%,'direction','reverse')
+set(acbar, 'position', [0.40 0.270 0.02 0.20])
+
 
 % going lower rez for now, but giant vector rendering was beaut
 print('-dpng','-r600',['/project/imco/baller/results/images/pbp/' char(name)])

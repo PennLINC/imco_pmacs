@@ -5,15 +5,18 @@ function PBP_vertWiseEffect_Erica(LH,RH,name)% pretty picture code, AAB 4/2018 -
 
 %%% SET THRESHOLDS AS DESIRED HERE: only fill in each threshold as needed (no need to set both if you only want to threshold one end)
 % Values at or above this set to gray
- Uthresh=-2;
+%Uthresh=-2;
 % Values at or below this set to gray
- %LThresh=2;
+%LThresh=2;
+%general threshold if I want bidirectional
+GThresh=2
 %%%
 
 
 addpath(genpath('/appl/freesurfer-6.0.0/matlab/'));
 addpath(genpath('/project/imco/baller/scripts/subaxis/'));
 addpath(genpath('/project/imco/baller/scripts/Colormaps/Colormaps (5)/Colormaps/'));
+addpath(genpath('/project/imco/baller/scripts/b2r/'));
 %{
 addpath(genpath('/cbica/projects/alpraz_EI/scripts/tools/'));
 ProjectFolder = '/cbica/projects/pinesParcels/data/SingleParcellation';
@@ -43,14 +46,17 @@ datar(indexNaNrh)=0;
 datal(indexNaNlh)=0;
 datalr=[datal; datar];
 %invoke thresholding 1/12/21
-if exist('Uthresh','Var') == 1;
-	AboveThresh= datalr > Uthresh;
-	datalr(AboveThresh)=0;
-end
-if exist('LThresh','Var') ==1;
-	BelowThresh= datalr < LThresh;
-	datalr(BelowThresh)=0;
-end
+%if exist('Uthresh','Var') == 1;
+%	AboveThresh= datalr > Uthresh;
+%	datalr(AboveThresh)=0;
+%end
+%if exist('LThresh','Var') ==1;
+%	BelowThresh= datalr < LThresh;
+%	datalr(BelowThresh)=0;
+%end
+
+InsigIndex = abs(datalr) < GThresh
+datalr(InsigIndex) = 0
 %%% set color scale
 % 1/12/21 - for p values, visualizing 1/p might be more effective. comment out line below and  uncomment subsequent line to nix this approach.
 %datalr=1./datalr;
@@ -64,17 +70,23 @@ datalr(InfIndex)=0;
 %AP% set to make white zero on all maps
 maxabs=prctile(abs(datalr),88);
 %mincol= minval-.00001 
-%maxcol=maxabs
-%mincol=-maxabs
-maxcol=max(datalr)
-mincol=min(datalr)
+maxcol=prctile(datalr,99);
+mincol=prctile(datalr,1);
+
+%maxcol=max(datalr)
+%mincol=min(datalr)
+
 %change above to set max/min manually or by other means
 %custommap=colormap('plasma'); %or whatever
 % for white at 0
-%custommap=colormap(b2r(-1,1));
+%custommap=colormap(b2r(-2,2));
+
+%custommap=b2r(min(datalr),max(datalr));
+%custommap=b2r(-10,10);
 %custommap=colormap('jet');
 custommap=colormap('plasma')
 custommap(1,:)=[0.75 0.75 0.75];
+
 
 data=datalr(1:10242);
 asub = subaxis(4,2,1, 'sh', 0, 'sv', 0, 'padding', 0, 'margin', 0);
@@ -88,6 +100,7 @@ aplot = trisurf(faces, vertices(:,1), vertices(:,2), vertices(:,3),data)
 view([90 0]);
 colormap(custommap)
 caxis([mincol; maxcol]);
+%caxis([-10; 10]);
 daspect([1 1 1]);
 axis tight;
 axis vis3d off;
@@ -243,8 +256,8 @@ set(gcf,'Color',[1,1,1])
 
 
 acbar = colorbar('EastOutside')
-%set(acbar, 'position', [0.40 0.270 0.02 0.20])
-set(acbar, 'position', [0.3 0.1 0.37 0.028])%,'direction','reverse')
+set(acbar, 'position', [0.40 0.270 0.02 0.20])
+
 
 % going lower rez for now, but giant vector rendering was beaut
 print('-dpng','-r600',['/project/imco/baller/results/images/pbp/' char(name)])
