@@ -117,6 +117,7 @@ subjDemos_with_rh_matrix <- cbind(subjDemos, rh_matrix)
 #write output
 write.table(subjDemos_with_rh_matrix, file = paste0(homedir, "/baller/results/coupling_accuracy/subjDemos_with_rh_", numrows, "x10242.csv"), sep = ",")
 
+
 ####-----------------------------------------------------------------------------####
 ####---------------------------End of Part 1- Making matrices---_----------------####
 ####-----------------------------------------------------------------------------####
@@ -472,3 +473,38 @@ for (hemi in hemis) {
     eval(parse(text=write_table_command))
   }
 }
+
+###########
+## Plots ##
+###########
+
+
+### Find Gam age FDR corrected
+### just for age
+lh_gam_age_t_fdr05 <- read.csv(paste0(homedir, '/baller/results/coupling_accuracy/lh_gam_age_t_fdr05.csv'), header = F)
+rh_gam_age_t_fdr05 <- read.csv(paste0(homedir, '/baller/results/coupling_accuracy/rh_gam_age_t_fdr05.csv'), header = F)
+
+#turn 0s into na
+lh_gam_to_keep <- lh_gam_age_t_fdr05$V1
+lh_gam_to_keep[lh_gam_to_keep==0] <- NA
+
+rh_gam_to_keep <- rh_gam_age_t_fdr05$V1
+rh_gam_to_keep[rh_gam_to_keep==0] <- NA
+
+#concatenate rows to keep
+lh_and_rh_to_keep <- c(lh_gam_to_keep, rh_gam_to_keep)
+columns_to_drop <- which(is.na(lh_and_rh_to_keep))
+
+# concatenate 831x10242 right and left matrices, and drop the columns with NA
+lh_and_rh_matrix <- data.frame(cbind(lh_matrix, rh_matrix))
+lh_and_rh_matrix_fdr_corrected = subset(lh_and_rh_matrix, select = -(columns_to_drop)) 
+
+lh_and_rh_rowmeans <- rowMeans(lh_and_rh_matrix_fdr_corrected) #make vector of row means
+age = subjDemos$ageAtScan1
+#age_x2_for_plotting <- c(subjDemos$ageAtScan1, subjDemos$ageAtScan1) #make vector of ages
+
+#plot and save
+jpeg(paste0(homedir,'baller/results/images/Mean_coupling_by_age_rplot_fdr.jpg'))
+plot(age, lh_and_rh_rowmeans, ylab = "Coupling (Z)", xlab = "Age (In Years)", main = "Mean Coupling by Age")
+abline(lm(lh_and_rh_rowmeans~age), col = 'red')
+dev.off()

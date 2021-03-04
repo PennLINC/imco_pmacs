@@ -451,6 +451,9 @@ subjDemos_with_rh_matrix <- cbind(subjDemos, rh_matrix)
 #write output
 write.table(subjDemos_with_rh_matrix, file = paste0(homedir, "/baller/results/coupling_accuracy/subjDemos_with_rh_", numrows, "x10242.csv"), sep = ",")
 
+
+
+
 ####-----------------------------------------------------------------------------####
 ####---------------------------End of Part 1- Making matrices---_----------------####
 ####-----------------------------------------------------------------------------####
@@ -806,7 +809,45 @@ for (hemi in hemis) {
     eval(parse(text=write_table_command))
   }
 }
+
+###########
+## Plots ##
+###########
+
+
+### Find Gam age FDR corrected
+### just for age
+lh_gam_age_t_fdr05 <- read.csv(paste0(homedir, '/baller/results/coupling_accuracy/lh_gam_age_t_fdr05.csv'), header = F)
+rh_gam_age_t_fdr05 <- read.csv(paste0(homedir, '/baller/results/coupling_accuracy/rh_gam_age_t_fdr05.csv'), header = F)
+
+#turn 0s into na
+lh_gam_to_keep <- lh_gam_age_t_fdr05$V1
+lh_gam_to_keep[lh_gam_to_keep==0] <- NA
+
+rh_gam_to_keep <- rh_gam_age_t_fdr05$V1
+rh_gam_to_keep[rh_gam_to_keep==0] <- NA
+
+#concatenate rows to keep
+lh_and_rh_to_keep <- c(lh_gam_to_keep, rh_gam_to_keep)
+columns_to_drop <- which(is.na(lh_and_rh_to_keep))
+
+# concatenate 831x10242 right and left matrices, and drop the columns with NA
+lh_and_rh_matrix <- data.frame(cbind(lh_matrix, rh_matrix))
+lh_and_rh_matrix_fdr_corrected = subset(lh_and_rh_matrix, select = -(columns_to_drop)) 
+
+lh_and_rh_rowmeans <- rowMeans(lh_and_rh_matrix_fdr_corrected) #make vector of row means
+age = subjDemos$ageAtScan1
+
+#plot and save
+jpeg(paste0(homedir,'baller/results/images/Mean_coupling_by_age_rplot_fdr.jpg'))
+plot(age, lh_and_rh_rowmeans, ylab = "Coupling (Z)", xlab = "Age (In Years)", main = "Mean Coupling by Age")
+abline(lm(lh_and_rh_rowmeans~age), col = 'red')
+dev.off()
+
 ```
+<img width="40%" src="/project/imco/baller/results/images/Mean_coupling_by_age_rplot_fdr.jpg"/>
+
+
 
 ##### Extra- Part 3- repeating these analyses for CBF and ALFF alone 
 Similar to above, navigate to appropriate directory and run the code
@@ -923,9 +964,18 @@ for (analysis in analyses) {
       rh_parcel_nums <- read.csv(paste0(homedir, "/baller/processed_data/yeo_network_data/rh_", input_parcel_array_length, "_vertex_nums_", parcel_type, parcel_num, ".csv"), header = F)
       
       ## output
+      
+      #Positive and negative vectors, contains Ts
+      lh_outdir_pos_t <- paste0(homedir, "/baller/results/", stat_path, "lh_pos_", result_path, ".csv")
+      rh_outdir_pos_t <- paste0(homedir, "/baller/results/", stat_path, "rh_pos_", result_path, ".csv")
+      
+      lh_outdir_neg_t <- paste0(homedir, "/baller/results/", stat_path, "lh_neg_", result_path, ".csv")
+      rh_outdir_neg_t <- paste0(homedir, "/baller/results/", stat_path, "rh_neg_", result_path, ".csv")
+     
+      #pos and negative, all with masks
       lh_outdir <- paste0(homedir, "/baller/results/", stat_path, "lh_", result_path, "_", parcel_type, parcel_num, ".csv")
       rh_outdir <- paste0(homedir, "/baller/results/", stat_path, "rh_", result_path, "_", parcel_type, parcel_num, ".csv")
-      
+
       lh_outdir_pos <- paste0(homedir, "/baller/results/", stat_path, "lh_pos_", result_path, "_", parcel_type, parcel_num, ".csv")
       rh_outdir_pos <- paste0(homedir, "/baller/results/", stat_path, "rh_pos_", result_path, "_", parcel_type, parcel_num, ".csv")
       
@@ -941,11 +991,26 @@ for (analysis in analyses) {
       print(refnum_networknum_name)
       
       
+      #positive and negative vectors
+      
+      #positive - assign everything < 0 to 0
+      lh_stat_pos <- lh_stat_map
+      lh_stat_pos[lh_stat_pos<0] <- 0
+      
+      rh_stat_pos <- rh_stat_map
+      rh_stat_pos[rh_stat_pos<0] <- 0
+      
+      #negative - assign everything > 0 to 0
+      lh_stat_neg <- lh_stat_map
+      lh_stat_neg[lh_stat_neg>0] <- 0
+      
+      rh_stat_neg <- rh_stat_map
+      rh_stat_neg[rh_stat_neg>0] <- 0
+      
       #convert stat map to boolean
       lh_stat_boolean <- ifelse(lh_stat_map == 0, 0, 1)
       rh_stat_boolean <- ifelse(rh_stat_map == 0, 0, 1)
-      
-      #positive and negative vectors
+
       lh_stat_boolean_pos <- ifelse(lh_stat_map > 0, 1, 0)
       rh_stat_boolean_pos <- ifelse(rh_stat_map > 0, 1, 0)
       
@@ -978,8 +1043,14 @@ for (analysis in analyses) {
       lh_stat_booleanxnetwork_neg <- lh_stat_boolean_neg * lh_numerical_map
       rh_stat_booleanxnetwork_neg <- rh_stat_boolean_neg * rh_numerical_map 
       
+      #write output pos and neg maps
+      write.table(x = lh_stat_pos, file = lh_outdir_pos_t, quote = F, row.names = F, col.names = F)
+      write.table(x = rh_stat_pos, file = rh_outdir_pos_t, quote = F, row.names = F, col.names = F)
       
-      #write output
+      write.table(x = lh_stat_neg, file = lh_outdir_neg_t, quote = F, row.names = F, col.names = F)
+      write.table(x = rh_stat_neg, file = rh_outdir_neg_t, quote = F, row.names = F, col.names = F)
+      
+      #write output pos and neg maps, masked
       write.table(x = lh_stat_booleanxnetwork, file = lh_outdir, quote = F, row.names = F, col.names = F)
       write.table(x = rh_stat_booleanxnetwork, file = rh_outdir, quote = F, row.names = F, col.names = F)
       
@@ -1046,6 +1117,38 @@ for (analysis in analyses) {
 
 
 
+```
+
+** Preparing for GAM visualization **
+
+One challenge in plotting GAMS is that every value for the linear term, whether positive or negative, will be plotted as a positive number in the GAM. This makes it difficult to interpret. As such, a way to adapt that is to take the sign of the T values from the linear term and multiple that times the F values, producing directionality for the GAM. Here, I take the gam term and linear term for age, extract the signage from the linear values, multiply it by the gam vector, and save.
+```{r gam_T_and_F_value_vector}
+
+
+### pre: gam and lm T maps
+### post: gam t maps with signage from lm maps
+### uses: Gives sinage to gam age maps based on the linear term in the model
+### dependencies: and R will do. I used 3.2.5
+
+
+#set remote homedirectories
+#homedir = '/Users/eballer/BBL/imco/pmacs/PMACS_remote'
+#homedir = '/project/imco'
+
+lh_gam <- read.csv(paste0(homedir, "/baller/results/coupling_accuracy/lh_gam_age_t_fdr05.csv"), header = F)
+rh_gam <- read.csv(paste0(homedir, "/baller/results/coupling_accuracy/rh_gam_age_t_fdr05.csv"), header = F)
+
+lh_lm <- read.csv(paste0(homedir, "/baller/results/coupling_accuracy/lh_lm_age_t_fdr05.csv"), header = F)
+rh_lm <- read.csv(paste0(homedir, "/baller/results/coupling_accuracy/rh_lm_age_t_fdr05.csv"), header = F)
+
+lh_lm_sign <- ifelse(lh_lm$V1 > 0, 1, -1)
+rh_lm_sign <- ifelse(rh_lm$V1 > 0, 1, -1)
+
+lh_gam_with_lm_sign <- lh_gam$V1*lh_lm_sign
+rh_gam_with_lm_sign <- rh_gam$V1*rh_lm_sign
+
+write.table(lh_gam_with_lm_sign, paste0(homedir, "/baller/results/coupling_accuracy/lh_gam_with_lm_sign_age_t_fdr05.csv"), quote = F, row.names = F, col.names = F)
+write.table(rh_gam_with_lm_sign, paste0(homedir, "/baller/results/coupling_accuracy/rh_gam_with_lm_sign_age_t_fdr05.csv"), quote = F, row.names = F, col.names = F)
 ```
 
 
