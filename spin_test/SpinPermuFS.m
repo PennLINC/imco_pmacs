@@ -1,4 +1,4 @@
-function SpinPermuFS(readleft,readright,permno,wsname)
+function SpinPermuFS(readleft,readright,permno,wsname,model)
 % Compute designated # of permutations/spins of the input surface data
 % in FreeSurfer fsaverage5.
 % FORMAT SpinPermuFS(readleft,readright,permno)
@@ -6,6 +6,7 @@ function SpinPermuFS(readleft,readright,permno,wsname)
 % readright    - the filename of right surface data to spin 
 % permno       - the number of permutations
 % wsname       - the name of a workspace file including all spun data to be saved
+% model        - gam_accuracy, lm_accuracy, gam_sex, etc
 % Example   SpinPermuFS('../data/depressionFSdataL.csv','../data/depressionFSdataR.csv',100,'../data/rotationFS.mat')
 % will spin prebuilt data, neurosynth map associated with 'depression', 100
 % times, and save the workspace file of all spun data in ../data/rotationFS.mat
@@ -30,18 +31,7 @@ path(path,fsmatlab);
 %read the data saved in csv
 datal=importdata(readleft);
 datar=importdata(readright);
-%For an annotation file, please used the following command to load the data
-% [Vl, dataL, ctl] = read_annotation(readleft);
-% [Vr, dataR, ctr] = read_annotation(readright);
 
-%If there is a mask,e.g. median wall, to be excluded, use the following
-%command to assign vertices in this mask with a special value out of the
-%real range, e.g. 100 here, to mark these vertices and exclude them later
-%in pvalvsNull.m
-% leftmask=importdata(readleftmask);
-% datal(leftmask==1)=100;
-% rightmask=importdata(readrightmask);
-% datar(rightmask==1)=100;
 
 %%extract the correspoding sphere surface coordinates for rotation
 % AP changed the filepath 10/26/20, i don't know how cubic managed to set up a fshome path not amenable to this
@@ -90,7 +80,7 @@ for j=1:permno
     %saved by write_annotation.m of FreeSurfer
 end
 save(wsname,'bigrotl','bigrotr')
-writematrix(bigrotl, [outdir, '/lh_spintest_output.csv']);
-writematrix(bigrotr, [outdir, '/rh_spintest_output.csv']);
+writematrix(bigrotl, [outdir, '/lh_spintest_', model, '_output.csv']);
+writematrix(bigrotr, [outdir, '/rh_spintest_', model, '_output.csv']);
 %save bigrotl and bigrotr in a workspace file for the null distribution
 %use it in pvalvsNull.m to caclulate pvalue
