@@ -1,7 +1,8 @@
 % addpaths
 addpath(genpath('/project/imco/baller/scripts/spin_test/'));
 ProjectFolder = '/project/imco/baller/results/coupling_accuracy/';
-model = 'gam_sex'
+%model = 'gam_sex'
+model = 'lm_exec_accuracy'
 
 % set outdir
 outdir= '/project/imco/baller/results/coupling_accuracy/spin_test_results/';

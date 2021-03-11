@@ -80,7 +80,7 @@ for j=1:permno
     %saved by write_annotation.m of FreeSurfer
 end
 save(wsname,'bigrotl','bigrotr')
-writematrix(bigrotl, [outdir, '/lh_spintest_', model, '_output.csv']);
-writematrix(bigrotr, [outdir, '/rh_spintest_', model, '_output.csv']);
+writematrix(bigrotl, [outdir, '/lh_spin_test_', model, '_output.csv']);
+writematrix(bigrotr, [outdir, '/rh_spin_test_', model, '_output.csv']);
 %save bigrotl and bigrotr in a workspace file for the null distribution
 %use it in pvalvsNull.m to caclulate pvalue
