@@ -807,14 +807,42 @@ for (hemi in hemis) {
   }
 }
 
+```
+Plots for Age x Coupling
+*script: /project/imco/baller/scripts/coupling/scatter_plots.R*
+```{r scatter_plots, eval=FALSE}
 ###########
 ## Plots ##
 ###########
 
+
+###pre: gam age results, both fdr and uncorrected. rh and lh matrices
+###post: jpegs of linear and gam modesl
+###uses: makes the scatter plot of age by couping means for Figure 2
+### dependencies: R 3.6.3
+
+library(mgcv)
+library(dplyr)
+library(ggplot2)
+library(visreg)
+
+#set home directory, switch this depending on whether running from PMACS or from home directory
+#homedir <- "/Users/eballer/BBL/imco/pmacs/PMACS_remote/"
+#homedir <- "/project/imco/"
+
+numrows = 831
+
+
+# read in lh and rh matrices, which have demos appended
+lh_df <- read.table(paste0(homedir, "/baller/results/coupling_accuracy/subjDemos_with_lh_", numrows, "x10242.csv"), sep = ",")
+rh_df <- read.table(paste0(homedir, "/baller/results/coupling_accuracy/subjDemos_with_rh_", numrows, "x10242.csv"), sep = ",")
+
+#just get the coupling values
+lh_matrix <- lh_df[,(dim(lh_df)[2]-10241):dim(lh_df)[2]]
+rh_matrix <- rh_df[,(dim(rh_df)[2]-10241):dim(rh_df)[2]]
+
 ### Find Gam age FDR corrected
 ### just for age
-#homedir <- "/Users/eballer/BBL/imco/pmacs/PMACS_remote/"
-#homedir <- "/project/imco"
 lh_gam_age_t_fdr05 <- read.csv(paste0(homedir, '/baller/results/coupling_accuracy/lh_gam_age_t_fdr05.csv'), header = F)
 rh_gam_age_t_fdr05 <- read.csv(paste0(homedir, '/baller/results/coupling_accuracy/rh_gam_age_t_fdr05.csv'), header = F)
 
@@ -831,20 +859,33 @@ columns_to_drop <- which(is.na(lh_and_rh_to_keep))
 
 # concatenate 831x10242 right and left matrices, and drop the columns with NA
 lh_and_rh_matrix <- data.frame(cbind(lh_matrix, rh_matrix))
-lh_and_rh_matrix_fdr_corrected = subset(lh_and_rh_matrix, select = -(columns_to_
-drop)) 
+lh_and_rh_matrix_fdr_corrected = subset(lh_and_rh_matrix, select = -(columns_to_drop)) 
 
-lh_and_rh_rowmeans <- rowMeans(lh_and_rh_matrix_fdr_corrected) #make vector of r
-ow means
-age = subjDemos$ageAtScan1
-#age_x2_for_plotting <- c(subjDemos$ageAtScan1, subjDemos$ageAtScan1) #make vector of ages
+lh_and_rh_rowmeans <- rowMeans(lh_and_rh_matrix_fdr_corrected) #make vector of row means
+age = lh_df$ageAtScan1
 
 #plot and save
-jpeg(paste0(homedir,'baller/results/images/Mean_coupling_by_age_rplot_fdr.jpg'))
-plot(age, lh_and_rh_rowmeans, ylab = "Coupling (Z)", xlab = "Age (In Years)", ma
-in = "Mean Coupling by Age")
+jpeg(paste0(homedir,'baller/results/images/Mean_coupling_by_age_rplot_fdr05.jpg'))
+plot(age, lh_and_rh_rowmeans, ylab = "Coupling (Z)", xlab = "Age (In Years)", main = "Mean Coupling by Age")
 abline(lm(lh_and_rh_rowmeans~age), col = 'red')
 dev.off()
+
+#visreg
+
+jpeg(paste0(homedir,'baller/results/images/Mean_coupling_by_age_rplot_fdr05_visreg.jpg'))
+fit <- lm(Means~Age, data=df)
+visreg(fit, "Age", ylab = "Mean Coupling (Z)", xlab = "Age (in Years)",
+       line=list(col="red"),
+       points=list(col="black"))
+dev.off()
+
+jpeg(paste0(homedir, 'baller/results/images/Mean_coupling_by_age_rplot_fdr05_visreg_gam.jpg'))
+fit_gam <- gam(Means~s(Age, k = 4, fx=T), data=df)
+visreg(fit_gam, "Age", ylab = "Mean Coupling (Z)", xlab = "Age (in Years)",
+       line=list(col="red"),
+       points=list(col="black"))
+dev.off()
+
 
 ### Find Gam age uncorrected
 ### just for age
@@ -864,12 +905,10 @@ columns_to_drop <- which(is.na(lh_and_rh_to_keep))
 
 # concatenate 831x10242 right and left matrices, and drop the columns with NA
 lh_and_rh_matrix <- data.frame(cbind(lh_matrix, rh_matrix))
-lh_and_rh_matrix_fdr_corrected = subset(lh_and_rh_matrix, select = -(columns_to_
-drop)) 
+lh_and_rh_matrix_uncorrected = subset(lh_and_rh_matrix, select = -(columns_to_drop)) 
 
-lh_and_rh_rowmeans <- rowMeans(lh_and_rh_matrix_fdr_corrected) #make vector of r
-ow means
-age = subjDemos$ageAtScan1
+lh_and_rh_rowmeans <- rowMeans(lh_and_rh_matrix_uncorrected) #make vector of row means
+age = lh_df$ageAtScan1
 #age_x2_for_plotting <- c(subjDemos$ageAtScan1, subjDemos$ageAtScan1) #make vector of ages
 
 #plot and save
@@ -878,7 +917,27 @@ plot(age, lh_and_rh_rowmeans, ylab = "Coupling (Z)", xlab = "Age (In Years)", ma
 abline(lm(lh_and_rh_rowmeans~age), col = 'red')
 dev.off()
 
+#visreg
+df <- data.frame(cbind(lh_and_rh_rowmeans, age))
+names(df) <- c("Means", "Age")
+
+jpeg(paste0(homedir,'baller/results/images/Mean_coupling_by_age_rplot_uncor_visreg.jpg'))
+fit <- lm(Means~Age, data=df)
+visreg(fit, "Age", ylab = "Mean Coupling (Z)", xlab = "Age (in Years)",
+       line=list(col="red"),
+       points=list(col="black"))
+dev.off()
+
+jpeg(paste0(homedir, 'baller/results/images/Mean_coupling_by_age_rplot_uncor_visreg_gam.jpg'))
+fit_gam <- gam(Means~s(Age, k = 4, fx=T), data=df)
+visreg(fit_gam, "Age", ylab = "Mean Coupling (Z)", xlab = "Age (in Years)",
+       line=list(col="red"),
+       points=list(col="black"))
+dev.off()
+
+
 ```
+
 
 ##### Extra- Part 3- repeating these analyses for CBF and ALFF alone 
 Similar to above, navigate to appropriate directory and run the code
@@ -1891,14 +1950,15 @@ writematrix(bigrotr, [outdir, '/rh_spintest_', model, '_output.csv']);
 ##post: 2 7 x 1000 matrices (r & l) that contain the proportion of vertices within a network divided by the total number of vertices, and plots
 ## uses: Takes output of spin test, and calcualted the number of vertices within each of yeo's 7 networks out of the number of total possible vertices within the network
     #### 1) Read in the yeo network assignments and calculate total number of vertices per network
-    #### 2) Multiply the yeo networks x the matrices (so every value is 1 -7 if they were within the mask, -1--7 if they were medial wall, and 0 otherwise
-)
+    #### 2) Multiply the yeo networks x the matrices (so every value is 1 -7 if they were within the mask, -1--7 if they were medial wall, and 0 otherwise)
     #### 3) Foreach permutation (r and l separately), and for each network, calculate the (# of vertices with a 1) divided(/) by the (number of total vertices within network minus number of negative vertices
     #### 4) Store
     #### 5) Plot
 
-### dependencies: ggplot2, tidyr
+### dependencies: ggplot2, bigmemory, vroom
 
+
+#library(bigmemory.sri)
 library(ggplot2)
 library(tidyr)
 
@@ -1915,86 +1975,206 @@ source(paste0(homedir, "/baller/scripts/imco_functions.R"))
 hemis <- c("lh", "rh")
 permNum <- 1000
 yeo_num <- 7
-model = "gam_sex"
+models = c("gam_sex", "pos_gam_sex", "neg_gam_sex", "lm_exec_accuracy", "pos_lm_exec_accuracy", "neg_lm_exec_accuracy")
+#models = c("lm_exec_accuracy", "pos_lm_exec_accuracy", "neg_lm_exec_accuracy")
 ################
 ### Read in matrices 
+for (model in models) {
+  #{lh and rh}_gam_sex_t_fdr05 -> actual results
+  lh_gam_sex_t_fdr05_results <- read.table(paste0(homedir, "/baller/results/coupling_accuracy/lh_", model, "_t_fdr05_Yeo7_1_0_-1.csv"))
+  rh_gam_sex_t_fdr05_results <- read.table(paste0(homedir, "/baller/results/coupling_accuracy/rh_", model, "_t_fdr05_Yeo7_1_0_-1.csv"))
+  
+  #spins
+  lh_spin <- t(read.table(paste0(homedir, "/baller/results/coupling_accuracy/spin_test_results/lh_spin_test_", model,"_output.csv"), sep = ","))
+  rh_spin <- t(read.table(paste0(homedir, "/baller/results/coupling_accuracy/spin_test_results/rh_spin_test_", model,"_output.csv"), sep = ","))
+                                          
+  #bring together, with original values as first column
+  lh_act_results_and_spin <- cbind(lh_gam_sex_t_fdr05_results, lh_spin)
+  rh_act_results_and_spin <- cbind(rh_gam_sex_t_fdr05_results, rh_spin)
+  
+  #grab list of yeo 7 networks in fsaverage5 space
+  yeo_networks <- get_parcel_mapping_yeo(yeo_num)
+  
+  #separate into right and left
+  lh_yeo_network <- yeo_networks[[1]]
+  rh_yeo_network <- yeo_networks[[2]]
+  
+  #count up number of vertices per network
+  lh_yeo_network_count_table <- table(lh_yeo_network)
+  rh_yeo_network_count_table <- table(rh_yeo_network)
+  
+  #multiply yeo network x spin test
+  lh_spinxyeo <- lh_act_results_and_spin*lh_yeo_network
+  rh_spinxyeo <- rh_act_results_and_spin*rh_yeo_network
+  
+  #proportions
+  #go through each hemisphere, go through each perm, and go through each network
+  
+  lh_hemi_spin_proportions <- data.frame(matrix(nrow = yeo_num, ncol = (permNum + 1)))
+  rh_hemi_spin_proportions <- data.frame(matrix(nrow = yeo_num, ncol = (permNum + 1)))
+  for (hemi in hemis){
 
-#{lh and rh}_gam_sex_t_fdr05 -> actual results
-lh_gam_sex_t_fdr05_results <- read.table(paste0(homedir, "/baller/results/coupling_accuracy/lh_", model, "_t_fdr05_Yeo7_1_0_-1.csv"))
-rh_gam_sex_t_fdr05_results <- read.table(paste0(homedir, "/baller/results/coupling_accuracy/rh_", model, "_t_fdr05_Yeo7_1_0_-1.csv"))
-
-#spins
-lh_spin <- t(read.table(paste0(homedir, "/baller/results/coupling_accuracy/spin_test_results/lh_spintest_", model,"_output.csv"), sep = ","))
-rh_spin <- t(read.table(paste0(homedir, "/baller/results/coupling_accuracy/spin_test_results/rh_spintest_", model,"_output.csv"), sep = ","))
-                                        
-#bring together, with original values as first column
-lh_act_results_and_spin <- cbind(lh_gam_sex_t_fdr05_results, lh_spin)
-rh_act_results_and_spin <- cbind(rh_gam_sex_t_fdr05_results, rh_spin)
-
-#grab list of yeo 7 networks in fsaverage5 space
-yeo_networks <- get_parcel_mapping_yeo(yeo_num)
-
-#separate into right and left
-lh_yeo_network <- yeo_networks[[1]]
-rh_yeo_network <- yeo_networks[[2]]
-
-#count up number of vertices per network
-lh_yeo_network_count_table <- table(lh_yeo_network)
-rh_yeo_network_count_table <- table(rh_yeo_network)
-
-#multiply yeo network x spin test
-lh_spinxyeo <- lh_act_results_and_spin*lh_yeo_network
-rh_spinxyeo <- rh_act_results_and_spin*rh_yeo_network
-
-#proportions
-#go through each hemisphere, go through each perm, and go through each network
-
-lh_hemi_spin_proportions <- data.frame(matrix(nrow = yeo_num, ncol = (permNum + 1)))
-rh_hemi_spin_proportions <- data.frame(matrix(nrow = yeo_num, ncol = (permNum + 1)))
-for (hemi in hemis){
- # print(paste0("hemi", hemi))
-  for (perm in 1:(permNum + 1)){
-    #print(paste0("perm: ", perm))
-    for (network in 1:yeo_num){
-      #print(paste0("network: ", network))
-      #to evaluate
+    for (perm in 1:(permNum + 1)){
       
-      #number of vertices within network that are fdr corrected
-      num_pos_to_parse<- paste0("length(which(", hemi, "_spinxyeo[", perm, "] == ", network, "))")
-      #print(num_pos_to_parse)
-      num_vertices_in_spin <- eval(parse(text = as.character(num_pos_to_parse)))
-      #print(paste0("num vertices in spin", num_vertices_in_spin))
+      for (network in 1:yeo_num){
+        
+        #to evaluate
+        
+        #number of vertices within network that are fdr corrected
+        num_pos_to_parse<- paste0("length(which(", hemi, "_spinxyeo[", perm, "] == ", network, "))")
+        
+        num_vertices_in_spin <- eval(parse(text = as.character(num_pos_to_parse)))
+        
+        
+        #number of vertices within network that are negative (i.e., medial wall)
+        num_neg_to_parse <- paste0("length(which(", hemi, "_spinxyeo[", perm, "] == -", network, "))")
       
-      #number of vertices within network that are negative (i.e., medial wall)
-      num_neg_to_parse <- paste0("length(which(", hemi, "_spinxyeo[", perm, "] == -", network, "))")
-     # print(num_neg_to_parse)
-      num_neg <- eval(parse(text = as.character(num_neg_to_parse)))
-      #print(paste0("num neg: ", num_neg))
-      
-      #total number of vertices in normal network
-      total_possible_to_parse <- paste0(hemi, "_yeo_network_count_table[", network, "]")
-      #print(total_possible_to_parse)
-      total_possible <- eval(parse(text = as.character(total_possible_to_parse)))
-      
-      #print(paste0("total possible:", total_possible))
-      #proportion of vertices within network , with denominator being total possible by # in medial wall
-      proportion_potential_vertices <- num_vertices_in_spin/(total_possible - num_neg)
-      
-      #print(paste0("prop:", proportion_potential_vertices))
-      
-      #store in matrix
-      storing_to_parse <- paste0(hemi, "_hemi_spin_proportions[", network, ",", perm, "] = ", proportion_potential_vertices)
-      #print(storing_to_parse)
-      eval(parse(text = as.character(storing_to_parse)))
+        num_neg <- eval(parse(text = as.character(num_neg_to_parse)))
+        
+        
+        #total number of vertices in normal network
+        total_possible_to_parse <- paste0(hemi, "_yeo_network_count_table[", network, "]")
+ 
+        total_possible <- eval(parse(text = as.character(total_possible_to_parse)))
+        
+       
+        #proportion of vertices within network , with denominator being total possible by # in medial wall
+        proportion_potential_vertices <- num_vertices_in_spin/(total_possible - num_neg)
+    
+        
+        #store in matrix
+        storing_to_parse <- paste0(hemi, "_hemi_spin_proportions[", network, ",", perm, "] = ", proportion_potential_vertices)
+
+        eval(parse(text = as.character(storing_to_parse)))
+      }
     }
+  }
+  
+  write.table(lh_hemi_spin_proportions, file = paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/lh_spin_test_", model, "_proportions.csv"), sep = ",", col.names = F, row.names = F)
+  write.table(rh_hemi_spin_proportions, file = paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/rh_spin_test_", model, "_proportions.csv"), sep = ",", col.names = F, row.names = F)
+#then plot
+}
+
+```
+
+** violin plotting the spin tests and getting stats **
+From /project/imco/baller/scripts/spin_test/violin_plots.R
+```{r violin_plots, eval=FALSE}
+library(tidyr)
+library(ggplot2)
+library(reshape)
+#################
+### set home directory
+#homedir <- "/Users/eballer/BBL/imco/pmacs/PMACS_remote"
+#homedir <- "/project/imco"
+models = c("gam_sex", "pos_gam_sex", "neg_gam_sex","lm_exec_accuracy", "pos_lm_exec_accuracy", "neg_lm_exec_accuracy")
+network_names <- c("VIS", "MOT", "DA", "VA", "LIM", "FP", "DM")
+outdir_name <- "spin_stats_gam_sex_lm_exec_acc_all_pos_neg"
+num_spins = 2000
+#set yeo colors manually - this can be obtained through https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation_Yeo2011
+   #I typed the RGB values into a rgb -> hex converter and stored the values here. Works!
+
+yeo_colors <- c(
+    `VIS` = "#781286",
+    `MOT` = "#4682b4",
+    `DA` = "#00760e",
+    `VA` = "#c43afa",
+    `LIM` = "#dcf8a4",
+    `FP` = "#e69422",
+    `DM` = "#cd3e56")
+
+#for storing statistics at the end
+stats <- data.frame(matrix(nrow = 7, ncol = length(models)))
+names(stats) <- models
+row.names(stats) <- network_names
+
+for (model in models) {
+  lh_spin_df <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/lh_spin_test_", model, "_proportions.csv"), sep = ",")
+  )
+  rh_spin_df <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/rh_spin_test_", model, "_proportions.csv"), sep = ",")
+  )
+  
+  #take means of left and right
+  actual_results <- (lh_spin_df[,1] + rh_spin_df[,1])/2
+ #spin_without_target_col <- (lh_spin_df[,2:1001] + rh_spin_df[,2:1001])/2
+  spin_without_target_col <- cbind(lh_spin_df[,2:1001],rh_spin_df[,2:1001])
+  #melt dataframe so it is in a good format for violin plotting.
+  #melt df so it is in a good position to be plotted
+  melted_df_network_name <- rep(x = network_names, each = num_spins)
+  melted_df_network_num <- rep(x = seq(1:7), each = num_spins)
+  melted_df_spin_results <- rbind(t(spin_without_target_col[1,]), 
+                                  t(spin_without_target_col[2,]),
+                                  t(spin_without_target_col[3,]),
+                                  t(spin_without_target_col[4,]),
+                                  t(spin_without_target_col[5,]),
+                                  t(spin_without_target_col[6,]),
+                                  t(spin_without_target_col[7,]))
+  
+  melted_df <- as.data.frame(cbind(melted_df_network_name, melted_df_network_num,melted_df_spin_results))
+  names(melted_df) <- c("network_name", "network_num", "spin")
+  melted_df$spin <- as.numeric(as.character(melted_df$spin))
+  
+  #with mean lines, different fonts
+  #save images
+  jpeg(file=paste0(homedir, "/baller/results/images/spin_", model, "_t_fdr05.jpeg"))
+  ggplot(melted_df, aes(x = factor(network_name, level = network_names), y = spin, fill = network_name)) +  
+    scale_fill_manual(values=yeo_colors) + 
+    geom_violin(trim = TRUE) + 
+    xlab("Yeo 7 Network") + ylab(paste0("Proportion")) +
+  #  scale_y_continuous(limits=c(-0.1, .75)) + 
+    #scale_y_continuous(limits=c(-0.1, .4)) + 
+    geom_violin(trim=FALSE) + 
+    theme(legend.position = "none",
+          legend.title = element_blank(),
+          axis.text.x = element_text(size = 10),
+          axis.text.y = element_text(size = 10),
+          axis.title.y = element_text(size = 10),
+          axis.title.x = element_blank(),
+          plot.title = element_text(size = 10)) +
+    stat_summary(fun.y = mean, geom = "errorbar", 
+                aes(ymax = ..y.., ymin = ..y.., group = factor(network_name)),
+                 width = 0.5, linetype = "dashed", position = position_dodge(0.9)) + 
+    #geom_boxplot(width = 0.15, position = position_dodge(0.9)) + 
+    geom_segment(aes(x = 0.5, y = actual_results[1], xend = 1.5, yend = actual_results[1])) + 
+    geom_segment(aes(x = 1.5, y = actual_results[2], xend = 2.5, yend = actual_results[2])) +
+    geom_segment(aes(x = 2.5, y = actual_results[3], xend = 3.5, yend = actual_results[3])) +
+    geom_segment(aes(x = 3.5, y = actual_results[4], xend = 4.5, yend = actual_results[4])) +
+    geom_segment(aes(x = 4.5, y = actual_results[5], xend = 5.5, yend = actual_results[5])) +
+    geom_segment(aes(x = 5.5, y = actual_results[6], xend = 6.5, yend = actual_results[6])) +
+    geom_segment(aes(x = 6.5, y = actual_results[7], xend = 7.5, yend = actual_results[7])) +
+    ggtitle(paste0("Spin Test Permutation Results ", model))
+  dev.off()
+  
+  #try bars
+  jpeg(file=paste0(homedir,"/baller/results/images/spin_", model, "_t_fdr05_bar_graph_means.jpeg"))
+  means <- as.vector(rowMeans(spin_without_target_col))
+  actual_results <- as.vector(actual_results)
+  spin_results <- rbind(actual_results,means)
+  melted_for_plot <- melt(spin_results)
+  melted_for_plot$network_name <- rep(network_names, each = 2)
+  names(melted_for_plot) <- c("group_name", "group_num", "value", "net")
+  melted_for_plot$value <- as.numeric(as.character(melted_for_plot$value))
+  
+  
+  #ggplot(melted_for_plot, aes(fill=group_name, y=value, x=net)) + 
+  ggplot(data=melted_for_plot, aes(fill=group_name, y=value, x=factor(net, level = network_names))) + 
+  #ggplot(data=melted_for_plot, aes(fill=yeo_colors, y=value, x=factor(net, level = network_names))) + 
+  
+    geom_bar(position="dodge", stat="identity") + 
+  ggtitle(paste0("Spin Test Permutation Results ", model))
+  dev.off()
+  
+  
+  ####### Stats ########
+  for (i in 1:7){
+    #store p values
+    #equivalent to: stats$model[i] <- (length(which(spin_without_target_col[i,] > actual_results[i]))/2000)
+    eval(parse(text=as.character(paste0("stats$", model, "[", i ,"] <- (length(which(spin_without_target_col[",i, ",] > actual_results[", i, "]))/", num_spins, ")"))))
   }
 }
 
-write.table(lh_hemi_spin_proportions, file = paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/lh_spin_test_", model, "_proportions.csv"), sep = ",", col.names = F, row.names = F)
-write.table(rh_hemi_spin_proportions, file = paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/rh_spin_test_", model, "_proportions.csv"), sep = ",", col.names = F, row.names = F)
-#then plot
+write.csv(stats, paste0(homedir, "/baller/results/coupling_accuracy/spin_test_results/", outdir_name, ".csv"))
 ```
-
 
 
 New images made on PMACS:/project/imco/baller/scripts/PBP_graphics

@@ -80,15 +80,17 @@ mincol=min(datalr)
 % for white at 0
 %custommap=colormap(customcolormap(min(datalr),max(datalr));
 %custommap=b2r(min(datalr),max(datalr));
-%custommap=colormap('jet');
-custommap=colormap('parula');
+custommap=colormap('viridis');
+%custommap=colormap('plasma');
+custommap([1:37],:)=repmat([.84 .03 0.94],37,1);
+custommap([38:50],:)=repmat([0.75 0.75 0.75],13,1);
 custommap=flipud(custommap);
 %custommap = customcolormap(linspace(0,1,11), {'#410149','#762a84','#9b6fac','#c1a5cd','#e7d4e8','#faf6f7','#d7f1d6','#a6db9d','#5aae60','#1c7735','#014419'});
 %custommap = customcolormap([0 .3 .8 1], {'#fbeed7','#ffba5a','#ff7657','#665c84'});
 %custommap=flipud(custommap)
 %custommap = customcolormap(linspace(0,1,11), {'#68011d','#b5172f','#d75f4e','#f7a580','#fedbc9','#f5f9f3','#d5e2f0','#93c5dc','#4295c1','#2265ad','#062e61'});
 
-custommap(1,:)=[0.75 0.75 0.75];
+%custommap(1,:)=[0.75 0.75 0.75];
 
 
 data=datalr(1:10242);

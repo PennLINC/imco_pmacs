@@ -36,6 +36,7 @@ hemis <- c("lh", "rh")
 permNum <- 1000
 yeo_num <- 7
 models = c("gam_sex", "pos_gam_sex", "neg_gam_sex", "lm_exec_accuracy", "pos_lm_exec_accuracy", "neg_lm_exec_accuracy")
+#models = c("lm_exec_accuracy", "pos_lm_exec_accuracy", "neg_lm_exec_accuracy")
 ################
 ### Read in matrices 
 for (model in models) {
@@ -72,39 +73,38 @@ for (model in models) {
   lh_hemi_spin_proportions <- data.frame(matrix(nrow = yeo_num, ncol = (permNum + 1)))
   rh_hemi_spin_proportions <- data.frame(matrix(nrow = yeo_num, ncol = (permNum + 1)))
   for (hemi in hemis){
-   # print(paste0("hemi", hemi))
+
     for (perm in 1:(permNum + 1)){
-      #print(paste0("perm: ", perm))
+      
       for (network in 1:yeo_num){
-        #print(paste0("network: ", network))
+        
         #to evaluate
         
         #number of vertices within network that are fdr corrected
         num_pos_to_parse<- paste0("length(which(", hemi, "_spinxyeo[", perm, "] == ", network, "))")
-        #print(num_pos_to_parse)
+        
         num_vertices_in_spin <- eval(parse(text = as.character(num_pos_to_parse)))
-        #print(paste0("num vertices in spin", num_vertices_in_spin))
+        
         
         #number of vertices within network that are negative (i.e., medial wall)
         num_neg_to_parse <- paste0("length(which(", hemi, "_spinxyeo[", perm, "] == -", network, "))")
-       # print(num_neg_to_parse)
+      
         num_neg <- eval(parse(text = as.character(num_neg_to_parse)))
-        #print(paste0("num neg: ", num_neg))
+        
         
         #total number of vertices in normal network
         total_possible_to_parse <- paste0(hemi, "_yeo_network_count_table[", network, "]")
-        #print(total_possible_to_parse)
+ 
         total_possible <- eval(parse(text = as.character(total_possible_to_parse)))
         
-        #print(paste0("total possible:", total_possible))
+       
         #proportion of vertices within network , with denominator being total possible by # in medial wall
         proportion_potential_vertices <- num_vertices_in_spin/(total_possible - num_neg)
-        
-        #print(paste0("prop:", proportion_potential_vertices))
+    
         
         #store in matrix
         storing_to_parse <- paste0(hemi, "_hemi_spin_proportions[", network, ",", perm, "] = ", proportion_potential_vertices)
-        #print(storing_to_parse)
+
         eval(parse(text = as.character(storing_to_parse)))
       }
     }
