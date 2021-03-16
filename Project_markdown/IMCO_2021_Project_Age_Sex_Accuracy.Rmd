@@ -1,7 +1,7 @@
 ---
 title: "IMCO 2021 Project - Age, Sex, and Accuracy"
 author: "Erica Baller"
-date: "2/26/2021"
+date: "3/16/2021"
 output: html_document
 params:
   args: myarg
@@ -14,9 +14,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### Set up your paths
 #homedir = '/Users/eballer/BBL/imco/pmacs/PMACS_remote'
-#homedir = '/project/imco'
+homedir = '/project/imco'
 mydirec = '/baller'
-suListPath = '/subjectLists'
+subListPath = '/subjectLists'
 scriptsPath = '/scripts'
 
 ## include external functions
@@ -36,8 +36,11 @@ Lab notebook (with day by day documentation):
 Erica Baller local computer and github script: Replicating_LB_2D_imco_started_20200911.Rmd
 
 ** Notes before you get started **
+
  1) Please make sure you have appropriately specified your home directory above
+ 
  2) Please make sure to **xbash** 
+ 
  3) After that, things should run just fine
 
 To run this from command line ** on PMACS**: 
@@ -69,6 +72,10 @@ The steps for coupling are as follows -
 5) Reading in the .asc files into R, as well as demographic and accuracy information, and running coupling ~ age, sex, motion, and accuracy regressions
 6) Correcting and masking these findings for display
 7) Displaying in matlab
+8) Spin testing gam sex and lm accuracy results to test whether # vertices per yeo network is significantly different in these analysis
+9) Plotting the spin test results
+
+Extra analyses were performed to test whether coupling related to other measures like metabolic consumption of glucose, allometric scaling, etc. These are available for reference but were not used in the final analysis.
 
 Coupling was initially completed on chead, and replicated by Azeez using updated freesurfer and R directories. Once we verified that the coupling maps were equivalent to the original maps created in 2018, we moved the maps over to PMACS and started our group level analyses from there. 
 
@@ -1230,93 +1237,41 @@ done < $command_file
 
 ```
 
-The command files contain paths to the PBP* visualization scripts. At any time, you can run one or all of them by changing the inputs in /project/imco/baller/scripts/PBP_graphics/commands_for_matlab. Currently, these are the commands in that file. Of note, if you ever want to run a command independently, just go into matlab, copy the command, and run it within matlab. This just takes forever.
+The command files contain paths to the PBP* visualization scripts. At any time, you can run one or all of them by changing the inputs in /project/imco/baller/scripts/PBP_graphics/commands_for_matlab. Currently, these are the commands in that file. Of note, if you ever want to run a command independently, just go into matlab, copy the command, and run it within matlab. This just takes forever. Here are the final commands for visualization that I ran. 
 
 ```{bash commands_for_matlab, eval=FALSE}
-PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05_Yeo7.csv','coupling_gam_age_yeo7_fdr05')
-PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_lm_age_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_age_t_fdr05_Yeo7.csv','coupling_lm_age_yeo7_fdr05')
-PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_lm_sex_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_sex_t_fdr05_Yeo7.csv','coupling_lm_sex_yeo7_fdr05')
-PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05_Yeo7.csv','coupling_lm_exec_accuracy_yeo7_fdr05')
-PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_pos_lm_age_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_age_t_fdr05_Yeo7.csv','coupling_pos_lm_age_yeo7_fdr05')
-PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_pos_lm_sex_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_sex_t_fdr05_Yeo7.csv','coupling_pos_lm_sex_yeo7_fdr05')
-PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05_Yeo7.csv','coupling_pos_lm_exec_accuracy_yeo7_fdr05')
-PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_neg_lm_age_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_age_t_fdr05_Yeo7.csv','coupling_neg_lm_age_yeo7_fdr05')
-PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_neg_lm_sex_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_sex_t_fdr05_Yeo7.csv','coupling_neg_lm_sex_yeo7_fdr05')
-PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath('//project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_Yeo7.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05_Yeo7.csv','coupling_neg_lm_exec_accuracy_yeo7_fdr05')
-BP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('//project/imco/baller/results/mean_maps/n831_lh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv','/project/imco/baller/results/mean_maps/n831_rh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv','coupling_mean_fdr05')
-PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('//project/imco/baller/results/mean_maps/lh_alff_mean.csv','/project/imco/baller/results/mean_maps/rh_alff_mean.csv','alff_mean_fdr05')
-PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('//project/imco/baller/results/mean_maps/lh_cbf_mean.csv','/project/imco/baller/results/mean_maps/rh_cbf_mean.csv','cbf_mean_fdr05')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/processed_data/glycolytic_index_maps/lh_GI_fsaverage5_10242.csv','/project/imco/baller/processed_data/glycolytic_index_maps/rh_GI_fsaverage5_10242.csv','glycolytic_index_red_blue')
-PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05.csv','coupling_gam_age_red_and_blue_fdr05')
-PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_age_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_age_t_fdr05.csv','coupling_lm_age_red_and_blue_fdr05')
-PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_sex_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_sex_t_fdr05.csv','coupling_lm_sex_red_and_blue_fdr05')
+PBP_vertWiseEffect_Erica_Ts_green_purp_imco_results_outpath('/project/imco/baller/results/mean_maps/n831_lh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv','/project/imco/baller/results/mean_maps/n831_rh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv','coupling_mean_fdr05_grpur')
+PBP_vertWiseEffect_Erica_Ts_blue_alff_results_outpath('/project/imco/baller/results/mean_maps/lh_alff_mean.csv','/project/imco/baller/results/mean_maps/rh_alff_mean.csv','alff_mean_fdr05_blue')
+PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/mean_maps/lh_cbf_mean.csv','/project/imco/baller/results/mean_maps/rh_cbf_mean.csv','cbf_mean_fdr05')
+PBP_vertWiseEffect_Erica_gam_age_parula_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_with_lm_sign_age_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_with_lm_sign_age_t_fdr05.csv','coupling_gam_w_lm_sign_age_parula_fdr05_grey_mid')
+PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_sex_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_sex_t_fdr05.csv','coupling_gam_sex_red_and_blue_fdr05')
 PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05.csv','coupling_lm_exec_accuracy_red_and_blue_fdr05')
-PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/alff_accuracy/lh_gam_age_t_fdr05.csv','/project/imco/baller/results/alff_accuracy/rh_gam_age_t_fdr05.csv','alff_gam_age_red_and_blue_fdr05')
-PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/alff_accuracy/lh_lm_age_t_fdr05.csv','/project/imco/baller/results/alff_accuracy/rh_lm_age_t_fdr05.csv','alff_lm_age_red_and_blue_fdr05')
-PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/alff_accuracy/lh_lm_sex_t_fdr05.csv','/project/imco/baller/results/alff_accuracy/rh_lm_sex_t_fdr05.csv','alff_lm_sex_red_and_blue_fdr05')
-PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/alff_accuracy/lh_lm_exec_accuracy_t_fdr05.csv','/project/imco/baller/results/alff_accuracy/rh_lm_exec_accuracy_t_fdr05.csv','alff_lm_exec_accuracy_red_and_blue_fdr05')
-PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/cbf_accuracy/lh_gam_age_t_fdr05.csv','/project/imco/baller/results/cbf_accuracy/rh_gam_age_t_fdr05.csv','cbf_gam_age_red_and_blue_fdr05')
-PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/cbf_accuracy/lh_lm_age_t_fdr05.csv','/project/imco/baller/results/cbf_accuracy/rh_lm_age_t_fdr05.csv','cbf_lm_age_red_and_blue_fdr05')
-PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/cbf_accuracy/lh_lm_sex_t_fdr05.csv','/project/imco/baller/results/cbf_accuracy/rh_lm_sex_t_fdr05.csv','cbf_lm_sex_red_and_blue_fdr05')
-PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/cbf_accuracy/lh_lm_exec_accuracy_t_fdr05.csv','/project/imco/baller/results/cbf_accuracy/rh_lm_exec_accuracy_t_fdr05.csv','cbf_lm_exec_accuracy_red_and_blue_fdr05')
-PBP_vertWiseEffect_Erica_Ts_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05.csv','coupling_gam_age_plasma_fdr05')
-PBP_vertWiseEffect_Erica_Ts_results_outpath('/project/imco/baller/results/alff_accuracy/lh_gam_age_t_fdr05.csv','/project/imco/baller/results/alff_accuracy/rh_gam_age_t_fdr05.csv','alff_gam_age_plasma_fdr05')
-PBP_vertWiseEffect_Erica_Ts_results_outpath('/project/imco/baller/results/cbf_accuracy/lh_gam_age_t_fdr05.csv','/project/imco/baller/results/cbf_accuracy/rh_gam_age_t_fdr05.csv','cbf_gam_age_plasma_fdr05')
-PBP_vertWiseEffect_Erica_Ts_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_exec_accuracy_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_exec_accuracy_t_fdr05.csv','coupling_gam_exec_accuracy_plasma_fdr05')
-PBP_vertWiseEffect_Erica_GI_plasma_results_outpath('/project/imco/baller/processed_data/glycolytic_index_maps/lh_GI_fsaverage5_10242.csv','/project/imco/baller/processed_data/glycolytic_index_maps/rh_GI_fsaverage5_10242.csv','glycolytic_index_plasma')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_gam_age')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_lm_age')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_lm_sex')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_lm_exec_accuracy')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_gam_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_gam_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_pos_gam_age')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_pos_lm_age')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_pos_lm_sex')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_pos_lm_exec_accuracy')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_gam_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_gam_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_neg_gam_age')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_neg_lm_age')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_neg_lm_sex')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_neg_lm_exec_accuracy')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_gam_age')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_age_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_age_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_lm_age')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_sex_t_fdr05_AllometricScaling_fsaverage5.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_sex_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_lm_sex')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05_AllometricScaling_fsaverage5.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_lm_exec_accuracy')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_age_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_age_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_pos_lm_age')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_sex_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_sex_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_pos_lm_sex')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_pos_lm_exec_accuracy')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_age_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_age_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_neg_lm_age')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_sex_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_sex_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_neg_lm_sex')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_neg_lm_exec_accuracy')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_gam_age')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_age_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_age_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_lm_age')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_sex_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_sex_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_lm_sex')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_lm_exec_accuracy')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_age_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_age_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_pos_lm_age')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_sex_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_sex_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_pos_lm_sex')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_pos_lm_exec_accuracy')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_age_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_age_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_neg_lm_age')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_sex_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_sex_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_neg_lm_sex')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_neg_lm_exec_accuracy')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_gam_age')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_age_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_age_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_lm_age')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_sex_t_fdr05_Hill2010_evo_fsaverage5.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_sex_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_lm_sex')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05_Hill2010_evo_fsaverage5.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_lm_exec_accuracy')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_age_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_age_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_pos_lm_age')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_sex_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_sex_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_pos_lm_sex')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_pos_lm_exec_accuracy')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_age_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_age_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_neg_lm_age')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_sex_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_sex_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_neg_lm_sex')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_neg_lm_exec_accuracy')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_gam_age')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_age_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_age_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_lm_age')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_sex_t_fdr05_MeanCBF.fsaverage5.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_sex_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_lm_sex')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05_MeanCBF.fsaverage5.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_lm_exec_accuracy')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_age_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_age_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_pos_lm_age')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_sex_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_sex_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_pos_lm_sex')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_pos_lm_exec_accuracy')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_age_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_age_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_neg_lm_age')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_sex_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_sex_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_neg_lm_sex')
-PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_MeanCBF_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_neg_lm_exec_accuracy')
 ```
+
+Final images:
+
+Coupling mean
+
+<img width="100%" src="/project/imco/baller/results/images/pbp/coupling_mean_fdr05_grpur.png"/>
+
+Alff mean
+
+<img width="100%" src="/project/imco/baller/results/images/pbp/alff_mean_fdr05_blue.png"/>
+
+CBF mean
+<img width="100%" src="/project/imco/baller/results/images/pbp/cbf_mean_fdr05.png"/>
+
+Coupling gam age
+
+<img width="100%" src="/project/imco/baller/results/images/pbp/coupling_gam_w_lm_sign_age_parula_fdr05.png"/>
+
+Coupling gam sex
+
+<img width="100%" src="/project/imco/baller/results/images/pbp/coupling_gam_sex_red_and_blue_fdr05.png"/>
+
+Coupling lm exec accuracy
+<img width="100%" src="/project/imco/baller/results/images/pbp/coupling_lm_exec_accuracy_red_and_blue_fdr05.png"/>
+
 
 Sample code (from PBP_vertWiseEffect_Erica_Ts_results_outpath.m)
 
@@ -1577,117 +1532,10 @@ set(acbar, 'position', [0.40 0.270 0.02 0.20])
 print('-dpng','-r600',['/project/imco/baller/results/images/pbp/' char(name)])
 ```
 
-#### Checking to see which of the previously defined maps have the most overlap with our coupling  maps
 
- - There are many masks that are available and we have previously used to understand brain dynamics. Here, I look at the correlation between coupling and glycolytic index map, hill2010_evo map, allometric_scaling map, cerebral metabolic rate of glucose map, and cbf map. It turns out, the cerebral metabolic rate of glucose map is the one with the highest overlap. 
-```{r correlations_with_masks}
 
-#########################################
-## Correlations of coupling with masks ##
-#########################################
+#### Spin Test 
 
-### Author: Erica Baller
-## Date: 2/26/2021
-
-### This script emerged out of the desire to take vertex output and display it within different networks/parcels
-
-#pre: input: 
-#1) mean coupling map, r and l side
-#2) masks, GI, Hill, CBF, etc
-
-#post - matrix of correlations for each of the maps
-
-#uses - We want to see which of the masks best correlates with mean coupling. To do this, will correlate the uncorrected mean map with the GI map, Hill2010, and all the others
-
-#dependencies: Any R will do, I used 3.2.5
-
-# set home directory
-#homedir = '/Users/eballer/BBL/imco/pmacs/PMACS_remote/'
-#homedir = '/project/imco'
-
-#mean coupling maps
-mean_coupling_map <- rbind(read.csv(paste0(homedir, "/baller/results/mean_maps/n831_lh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv"), header = F),
-                           read.csv(paste0(homedir, "/baller/results/mean_maps/n831_rh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv"), header = F))
-
-#gi maps
-gi_map <- rbind(read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/lh.GI_fsaverage5_10242.csv"), header = F),
-                read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/rh.GI_fsaverage5_10242.csv"), header = F))
-
-#hill2010
-hill_map <- rbind(read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/lh.Hill2010_evo_fsaverage5.csv"), header = F),
-                  read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/rh.Hill2010_evo_fsaverage5.csv"), header = F))
-
-#allometric scaling
-as_map <- rbind(read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/lh.AllometricScaling_fsaverage5.csv"), header = F),
-                read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/rh.AllometricScaling_fsaverage5.csv"), header = F))
-
-#cmrglu
-cmrglu_map <- rbind(read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/lh.CMRGlu_fsaverage5.csv"), header = F),
-                    read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/rh.CMRGlu_fsaverage5.csv"), header = F))
-
-#meancbf
-meancbf_map <- rbind(read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/lh.MeanCBF.fsaverage5.csv"), header = F),
-                     read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/rh.MeanCBF.fsaverage5.csv"), header = F))
-
-maps <- c('mean_coupling_map','gi_map', 'hill_map', 'as_map', 'cmrglu_map', 'meancbf_map')
-
-correlations <- data.frame(matrix(0, nrow = 1, ncol = 6))
-names(correlations) <- maps
-row.names(correlations) <- "mean_coupling_map"
-
-i = 1
-for (map in maps) {
-    map_to_corr <- map
-    corr_cmd <- paste0("cor(x = mean_coupling_map, ", "y =", map_to_corr, ", method=c(\"pearson\"))")
-    corr_results <- eval(parse(text = as.character(corr_cmd)))
-    print(paste0("mean_coupling_map:", map_to_corr, "--> R = ", corr_results))
-    correlations[1,i] = corr_results
-    i <- i + 1
-
-}
-
-### correlations only using nonzero values in mean coupling map
-mean_coupling_map_nonzero <- mean_coupling_map$V1
-mean_coupling_map_nonzero[mean_coupling_map_nonzero==0] <- NA #set the 0s to NA so we can drop them in the next step
-
-correlations_nonzero <- data.frame(matrix(0, nrow = 2, ncol = 6))
-names(correlations_nonzero) <- maps
-row.names(correlations_nonzero) <- c("mean_coupling_map_nonzero_cor", "mean_coupling_map_nonzero_lm")
-
-i = 1
-for (map in maps) {
-    map_to_corr <- map
-    
-
-    # do correlations
-    corr_cmd <- paste0("cor(x = mean_coupling_map_nonzero, ", "y =", map_to_corr, "$V1, method=c(\"pearson\"), use=\"complete.obs\")")
-    corr_results <- eval(parse(text=as.character(corr_cmd)))
-  
-    lm_cmd <- paste0("round(summary(lm(mean_coupling_map_nonzero ~ ", map_to_corr, "$V1))$coefficients[2,4], 3)")
-    lm_results <- eval(parse(text=as.character(lm_cmd)))
-    
-    ###plots
-    plot_cmd <- paste0("plot(mean_coupling_map_nonzero, ", map_to_corr, "$V1, ylab = \"", map_to_corr,"\")")
-    eval(parse(text=as.character(plot_cmd)))
-    
-    print(paste0("mean_coupling_map:", map_to_corr, "--> R = ", corr_results))
-    correlations_nonzero[1,i] = corr_results
-    correlations_nonzero[2,i] = lm_results
-    i <- i + 1
-
-}
-
-print(correlations)
-
-print(correlations_nonzero)
-
-####### write output
-write.csv(correlations, file = paste0(homedir, "/baller/results/mean_coupling_x_mask_correlations/mean_coupling_map_x_mask_correlations.csv"), quote = F)
-
-write.csv(correlations_nonzero, file = paste0(homedir, "/baller/results/mean_coupling_x_mask_correlations/mean_coupling_map_non_zeros_x_mask_correlations.csv"), quote = F)
-```
-
-** Spin Test **
 In reviewing our results, it looked very clear that the sex and executive accuracy maps followed very closely onto Yeo 7 networks. For interpretability and for graphs, we decided to do a variation on the spin test. Overall, the goal was to take the vertices (10242 for each hemisphere), and spin. We would next ask how many vertices would randomly and by chance fall within certain yeo networks as compared to what we actually saw. A challenge of this spin is that when we spin the vertices, we include medial wall which is guaranteed to be 0. In order to account for this, we calculated the proportion of vertices within each network minus the ones in the medial wall. We then used ggplot2 to make violin plots for display.
 
 Unfortunatley, this was another step where we required both matlab and R. Lucky for you, I have a bash wrapper that calls matlab!
@@ -1803,7 +1651,9 @@ for (analysis in analyses) {
       
 ```
 
+
 ** Call matlab **
+
 ```{bash call_spin_test, eval=FALSE}
 
 #runs whatever command is in the commands_for_matlab file. Currently, it is set to: calc_spinTest_EB
@@ -1811,7 +1661,8 @@ sh run_spin_test_from_command_line.sh
 
 ```
 
-Matlab wrapper 
+** Matlab wrapper **
+
 ```{bash calc_spinTest_EB, eval=FALSE}
 # this is actually matlab code
 
@@ -1870,7 +1721,7 @@ function SpinPermuFS(readleft,readright,permno,wsname,model)
 % Updated on 2018-07-18
 
 
-outdir= '/project/imco/baller/results/coupling_accuracy/spin_test_results/';
+%outdir= '/project/imco/baller/results/coupling_accuracy/spin_test_results/';
 
 %Set up paths
 fshome = getenv('FREESURFER_HOME');
@@ -2058,8 +1909,27 @@ for (model in models) {
 ```
 
 ** violin plotting the spin tests and getting stats **
-From /project/imco/baller/scripts/spin_test/violin_plots.R
+
+From /project/imco/baller/scripts/spin_test/violin_plots.R . This provides a platform for analysis and visualization of the permuted results. It calls a few functions from the imco_functions.R script, so you must source it (uncomment that line) in this section if running independtly. Otherwise, it should load if running this document start to finish.
 ```{r violin_plots, eval=FALSE}
+####### Violin Plots ###
+
+
+#### Author: Erica Baller
+
+### 3/16/2021
+
+###pre: requires that you have run the spin tests for your models, including the positive and negative spin tests
+###post: 2 violin plots per model. Violin plot x axis - yeo networks, y axis - proportion of vertices within networks. dotted lines - mean from permutations
+   #### plot 1 will contain a thick black line for the *actual values from your analysis so you can compare how far above or below your value is from permuted
+   #### plot 2 will contain red lines detailing where the actual values from your analysis from the POSITIVE domain, blue for NEGATIVE
+   #### plots are saved in /project/imco/baller/results/images
+   #### You will also get a table that tells you the p value (uncorrected) for each network within each model. Stats saved in /baller/results/coupling_accuracy/spin_test_results/spin_stats_gam_sex_lm_exec_acc_all_pos_neg. Change the outdir name at the top of the script.
+   #### for my final plot, I added a * to these manually
+### uses: Creates violin plots and analyses to help make sense of the results from permutation spin tests. The question we are asking is:
+    ### what is the likelihood that the number of vertices within a network is significant rather than due to chance
+### dependencies: Using R 3.6.3 but any R will do. Libraries to include listed below. You must source imco_functions.R -> it is commented out here but you can uncomment if running this section separately.
+
 library(tidyr)
 library(ggplot2)
 library(reshape)
@@ -2067,115 +1937,170 @@ library(reshape)
 ### set home directory
 #homedir <- "/Users/eballer/BBL/imco/pmacs/PMACS_remote"
 #homedir <- "/project/imco"
-models = c("gam_sex", "pos_gam_sex", "neg_gam_sex","lm_exec_accuracy", "pos_lm_exec_accuracy", "neg_lm_exec_accuracy")
-network_names <- c("VIS", "MOT", "DA", "VA", "LIM", "FP", "DM")
+#source(paste0(homedir, '/baller/scripts//imco_functions.R'))
+
 outdir_name <- "spin_stats_gam_sex_lm_exec_acc_all_pos_neg"
+
+models_for_stats = c("gam_sex", "pos_gam_sex", "neg_gam_sex","lm_exec_accuracy", "pos_lm_exec_accuracy", "neg_lm_exec_accuracy")
+models_for_plots = c("gam_sex", "lm_exec_accuracy")
+
+network_names <- c("VIS", "MOT", "DA", "VA", "LIM", "FP", "DM")
 num_spins = 2000
-#set yeo colors manually - this can be obtained through https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation_Yeo2011
+#get Yeo colors from function, these values were set manually - this can be obtained through https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation_Yeo2011
    #I typed the RGB values into a rgb -> hex converter and stored the values here. Works!
 
-yeo_colors <- c(
-    `VIS` = "#781286",
-    `MOT` = "#4682b4",
-    `DA` = "#00760e",
-    `VA` = "#c43afa",
-    `LIM` = "#dcf8a4",
-    `FP` = "#e69422",
-    `DM` = "#cd3e56")
+yeo_colors <- get_yeo7_colors()
 
 #for storing statistics at the end
 stats <- data.frame(matrix(nrow = 7, ncol = length(models)))
-names(stats) <- models
+names(stats) <- models_for_stats
 row.names(stats) <- network_names
 
-for (model in models) {
+for (model in models_for_stats) {
+  
   lh_spin_df <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/lh_spin_test_", model, "_proportions.csv"), sep = ",")
   )
   rh_spin_df <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/rh_spin_test_", model, "_proportions.csv"), sep = ",")
   )
   
+  
   #take means of left and right
   actual_results <- (lh_spin_df[,1] + rh_spin_df[,1])/2
- #spin_without_target_col <- (lh_spin_df[,2:1001] + rh_spin_df[,2:1001])/2
+  
+  #dataframes for all spins
   spin_without_target_col <- cbind(lh_spin_df[,2:1001],rh_spin_df[,2:1001])
-  #melt dataframe so it is in a good format for violin plotting.
-  #melt df so it is in a good position to be plotted
-  melted_df_network_name <- rep(x = network_names, each = num_spins)
-  melted_df_network_num <- rep(x = seq(1:7), each = num_spins)
-  melted_df_spin_results <- rbind(t(spin_without_target_col[1,]), 
-                                  t(spin_without_target_col[2,]),
-                                  t(spin_without_target_col[3,]),
-                                  t(spin_without_target_col[4,]),
-                                  t(spin_without_target_col[5,]),
-                                  t(spin_without_target_col[6,]),
-                                  t(spin_without_target_col[7,]))
-  
-  melted_df <- as.data.frame(cbind(melted_df_network_name, melted_df_network_num,melted_df_spin_results))
-  names(melted_df) <- c("network_name", "network_num", "spin")
-  melted_df$spin <- as.numeric(as.character(melted_df$spin))
-  
-  #with mean lines, different fonts
-  #save images
-  jpeg(file=paste0(homedir, "/baller/results/images/spin_", model, "_t_fdr05.jpeg"))
-  ggplot(melted_df, aes(x = factor(network_name, level = network_names), y = spin, fill = network_name)) +  
-    scale_fill_manual(values=yeo_colors) + 
-    geom_violin(trim = TRUE) + 
-    xlab("Yeo 7 Network") + ylab(paste0("Proportion")) +
-  #  scale_y_continuous(limits=c(-0.1, .75)) + 
-    #scale_y_continuous(limits=c(-0.1, .4)) + 
-    geom_violin(trim=FALSE) + 
-    theme(legend.position = "none",
-          legend.title = element_blank(),
-          axis.text.x = element_text(size = 10),
-          axis.text.y = element_text(size = 10),
-          axis.title.y = element_text(size = 10),
-          axis.title.x = element_blank(),
-          plot.title = element_text(size = 10)) +
-    stat_summary(fun.y = mean, geom = "errorbar", 
-                aes(ymax = ..y.., ymin = ..y.., group = factor(network_name)),
-                 width = 0.5, linetype = "dashed", position = position_dodge(0.9)) + 
-    #geom_boxplot(width = 0.15, position = position_dodge(0.9)) + 
-    geom_segment(aes(x = 0.5, y = actual_results[1], xend = 1.5, yend = actual_results[1])) + 
-    geom_segment(aes(x = 1.5, y = actual_results[2], xend = 2.5, yend = actual_results[2])) +
-    geom_segment(aes(x = 2.5, y = actual_results[3], xend = 3.5, yend = actual_results[3])) +
-    geom_segment(aes(x = 3.5, y = actual_results[4], xend = 4.5, yend = actual_results[4])) +
-    geom_segment(aes(x = 4.5, y = actual_results[5], xend = 5.5, yend = actual_results[5])) +
-    geom_segment(aes(x = 5.5, y = actual_results[6], xend = 6.5, yend = actual_results[6])) +
-    geom_segment(aes(x = 6.5, y = actual_results[7], xend = 7.5, yend = actual_results[7])) +
-    ggtitle(paste0("Spin Test Permutation Results ", model))
-  dev.off()
-  
-  #try bars
-  jpeg(file=paste0(homedir,"/baller/results/images/spin_", model, "_t_fdr05_bar_graph_means.jpeg"))
-  means <- as.vector(rowMeans(spin_without_target_col))
-  actual_results <- as.vector(actual_results)
-  spin_results <- rbind(actual_results,means)
-  melted_for_plot <- melt(spin_results)
-  melted_for_plot$network_name <- rep(network_names, each = 2)
-  names(melted_for_plot) <- c("group_name", "group_num", "value", "net")
-  melted_for_plot$value <- as.numeric(as.character(melted_for_plot$value))
-  
-  
-  #ggplot(melted_for_plot, aes(fill=group_name, y=value, x=net)) + 
-  ggplot(data=melted_for_plot, aes(fill=group_name, y=value, x=factor(net, level = network_names))) + 
-  #ggplot(data=melted_for_plot, aes(fill=yeo_colors, y=value, x=factor(net, level = network_names))) + 
-  
-    geom_bar(position="dodge", stat="identity") + 
-  ggtitle(paste0("Spin Test Permutation Results ", model))
-  dev.off()
-  
   
   ####### Stats ########
   for (i in 1:7){
     #store p values
-    #equivalent to: stats$model[i] <- (length(which(spin_without_target_col[i,] > actual_results[i]))/2000)
+    #equivalen to: stats$model[i] <- (length(which(spin_without_target_col[i,] > actual_results[i]))/2000)
     eval(parse(text=as.character(paste0("stats$", model, "[", i ,"] <- (length(which(spin_without_target_col[",i, ",] > actual_results[", i, "]))/", num_spins, ")"))))
   }
 }
 
+print(stats)
 write.csv(stats, paste0(homedir, "/baller/results/coupling_accuracy/spin_test_results/", outdir_name, ".csv"))
+
+violin_plot_means(homedir = homedir, models = models, network_names = network_names, num_spins = num_spins)
+violin_plot_pos_and_neg_lines(homedir = homedir, models = models_for_plots, network_names = network_names, num_spins = num_spins)
+
 ```
 
+Gam sex violin plots
+<img width="100%" src="/project/imco/baller/results/images/spin_gam_sex_pos_and_neg_lines_t_fdr05.png"/>
+
+Lm exec accuracy plots
+<img width="100%" src="/project/imco/baller/results/images/spin_lm_exec_accuracy_pos_and_neg_lines_t_fdr05.png"/>
+
+#### Checking to see which of the previously defined maps have the most overlap with our coupling  maps
+
+ - There are many masks that are available and we have previously used to understand brain dynamics. Here, I look at the correlation between coupling and glycolytic index map, hill2010_evo map, allometric_scaling map, cerebral metabolic rate of glucose map, and cbf map. It turns out, the cerebral metabolic rate of glucose map is the one with the highest overlap. However, this wasn't as revealing as we had hoped, so we did not pursue this further.
+```{r correlations_with_masks}
+
+#########################################
+## Correlations of coupling with masks ##
+#########################################
+
+### Author: Erica Baller
+## Date: 2/26/2021
+
+### This script emerged out of the desire to take vertex output and display it within different networks/parcels
+
+#pre: input: 
+#1) mean coupling map, r and l side
+#2) masks, GI, Hill, CBF, etc
+
+#post - matrix of correlations for each of the maps
+
+#uses - We want to see which of the masks best correlates with mean coupling. To do this, will correlate the uncorrected mean map with the GI map, Hill2010, and all the others
+
+#dependencies: Any R will do, I used 3.2.5
+
+# set home directory
+#homedir = '/Users/eballer/BBL/imco/pmacs/PMACS_remote/'
+#homedir = '/project/imco'
+
+#mean coupling maps
+mean_coupling_map <- rbind(read.csv(paste0(homedir, "/baller/results/mean_maps/n831_lh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv"), header = F),
+                           read.csv(paste0(homedir, "/baller/results/mean_maps/n831_rh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv"), header = F))
+
+#gi maps
+gi_map <- rbind(read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/lh.GI_fsaverage5_10242.csv"), header = F),
+                read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/rh.GI_fsaverage5_10242.csv"), header = F))
+
+#hill2010
+hill_map <- rbind(read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/lh.Hill2010_evo_fsaverage5.csv"), header = F),
+                  read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/rh.Hill2010_evo_fsaverage5.csv"), header = F))
+
+#allometric scaling
+as_map <- rbind(read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/lh.AllometricScaling_fsaverage5.csv"), header = F),
+                read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/rh.AllometricScaling_fsaverage5.csv"), header = F))
+
+#cmrglu
+cmrglu_map <- rbind(read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/lh.CMRGlu_fsaverage5.csv"), header = F),
+                    read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/rh.CMRGlu_fsaverage5.csv"), header = F))
+
+#meancbf
+meancbf_map <- rbind(read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/lh.MeanCBF.fsaverage5.csv"), header = F),
+                     read.csv(paste0(homedir, "/baller/processed_data/zaixu_maps/fsaverage5/rh.MeanCBF.fsaverage5.csv"), header = F))
+
+maps <- c('mean_coupling_map','gi_map', 'hill_map', 'as_map', 'cmrglu_map', 'meancbf_map')
+
+correlations <- data.frame(matrix(0, nrow = 1, ncol = 6))
+names(correlations) <- maps
+row.names(correlations) <- "mean_coupling_map"
+
+i = 1
+for (map in maps) {
+    map_to_corr <- map
+    corr_cmd <- paste0("cor(x = mean_coupling_map, ", "y =", map_to_corr, ", method=c(\"pearson\"))")
+    corr_results <- eval(parse(text = as.character(corr_cmd)))
+    print(paste0("mean_coupling_map:", map_to_corr, "--> R = ", corr_results))
+    correlations[1,i] = corr_results
+    i <- i + 1
+
+}
+
+### correlations only using nonzero values in mean coupling map
+mean_coupling_map_nonzero <- mean_coupling_map$V1
+mean_coupling_map_nonzero[mean_coupling_map_nonzero==0] <- NA #set the 0s to NA so we can drop them in the next step
+
+correlations_nonzero <- data.frame(matrix(0, nrow = 2, ncol = 6))
+names(correlations_nonzero) <- maps
+row.names(correlations_nonzero) <- c("mean_coupling_map_nonzero_cor", "mean_coupling_map_nonzero_lm")
+
+i = 1
+for (map in maps) {
+    map_to_corr <- map
+    
+
+    # do correlations
+    corr_cmd <- paste0("cor(x = mean_coupling_map_nonzero, ", "y =", map_to_corr, "$V1, method=c(\"pearson\"), use=\"complete.obs\")")
+    corr_results <- eval(parse(text=as.character(corr_cmd)))
+  
+    lm_cmd <- paste0("round(summary(lm(mean_coupling_map_nonzero ~ ", map_to_corr, "$V1))$coefficients[2,4], 3)")
+    lm_results <- eval(parse(text=as.character(lm_cmd)))
+    
+    ###plots
+    plot_cmd <- paste0("plot(mean_coupling_map_nonzero, ", map_to_corr, "$V1, ylab = \"", map_to_corr,"\")")
+    eval(parse(text=as.character(plot_cmd)))
+    
+    print(paste0("mean_coupling_map:", map_to_corr, "--> R = ", corr_results))
+    correlations_nonzero[1,i] = corr_results
+    correlations_nonzero[2,i] = lm_results
+    i <- i + 1
+
+}
+
+print(correlations)
+
+print(correlations_nonzero)
+
+####### write output
+write.csv(correlations, file = paste0(homedir, "/baller/results/mean_coupling_x_mask_correlations/mean_coupling_map_x_mask_correlations.csv"), quote = F)
+
+write.csv(correlations_nonzero, file = paste0(homedir, "/baller/results/mean_coupling_x_mask_correlations/mean_coupling_map_non_zeros_x_mask_correlations.csv"), quote = F)
+```
 
 New images made on PMACS:/project/imco/baller/scripts/PBP_graphics
 
@@ -2183,6 +2108,9 @@ First, get these pics locally if you want an easier time visualizing. Right now,
 
 scp eballer@transfer.pmacs.upenn.edu:/project/imco/baller/results/images/pbp/* /Users/eballer/BBL/imco/results/images/pbp/.
 
+
+
+-----
 
 ** Yeo7 (PBP_vertWiseEffect_Erica_Ts_Yeo7_colors_results_outpath.m) **
 
@@ -2522,5 +2450,226 @@ There are a selection of pictures that we will likely use for the paper. I am in
 <img width="30%" src="/project/imco/baller/results/images/pbp/coupling_neg_lm_exec_accuracy_yeo7_fdr05.png"/>
 
 
+
+** imco_functions.R **
+Lastly, here is the content for the imco functions script. Enjoy!
+```{r imco_functions.R, eval=FALSE}
+require('visreg')
+require('mgcv')
+require('tableone')
+require('dplyr')
+
+make_demographics_table<- function(data_frame) {
+  
+  #subset demographics
+  listVars <- c("Age", "Sex", "Race", "Maternal Ed") #Race 1 = caucasian, Maternal Ed = years, age = years
+  demo <- data.frame(data_frame$ageAtScan1, data_frame$sex, data_frame$race2, data_frame$medu1)
+  names(demo) <- c(listVars)
+  
+  #Change categorical values to have names
+  demo$Race <- ifelse(demo$Race == 1, "Caucasian", "Non-caucasian")
+  demo$Sex <- ifelse(demo$Sex == 1, "Male", "Female")
+ 
+  #Define Categorical Variables
+  cat_variables <- c("Sex", "Race")
+  title <- paste0("IMCO Demographics, n = ", dim(demo)[1])
+  
+  #create demographics table
+  demo_table <- CreateTableOne(vars = listVars, data = demo, factorVars = cat_variables)
+  print(demo_table, showAllLevels = TRUE)
+}
+
+get_parcel_mapping_yeo <- function(parcel_num){
+  
+  #pre: input parcel #, either 7 or 17
+  #post: list lh and rh yeo networks that map onto code #s
+  #uses: easy way to translate the weird numerical maps in fsaverage 5 space into something we are more familiar with
+  #dependencies: Any R will do, I used 3.2.5
+  
+  ## Set Yeo info
+  #### set # parcels in case I want to do 7 or 17 or something else in the future
+  parcel_type = "Yeo" 
+  parcel_num = parcel_num 
+  input_parcel_array_length = 10242
+  
+  # read in yeo fsaverage5 vectors
+  parcelID <- read.csv(paste0(homedir, "/baller/processed_data/yeo_network_data/NetworkIDnumbers", parcel_type, parcel_num, ".csv"), header = F)
+  parcelName <- t(read.csv(paste0(homedir, "/baller/processed_data/yeo_network_data/NetworkNames", parcel_type, parcel_num, ".csv"), header = F))
+  
+  lh_parcel_nums <- read.csv(paste0(homedir, "/baller/processed_data/yeo_network_data/lh_", input_parcel_array_length, "_vertex_nums_", parcel_type, parcel_num, ".csv"), header = F)
+  rh_parcel_nums <- read.csv(paste0(homedir, "/baller/processed_data/yeo_network_data/rh_", input_parcel_array_length, "_vertex_nums_", parcel_type, parcel_num, ".csv"), header = F)
+  
+  # map Yeo numbers to parcels
+  #make a column of numbers for mapping
+  parcelID$network_num <- c(1:dim(parcelID)[1])
+  
+  #add extra row to parcelID, not clear why this didn't come from Yeo labels, maybe cerebellum?... 8 will equal 65793
+  # comment this out if not using yeo 
+  parcelID<- rbind(parcelID, c(65793, 8))
+  
+  #make vector for lh and rh with mapping
+  lh_numerical_map <- lh_parcel_nums
+  rh_numerical_map <- rh_parcel_nums
+  
+  #foreach vertex, which contains a bunch of numbers, match it to the appropriate column, and take the network num (i.e. yeo 2, which would correspond to Motor), associated with it
+  lh_numerical_map[] <- lapply(lh_parcel_nums, function(x) parcelID$network_num[match(x, parcelID$V1)])
+  rh_numerical_map[] <- lapply(rh_parcel_nums, function(x) parcelID$network_num[match(x, parcelID$V1)])
+
+  lh_and_rh_numerical_map_list <- list(lh_numerical_map$V1, rh_numerical_map$V1)
+  return(lh_and_rh_numerical_map_list)
+  
+}
+
+melt_df_for_violin_plot_yeo7 <- function(df, network_names, num_spins){
+  #melt dataframe so it is in a good format for violin plotting.
+  #melt df so it is in a good position to be plotted
+  melted_df_network_name <- rep(x = network_names, each = num_spins)
+  melted_df_network_num <- rep(x = seq(1:7), each = num_spins)
+  melted_df_spin_results <- rbind(t(df[1,]), 
+                                  t(df[2,]),
+                                  t(df[3,]),
+                                  t(df[4,]),
+                                  t(df[5,]),
+                                  t(df[6,]),
+                                  t(df[7,]))
+  
+  melted_df <- as.data.frame(cbind(melted_df_network_name, melted_df_network_num,melted_df_spin_results))
+  names(melted_df) <- c("network_name", "network_num", "spin")
+  melted_df$spin <- as.numeric(as.character(melted_df$spin))
+  return(melted_df)
+}
+
+violin_plot_pos_and_neg_lines <- function (homedir, models, network_names, num_spins){
+  for (model in models) {
+
+    print(model)
+    #for storing statistics at the end
+    lh_spin_df <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/lh_spin_test_", model, "_proportions.csv"), sep = ",")
+    )
+    lh_spin_pos <-data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/lh_spin_test_pos_", model, "_proportions.csv"), sep = ",")
+    )
+    lh_spin_neg <-data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/lh_spin_test_neg_", model, "_proportions.csv"), sep = ",")
+    )
+    rh_spin_df <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/rh_spin_test_", model, "_proportions.csv"), sep = ",")
+    )
+    rh_spin_pos <-data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/rh_spin_test_pos_", model, "_proportions.csv"), sep = ",")
+    )
+    rh_spin_neg <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/rh_spin_test_neg_", model, "_proportions.csv"), sep = ",")
+    )
+    
+    #take means of left and right
+    actual_results <- (lh_spin_df[,1] + rh_spin_df[,1])/2
+    actual_results_pos <- ((lh_spin_pos[,1] + rh_spin_pos[,1])/2)
+    actual_results_neg <- ((lh_spin_neg[,1] + rh_spin_neg[,1])/2)
+    
+   # print(actual_results)
+  #  print(actual_results_pos)
+  #  print(actual_results_neg)
+    #dataframes for all spins, as well as positive and negative
+    spin_without_target_col <- cbind(lh_spin_df[,2:1001],rh_spin_df[,2:1001])
+   # print(min(spin_without_target_col))
+  #  print(spin_without_target_col[4,5:10])
+    
+    melted_df <- melt_df_for_violin_plot_yeo7(spin_without_target_col, network_names, num_spins)
+  
+  #  print(melted_df[1:4,2:3])
+    #with mean lines, different fonts
+    #save images
+    plot_violin <- ggplot(melted_df, aes(x = factor(network_name, level = network_names), y = spin, fill = network_name)) +  
+      scale_fill_manual(values=yeo_colors) + 
+      geom_violin(trim = TRUE) + 
+      xlab("Yeo 7 Network") + ylab(paste0("Proportion")) +
+      ylim(0,NA) + 
+      geom_violin(trim=FALSE) + 
+      theme_classic() + 
+      theme(legend.position = "none",
+            legend.title = element_blank(),
+            axis.text.x = element_text(size = 10, colour = "black"),
+            axis.text.y = element_text(size = 10, colour = "black"),
+            axis.title.y = element_text(size = 10),
+            axis.title.x = element_blank(),
+            plot.title = element_text(size = 10)) +
+      stat_summary(fun.y = mean, geom = "errorbar", 
+                  aes(ymax = ..y.., ymin = ..y.., group = factor(network_name)),
+                  width = 0.5, linetype = "dashed", position = position_dodge(0.9)) + 
+      geom_segment(aes(x = 0.5, y = actual_results_pos[1], xend = 1.5, yend = actual_results_pos[1]), color="red") + 
+      geom_segment(aes(x = 1.5, y = actual_results_pos[2], xend = 2.5, yend = actual_results_pos[2]), color="red") +
+      geom_segment(aes(x = 2.5, y = actual_results_pos[3], xend = 3.5, yend = actual_results_pos[3]), color="red") +
+      geom_segment(aes(x = 3.5, y = actual_results_pos[4], xend = 4.5, yend = actual_results_pos[4]), color="red") +
+      geom_segment(aes(x = 4.5, y = actual_results_pos[5], xend = 5.5, yend = actual_results_pos[5]), color="red") +
+      geom_segment(aes(x = 5.5, y = actual_results_pos[6], xend = 6.5, yend = actual_results_pos[6]), color="red") +
+      geom_segment(aes(x = 6.5, y = actual_results_pos[7], xend = 7.5, yend = actual_results_pos[7]), color="red") +
+      geom_segment(aes(x = 0.5, y = actual_results_neg[1], xend = 1.5, yend = actual_results_neg[1]), color="blue") + 
+      geom_segment(aes(x = 1.5, y = actual_results_neg[2], xend = 2.5, yend = actual_results_neg[2]), color="blue") +
+      geom_segment(aes(x = 2.5, y = actual_results_neg[3], xend = 3.5, yend = actual_results_neg[3]), color="blue") +
+      geom_segment(aes(x = 3.5, y = actual_results_neg[4], xend = 4.5, yend = actual_results_neg[4]), color="blue") +
+      geom_segment(aes(x = 4.5, y = actual_results_neg[5], xend = 5.5, yend = actual_results_neg[5]), color="blue") +
+      geom_segment(aes(x = 5.5, y = actual_results_neg[6], xend = 6.5, yend = actual_results_neg[6]), color="blue") +
+      geom_segment(aes(x = 6.5, y = actual_results_neg[7], xend = 7.5, yend = actual_results_neg[7]), color="blue")
+    #  ggtitle(paste0("Spin Test Perm: ", model))
+    ggsave(plot=plot_violin, filename = paste0(homedir, "/baller/results/images/spin_", model, "_pos_and_neg_lines_t_fdr05.png"), width = 4.81, height = 4.81)
+  }
+}
+
+violin_plot_means <- function (homedir, models, network_names, num_spins){
+  for (model in models) {
+    #for storing statistics at the end
+    lh_spin_df <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/lh_spin_test_", model, "_proportions.csv"), sep = ",")
+    )
+    rh_spin_df <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/rh_spin_test_", model, "_proportions.csv"), sep = ",")
+    )
+  
+    
+    #take means of left and right
+    actual_results <- (lh_spin_df[,1] + rh_spin_df[,1])/2
+    
+    #dataframes for all spins
+    spin_without_target_col <- cbind(lh_spin_df[,2:1001],rh_spin_df[,2:1001])
+    melted_df <- melt_df_for_violin_plot_yeo7(spin_without_target_col, network_names, num_spins)
+  
+    #with mean lines, different fonts
+    #save images
+    plot_violin <- ggplot(melted_df, aes(x = factor(network_name, level = network_names), y = spin, fill = network_name)) +  
+      scale_fill_manual(values=yeo_colors) + 
+      geom_violin(trim = TRUE) + 
+      xlab("Yeo 7 Network") + ylab(paste0("Proportion")) +
+      geom_violin(trim=FALSE) + 
+      ylim(0,NA) + 
+      theme_classic() + 
+      theme(legend.position = "none",
+            legend.title = element_blank(),
+            axis.text.x = element_text(size = 10, colour = "black"),
+            axis.text.y = element_text(size = 10, colour = "black"),
+            axis.title.y = element_text(size = 10),
+            axis.title.x = element_blank(),
+            plot.title = element_text(size = 10)) +
+      stat_summary(fun.y = mean, geom = "errorbar", 
+                   aes(ymax = ..y.., ymin = ..y.., group = factor(network_name)),
+                   width = 0.5, linetype = "dashed", position = position_dodge(0.9)) + 
+      #geom_boxplot(width = 0.15, position = position_dodge(0.9)) + 
+        geom_segment(aes(x = 0.5, y = actual_results[1], xend = 1.5, yend = actual_results[1])) + 
+        geom_segment(aes(x = 1.5, y = actual_results[2], xend = 2.5, yend = actual_results[2])) +
+        geom_segment(aes(x = 2.5, y = actual_results[3], xend = 3.5, yend = actual_results[3])) +
+        geom_segment(aes(x = 3.5, y = actual_results[4], xend = 4.5, yend = actual_results[4])) +
+        geom_segment(aes(x = 4.5, y = actual_results[5], xend = 5.5, yend = actual_results[5])) +
+        geom_segment(aes(x = 5.5, y = actual_results[6], xend = 6.5, yend = actual_results[6])) +
+        geom_segment(aes(x = 6.5, y = actual_results[7], xend = 7.5, yend = actual_results[7])) +
+  #    ggtitle(paste0("Spin Test Perm: ", model))
+    ggsave(plot=plot_violin, filename = paste0(homedir, "/baller/results/images/spin_", model, "_t_fdr05.png"), width = 4.81, height = 4.81)
+  }
+}
+
+get_yeo7_colors <- function() {
+  yeo_colors <- c(
+    `VIS` = "#781286",
+    `MOT` = "#4682b4",
+    `DA` = "#00760e",
+    `VA` = "#c43afa",
+    `LIM` = "#dcf8a4",
+    `FP` = "#e69422",
+    `DM` = "#cd3e56")
+  return(yeo_colors)
+}
+```
 
 
