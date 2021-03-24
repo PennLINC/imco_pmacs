@@ -1,3 +1,19 @@
+##################################################
+### Accuracy and Efficiency Scripts 02/09/2021 ###
+##################################################
+
+####################
+##### Summary ######
+####################
+
+#input: asc files, and pnc demographics, cnb, clinical files
+#output: 10242 length vector csvs with T and/or p values for vertex-wide regression
+#uses: goes vertex by vertex and does regression (coupling by age, sex, cognition, etc), pulls out T and p from these values and sticks it in a vector. The vector can then be used for visualization in matlab
+#dependencies: R (3.6.3 is my current default in pmacs)
+
+####################
+###  Libraries   ###
+####################
 
 library(mgcv)
 library(dplyr)
@@ -33,8 +49,7 @@ subjDemos <- merge(subjDemos, psych, by = "bblid")
 
 #cognitive data
 cog <- read.csv(paste0(homedir, "/pnc/cnb/n1601_cnb_factor_scores_tymoore_20151006.csv"))
-accuracy <- subset(cog, select = c("bblid", 
-                                   "Overall_Accuracy", 
+accuracy <- subset(cog, select = c("bblid","Overall_Accuracy", 
                                    "F1_Exec_Comp_Res_Accuracy", 
                                    "F2_Social_Cog_Accuracy", 
                                    "F3_Memory_Accuracy"))
@@ -64,9 +79,9 @@ for (subj in 1:831) {
   
   bblid <- subjDemos$bblid[subj]
   datexscanid <- subjDemos$datexscanid[subj]
-  file_path <- paste0(homedir, "/couplingSurfaceMaps/alffCbf/lh/stat/", bblid, "_", datexscanid, "_lh.coupling_coef_alff_cbf.fwhm15.fsaverage5.asc")
-  alff_data <- read.table(file_path, stringsAsFactors = FALSE)
-  lh_matrix[subj,] <- t(alff_data$V5)
+  file_path <- paste0(homedir, "/surfaceMaps/cbf_from_chead/", bblid, "_", datexscanid, "_lh_fs5_surf.asc")
+  cbf_data <- read.table(file_path, stringsAsFactors = FALSE)
+  lh_matrix[subj,] <- t(cbf_data$V5)
   
 }
 
@@ -74,7 +89,8 @@ for (subj in 1:831) {
 subjDemos_with_lh_matrix <- cbind(subjDemos, lh_matrix)
 
 #write output
-write.table(subjDemos_with_lh_matrix, file = paste0('/home/adebimpe/imco_replicate/', "/coupling_accuracy/subjDemos_with_lh_", numrows, "x10242.csv"), sep = ",")
+
+write.table(subjDemos_with_lh_matrix, file = paste0('/home/adebimpe/imco_replicate/', "/cbf_accuracy/","subjDemos_with_lh_", numrows, "x10242.csv"), sep = ",")
 
 #####################
 #### Right Side #####
@@ -89,9 +105,9 @@ for (subj in 1:831) {
   
   bblid <- subjDemos$bblid[subj]
   datexscanid <- subjDemos$datexscanid[subj]
-  file_path <- paste0(homedir, "/couplingSurfaceMaps/alffCbf/rh/stat/", bblid, "_", datexscanid, "_rh.coupling_coef_alff_cbf.fwhm15.fsaverage5.asc")
-  alff_data <- read.table(file_path, stringsAsFactors = FALSE)
-  rh_matrix[subj,] <- t(alff_data$V5)
+  file_path <- paste0(homedir, "/surfaceMaps/cbf_from_chead/", bblid, "_", datexscanid, "_rh_fs5_surf.asc")
+  cbf_data <- read.table(file_path, stringsAsFactors = FALSE)
+  rh_matrix[subj,] <- t(cbf_data$V5)
   
 }
 
@@ -99,7 +115,8 @@ for (subj in 1:831) {
 subjDemos_with_rh_matrix <- cbind(subjDemos, rh_matrix)
 
 #write output
-write.table(subjDemos_with_rh_matrix, file = paste0(homedir, "/baller/results/coupling_accuracy/subjDemos_with_rh_", numrows, "x10242.csv"), sep = ",")
+
+write.table(subjDemos_with_rh_matrix, file = paste0('/home/adebimpe/imco_replicate/', "/cbf_accuracy/subjDemos_with_rh_", numrows, "x10242.csv"), sep = ",")
 
 ####-----------------------------------------------------------------------------####
 ####---------------------------End of Part 1- Making matrices---_----------------####
@@ -110,8 +127,8 @@ write.table(subjDemos_with_rh_matrix, file = paste0(homedir, "/baller/results/co
 #####################################################################################
 
 #make easier to reference names
-lh_alff <- subjDemos_with_lh_matrix #can also read directly from files if you'd like
-rh_alff <- subjDemos_with_rh_matrix
+lh_cbf <- subjDemos_with_lh_matrix #can also read directly from files if you'd like
+rh_cbf <- subjDemos_with_rh_matrix
 
 
 #####################################################
@@ -159,46 +176,46 @@ for (hemi in hemis) {
 #######################
 
 #get # of items in df for calculation of column)
-numcolumns <- dim(lh_alff)[2]
+numcolumns <- dim(lh_cbf)[2]
 #run gams models and store info in respective vectors
 for (i in 1:10242) {
   curcol = (numcolumns - 10242 + i) # will start you counting at the right part of the df
-  age_sex_model <- gam(lh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                         osex + s(ageAtScan1, k = 4, fx = T), data=lh_alff)
+  age_sex_model <- gam(lh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                         osex + s(ageAtScan1, k = 4, fx = T), data=lh_cbf)
   
   ## accuracy
-  accuracy_model <- gam(lh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                          osex + s(ageAtScan1, k = 4, fx = T) + Overall_Accuracy, data=lh_alff)
+  accuracy_model <- gam(lh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                          osex + s(ageAtScan1, k = 4, fx = T) + Overall_Accuracy, data=lh_cbf)
   
-  exec_accuracy_model <- gam(lh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                               osex + s(ageAtScan1, k = 4, fx = T) + F1_Exec_Comp_Res_Accuracy, data=lh_alff)
+  exec_accuracy_model <- gam(lh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                               osex + s(ageAtScan1, k = 4, fx = T) + F1_Exec_Comp_Res_Accuracy, data=lh_cbf)
   
-  soc_accuracy_model <- gam(lh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                              osex + s(ageAtScan1, k = 4, fx = T) + F2_Social_Cog_Accuracy, data=lh_alff)
+  soc_accuracy_model <- gam(lh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                              osex + s(ageAtScan1, k = 4, fx = T) + F2_Social_Cog_Accuracy, data=lh_cbf)
   
-  mem_accuracy_model <- gam(lh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                              osex + s(ageAtScan1, k = 4, fx = T) + F3_Memory_Accuracy, data=lh_alff)
+  mem_accuracy_model <- gam(lh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                              osex + s(ageAtScan1, k = 4, fx = T) + F3_Memory_Accuracy, data=lh_cbf)
   
   
   
   #lm
-  age_lm_model <- lm(lh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1, 
-                     data=lh_alff)
-  sex_lm_model <- lm(lh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + osex, 
-                     data=lh_alff)
+  age_lm_model <- lm(lh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1, 
+                     data=lh_cbf)
+  sex_lm_model <- lm(lh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + osex, 
+                     data=lh_cbf)
   
   ## acc
-  accuracy_lm_model <- lm(lh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + Overall_Accuracy, 
-                          data=lh_alff)
+  accuracy_lm_model <- lm(lh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + Overall_Accuracy, 
+                          data=lh_cbf)
   
-  exec_accuracy_lm_model <- lm(lh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + F1_Exec_Comp_Res_Accuracy, 
-                               data=lh_alff)
+  exec_accuracy_lm_model <- lm(lh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + F1_Exec_Comp_Res_Accuracy, 
+                               data=lh_cbf)
   
-  soc_accuracy_lm_model <- lm(lh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + F2_Social_Cog_Accuracy, 
-                              data=lh_alff)
+  soc_accuracy_lm_model <- lm(lh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + F2_Social_Cog_Accuracy, 
+                              data=lh_cbf)
   
-  mem_accuracy_lm_model <- lm(lh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + F3_Memory_Accuracy, 
-                              data=lh_alff)
+  mem_accuracy_lm_model <- lm(lh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + F3_Memory_Accuracy, 
+                              data=lh_cbf)
   
   
   #put pvalue in it's appropriate lm
@@ -243,46 +260,46 @@ for (i in 1:10242) {
 ###### RIGHT ########
 #####################
 #get # of items in df for calculation of column)
-numcolumns <- dim(rh_alff)[2]
+numcolumns <- dim(rh_cbf)[2]
 #run gams models and store info in respective vectors
 for (i in 1:10242) {
   curcol = (numcolumns - 10242 + i) # will start you counting at the right part of the df
-  age_sex_model <- gam(rh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                         osex + s(ageAtScan1, k = 4, fx = T), data=rh_alff)
+  age_sex_model <- gam(rh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                         osex + s(ageAtScan1, k = 4, fx = T), data=rh_cbf)
   
   ## accuracy
-  accuracy_model <- gam(rh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                          osex + s(ageAtScan1, k = 4, fx = T) + Overall_Accuracy, data=rh_alff)
+  accuracy_model <- gam(rh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                          osex + s(ageAtScan1, k = 4, fx = T) + Overall_Accuracy, data=rh_cbf)
   
-  exec_accuracy_model <- gam(rh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                               osex + s(ageAtScan1, k = 4, fx = T) + F1_Exec_Comp_Res_Accuracy, data=rh_alff)
+  exec_accuracy_model <- gam(rh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                               osex + s(ageAtScan1, k = 4, fx = T) + F1_Exec_Comp_Res_Accuracy, data=rh_cbf)
   
-  soc_accuracy_model <- gam(rh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                              osex + s(ageAtScan1, k = 4, fx = T) + F2_Social_Cog_Accuracy, data=rh_alff)
+  soc_accuracy_model <- gam(rh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                              osex + s(ageAtScan1, k = 4, fx = T) + F2_Social_Cog_Accuracy, data=rh_cbf)
   
-  mem_accuracy_model <- gam(rh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                              osex + s(ageAtScan1, k = 4, fx = T) + F3_Memory_Accuracy, data=rh_alff)
+  mem_accuracy_model <- gam(rh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
+                              osex + s(ageAtScan1, k = 4, fx = T) + F3_Memory_Accuracy, data=rh_cbf)
   
   
   
   #lm
-  age_lm_model <- lm(rh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1, 
-                     data=rh_alff)
-  sex_lm_model <- lm(rh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + osex, 
-                     data=rh_alff)
+  age_lm_model <- lm(rh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1, 
+                     data=rh_cbf)
+  sex_lm_model <- lm(rh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + osex, 
+                     data=rh_cbf)
   
   ## acc
-  accuracy_lm_model <- lm(rh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + Overall_Accuracy, 
-                          data=rh_alff)
+  accuracy_lm_model <- lm(rh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + Overall_Accuracy, 
+                          data=rh_cbf)
   
-  exec_accuracy_lm_model <- lm(rh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + F1_Exec_Comp_Res_Accuracy, 
-                               data=rh_alff)
+  exec_accuracy_lm_model <- lm(rh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + F1_Exec_Comp_Res_Accuracy, 
+                               data=rh_cbf)
   
-  soc_accuracy_lm_model <- lm(rh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + F2_Social_Cog_Accuracy, 
-                              data=rh_alff)
+  soc_accuracy_lm_model <- lm(rh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + F2_Social_Cog_Accuracy, 
+                              data=rh_cbf)
   
-  mem_accuracy_lm_model <- lm(rh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + F3_Memory_Accuracy, 
-                              data=rh_alff)
+  mem_accuracy_lm_model <- lm(rh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion + ageAtScan1 + F3_Memory_Accuracy, 
+                              data=rh_cbf)
   
   
   #put pvalue in it's appropriate lm
@@ -327,13 +344,6 @@ for (i in 1:10242) {
 
 
 
-#################################################################################
-#################################################################################
-
-#####################################################
-#                     results                       #
-#####################################################
-
 #### FDR correction ####
 for (hemi in hemis) {
   for (model in models) {
@@ -370,25 +380,26 @@ for (hemi in hemis) {
     ## uncorrected ##
     
     ### p
-    filename <- paste0('/home/adebimpe/imco_replicate/', "/coupling_accuracy/", hemi_model_p_unc, ".csv")
+
+    filename <- paste0('/home/adebimpe/imco_replicate/', "/cbf_accuracy/", hemi_model_p_unc, ".csv"
     write_table_command <- paste0("write.table(x = ", hemi_model_p_unc, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
     eval(parse(text=write_table_command))
     
     ### t
     
-    filename <- paste0('/home/adebimpe/imco_replicate/', "/coupling_accuracy/", hemi_model_t_unc, ".csv")
+    filename <- paste0('/home/adebimpe/imco_replicate/', "/cbf_accuracy/", hemi_model_t_unc, ".csv")
     write_table_command <- paste0("write.table(x = ", hemi_model_t_unc, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
     eval(parse(text=write_table_command))
     
     ## corrected ##
     
     ### p
-    filename <- paste0('/home/adebimpe/imco_replicate/', "/coupling_accuracy/", hemi, "_gam_", model, "_p_fdr05.csv")
+    filename <- paste0('/home/adebimpe/imco_replicate/', "/cbf_accuracy/", hemi, "_gam_", model, "_p_fdr05.csv")
     write_table_command <- paste0("write.table(x = ", hemi_model_p_fdr, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
     eval(parse(text=write_table_command))
     
     ### t
-    filename <- paste0('/home/adebimpe/imco_replicate/', "/coupling_accuracy/", hemi, "_gam_", model, "_t_fdr05.csv")
+    filename <- paste0('/home/adebimpe/imco_replicate/', "/cbf_accuracy/", hemi, "_gam_", model, "_t_fdr05.csv")
     write_table_command <- paste0("write.table(x = ", hemi_model_t_fdr, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
     eval(parse(text=write_table_command))
     
@@ -433,25 +444,25 @@ for (hemi in hemis) {
     ## uncorrected ##
     
     ### p
-    filename <- paste0('/home/adebimpe/imco_replicate/', "/coupling_accuracy/", hemi_model_p_unc, ".csv")
+    filename <- paste0('/home/adebimpe/imco_replicate/', "/cbf_accuracy/", hemi_model_p_unc, ".csv")
     write_table_command <- paste0("write.table(x = ", hemi_model_p_unc, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
     eval(parse(text=write_table_command))
     
     ### t
     
-    filename <- paste0('/home/adebimpe/imco_replicate/', "/coupling_accuracy/", hemi_model_t_unc, ".csv")
+    filename <- paste0('/home/adebimpe/imco_replicate/', "/cbf_accuracy/", hemi_model_t_unc, ".csv")
     write_table_command <- paste0("write.table(x = ", hemi_model_t_unc, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
     eval(parse(text=write_table_command))
     
     ## corrected ##
     
     ### p
-    filename <- paste0('/home/adebimpe/imco_replicate/', "/coupling_accuracy/", hemi, "_lm_", model, "_p_fdr05.csv")
+    filename <- paste0('/home/adebimpe/imco_replicate/', "/cbf_accuracy/",hemi, "_lm_", model, "_p_fdr05.csv")
     write_table_command <- paste0("write.table(x = ", hemi_model_p_fdr, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
     eval(parse(text=write_table_command))
     
     ### t
-    filename <- paste0('/home/adebimpe/imco_replicate/', "/coupling_accuracy/", hemi, "_lm_", model, "_t_fdr05.csv")
+    filename <- paste0('/home/adebimpe/imco_replicate/', "/cbf_accuracy/", hemi, "_lm_", model, "_t_fdr05.csv")
     write_table_command <- paste0("write.table(x = ", hemi_model_t_fdr, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
     eval(parse(text=write_table_command))
   }

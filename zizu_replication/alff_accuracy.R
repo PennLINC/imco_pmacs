@@ -1,4 +1,3 @@
-
 library(mgcv)
 library(dplyr)
 library(ggplot2)
@@ -34,10 +33,10 @@ subjDemos <- merge(subjDemos, psych, by = "bblid")
 #cognitive data
 cog <- read.csv(paste0(homedir, "/pnc/cnb/n1601_cnb_factor_scores_tymoore_20151006.csv"))
 accuracy <- subset(cog, select = c("bblid", 
-                                   "Overall_Accuracy", 
-                                   "F1_Exec_Comp_Res_Accuracy", 
-                                   "F2_Social_Cog_Accuracy", 
-                                   "F3_Memory_Accuracy"))
+                                                  "Overall_Accuracy", 
+                                                  "F1_Exec_Comp_Res_Accuracy", 
+                                                  "F2_Social_Cog_Accuracy", 
+                                                  "F3_Memory_Accuracy"))
 #merge
 subjDemos <- merge(subjDemos, accuracy, by = "bblid")
 
@@ -64,7 +63,7 @@ for (subj in 1:831) {
   
   bblid <- subjDemos$bblid[subj]
   datexscanid <- subjDemos$datexscanid[subj]
-  file_path <- paste0(homedir, "/couplingSurfaceMaps/alffCbf/lh/stat/", bblid, "_", datexscanid, "_lh.coupling_coef_alff_cbf.fwhm15.fsaverage5.asc")
+  file_path <- paste0(homedir, "/surfaceMaps/alff_from_chead/", bblid, "_", datexscanid, "_lh_fs5_surf.asc")
   alff_data <- read.table(file_path, stringsAsFactors = FALSE)
   lh_matrix[subj,] <- t(alff_data$V5)
   
@@ -74,7 +73,7 @@ for (subj in 1:831) {
 subjDemos_with_lh_matrix <- cbind(subjDemos, lh_matrix)
 
 #write output
-write.table(subjDemos_with_lh_matrix, file = paste0('/home/adebimpe/imco_replicate/', "/coupling_accuracy/subjDemos_with_lh_", numrows, "x10242.csv"), sep = ",")
+write.table(subjDemos_with_lh_matrix, file = paste0('/home/adebimpe/imco_replicate/', "/alff_accuracy/subjDemos_with_lh_", numrows, "x10242.csv"), sep = ",")
 
 #####################
 #### Right Side #####
@@ -89,7 +88,7 @@ for (subj in 1:831) {
   
   bblid <- subjDemos$bblid[subj]
   datexscanid <- subjDemos$datexscanid[subj]
-  file_path <- paste0(homedir, "/couplingSurfaceMaps/alffCbf/rh/stat/", bblid, "_", datexscanid, "_rh.coupling_coef_alff_cbf.fwhm15.fsaverage5.asc")
+  file_path <- paste0(homedir, "/surfaceMaps/alff_from_chead/", bblid, "_", datexscanid, "_rh_fs5_surf.asc")
   alff_data <- read.table(file_path, stringsAsFactors = FALSE)
   rh_matrix[subj,] <- t(alff_data$V5)
   
@@ -99,7 +98,7 @@ for (subj in 1:831) {
 subjDemos_with_rh_matrix <- cbind(subjDemos, rh_matrix)
 
 #write output
-write.table(subjDemos_with_rh_matrix, file = paste0(homedir, "/baller/results/coupling_accuracy/subjDemos_with_rh_", numrows, "x10242.csv"), sep = ",")
+write.table(subjDemos_with_rh_matrix, file = paste0('/home/adebimpe/imco_replicate/', "/alff_accuracy/subjDemos_with_rh_", numrows, "x10242.csv"), sep = ",")
 
 ####-----------------------------------------------------------------------------####
 ####---------------------------End of Part 1- Making matrices---_----------------####
@@ -209,7 +208,7 @@ for (i in 1:10242) {
   lh_gam_exec_accuracy_p_uncor[i] <- summary(exec_accuracy_model)$p.table[5,4] #accuracy term
   lh_gam_soc_accuracy_p_uncor[i] <- summary(soc_accuracy_model)$p.table[5,4] #accuracy term
   lh_gam_mem_accuracy_p_uncor[i] <- summary(mem_accuracy_model)$p.table[5,4] #accuracy term
-  
+
   #lm to assess directionality
   lh_lm_age_p_uncor[i] <- summary(age_lm_model)$coeff[4,4]
   lh_lm_sex_p_uncor[i] <- summary(sex_lm_model)$coeff[4,4]
@@ -230,13 +229,13 @@ for (i in 1:10242) {
   
   #lm to assess directionality
   lh_lm_age_t_uncor[i] <- summary(age_lm_model)$coeff[4,3]
-  lh_lm_sex_t_uncor[i] <- summary(sex_lm_model)$coeff[4,3] #linear term
+  lh_lm_sex_t_uncor[i] <- summary(age_sex_model)$coeff[4,3] #linear term
   
   lh_lm_accuracy_t_uncor[i] <- summary(accuracy_lm_model)$coeff[5,3]
   lh_lm_exec_accuracy_t_uncor[i] <- summary(exec_accuracy_lm_model)$coeff[5,3]
   lh_lm_soc_accuracy_t_uncor[i] <- summary(soc_accuracy_lm_model)$coeff[5,3]
   lh_lm_mem_accuracy_t_uncor[i] <- summary(mem_accuracy_lm_model)$coeff[5,3]
-  
+
 }
 
 #####################
@@ -314,7 +313,7 @@ for (i in 1:10242) {
   
   #lm to assess directionality
   rh_lm_age_t_uncor[i] <- summary(age_lm_model)$coeff[4,3]
-  rh_lm_sex_t_uncor[i] <- summary(sex_lm_model)$coeff[4,3] #linear term
+  rh_lm_sex_t_uncor[i] <- summary(age_sex_model)$coeff[4,3] #linear term
   
   rh_lm_accuracy_t_uncor[i] <- summary(accuracy_lm_model)$coeff[5,3]
   rh_lm_exec_accuracy_t_uncor[i] <- summary(exec_accuracy_lm_model)$coeff[5,3]
@@ -370,25 +369,25 @@ for (hemi in hemis) {
     ## uncorrected ##
     
     ### p
-    filename <- paste0('/home/adebimpe/imco_replicate/', "/coupling_accuracy/", hemi_model_p_unc, ".csv")
+    filename <- paste0('/home/adebimpe/imco_replicate/', "/alff_accuracy/", hemi_model_p_unc, ".csv")
     write_table_command <- paste0("write.table(x = ", hemi_model_p_unc, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
     eval(parse(text=write_table_command))
     
     ### t
     
-    filename <- paste0('/home/adebimpe/imco_replicate/', "/coupling_accuracy/", hemi_model_t_unc, ".csv")
+    filename <- paste0('/home/adebimpe/imco_replicate/', "/alff_accuracy/", hemi_model_t_unc, ".csv")
     write_table_command <- paste0("write.table(x = ", hemi_model_t_unc, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
     eval(parse(text=write_table_command))
     
     ## corrected ##
     
     ### p
-    filename <- paste0('/home/adebimpe/imco_replicate/', "/coupling_accuracy/", hemi, "_gam_", model, "_p_fdr05.csv")
+    filename <- paste0('/home/adebimpe/imco_replicate/', "/alff_accuracy/", hemi, "_gam_", model, "_p_fdr05.csv")
     write_table_command <- paste0("write.table(x = ", hemi_model_p_fdr, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
     eval(parse(text=write_table_command))
     
     ### t
-    filename <- paste0('/home/adebimpe/imco_replicate/', "/coupling_accuracy/", hemi, "_gam_", model, "_t_fdr05.csv")
+    filename <- paste0('/home/adebimpe/imco_replicate/', "/alff_accuracy/", hemi, "_gam_", model, "_t_fdr05.csv")
     write_table_command <- paste0("write.table(x = ", hemi_model_t_fdr, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
     eval(parse(text=write_table_command))
     
@@ -433,25 +432,25 @@ for (hemi in hemis) {
     ## uncorrected ##
     
     ### p
-    filename <- paste0('/home/adebimpe/imco_replicate/', "/coupling_accuracy/", hemi_model_p_unc, ".csv")
+    filename <- paste0('/home/adebimpe/imco_replicate/', "/alff_accuracy/", hemi_model_p_unc, ".csv")
     write_table_command <- paste0("write.table(x = ", hemi_model_p_unc, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
     eval(parse(text=write_table_command))
     
     ### t
     
-    filename <- paste0('/home/adebimpe/imco_replicate/', "/coupling_accuracy/", hemi_model_t_unc, ".csv")
+    filename <- paste0('/home/adebimpe/imco_replicate/', "/alff_accuracy/", hemi_model_t_unc, ".csv")
     write_table_command <- paste0("write.table(x = ", hemi_model_t_unc, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
     eval(parse(text=write_table_command))
     
     ## corrected ##
     
     ### p
-    filename <- paste0('/home/adebimpe/imco_replicate/', "/coupling_accuracy/", hemi, "_lm_", model, "_p_fdr05.csv")
+    filename <- paste0('/home/adebimpe/imco_replicate/', "/alff_accuracy/", hemi, "_lm_", model, "_p_fdr05.csv")
     write_table_command <- paste0("write.table(x = ", hemi_model_p_fdr, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
     eval(parse(text=write_table_command))
     
     ### t
-    filename <- paste0('/home/adebimpe/imco_replicate/', "/coupling_accuracy/", hemi, "_lm_", model, "_t_fdr05.csv")
+    filename <- paste0('/home/adebimpe/imco_replicate/', "/alff_accuracy/", hemi, "_lm_", model, "_t_fdr05.csv")
     write_table_command <- paste0("write.table(x = ", hemi_model_t_fdr, ", file = \"", filename,"\", row.names = FALSE, col.names = FALSE)")
     eval(parse(text=write_table_command))
   }
