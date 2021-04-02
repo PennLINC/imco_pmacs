@@ -4125,6 +4125,62 @@ PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupli
 PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_sex_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_sex_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_neg_lm_sex')
 PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_MeanCBF_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_neg_lm_exec_accuracy')
 
+PBP_vertWiseEffect_Erica_Ts_results_outpath('/project/imco/baller/results/cbf_accuracy/lh_gam_age_t_fdr05.csv','/project/imco/baller/results/cbf_accuracy/rh_gam_age_t_fdr05.csv','cbf_gam_age_plasma_fdr05')
+PBP_vertWiseEffect_Erica_Ts_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_exec_accuracy_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_exec_accuracy_t_fdr05.csv','coupling_gam_exec_accuracy_plasma_fdr05')
+PBP_vertWiseEffect_Erica_GI_plasma_results_outpath('/project/imco/baller/processed_data/glycolytic_index_maps/lh_GI_fsaverage5_10242.csv','/project/imco/baller/processed_data/glycolytic_index_maps/rh_GI_fsaverage5_10242.csv','glycolytic_index_plasma')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_gam_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_gam_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_gam_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_pos_gam_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_pos_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_pos_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_pos_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_gam_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_gam_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_neg_gam_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_age_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_age_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_neg_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_sex_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_neg_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05_GI_fsaverage5_10242.csv','glycolytic_index_neg_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_gam_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_age_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_age_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_sex_t_fdr05_AllometricScaling_fsaverage5.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_sex_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05_AllometricScaling_fsaverage5.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_age_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_age_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_pos_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_sex_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_sex_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_pos_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_pos_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_age_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_age_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_neg_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_sex_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_sex_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_neg_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05_AllometricScaling_fsaverage5.csv_10242.csv','allometricScaling_neg_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_gam_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_age_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_age_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_sex_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_sex_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_age_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_age_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_pos_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_sex_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_sex_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_pos_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_pos_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_age_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_age_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_neg_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_sex_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_sex_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_neg_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05_CMRGlu_fsaverage5.csv_10242.csv','CMRGlu_neg_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_gam_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_age_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_age_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_sex_t_fdr05_Hill2010_evo_fsaverage5.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_sex_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05_Hill2010_evo_fsaverage5.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_age_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_age_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_pos_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_sex_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_sex_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_pos_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_pos_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_age_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_age_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_neg_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_sex_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_sex_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_neg_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05_Hill2010_evo_fsaverage5.csv_10242.csv','Hill2010_evo_neg_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_gam_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_age_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_age_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_sex_t_fdr05_MeanCBF.fsaverage5.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_sex_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05_MeanCBF.fsaverage5.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_age_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_age_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_pos_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_sex_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_sex_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_pos_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_pos_lm_exec_accuracy')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_age_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_age_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_neg_lm_age')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_sex_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_sex_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_neg_lm_sex')
+PBP_vertWiseEffect_Erica_GI_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_MeanCBF_fsaverage5.csv_10242.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05_MeanCBF.fsaverage5.csv_10242.csv','MeanCBF_neg_lm_exec_accuracy')
+
 ```
 
 [x] to quantify the best overlap - take the # vertices in the pos and negative for each one of the masks. The one with the highest good direction vertices should be the most overlap
@@ -4414,30 +4470,96 @@ mean_coupling_map                 1 0.2812543 0.2403881 0.4967886  **0.5010817**
 20210302
 
 - making my own mean maps to double check
+ 
   - cd /project/imco/couplingSurfaceMaps/alffCbf
+ 
   - cd lh/surf
+ 
   - mri_concat --i *lh*.mgh --o lh_coupling_mean.mgh --mean
+ 
   - mri_convert --ascii lh_coupling_mean.mgh lh_coupling_mean.asc
+ 
   - mv lh_coupling_mean.asc ../../../../baller/results/mean_maps/.
+ 
   - cp lh_coupling_mean.asc lh_coupling_mean.csv
+ 
   - do the same with the right side
+ 
   - diff old ones and new ones. 
+ 
   - ** THEY ARE THE SAME**
   
 -----
 20210305
  - starting the spin. Made the yeo 1, -1, 0 maps. Put it directly into IMCO project markdown. No separate script for this
  
- 
+-----
+20210309
+ - continuing with spin.
+ - moved Adam's files over to pmacs, including
+    - SpinPermuFS.m, calc_spinDistribs_MAD_PG.m (renamed calc_spinDistribs_EB.m), SpinTest_MAD.m (remaned calc_spinTest_EB.m) 
+    
+    - SpinPermuFS.m
+    
+      - changed paths to freesurfer spheres: 
+     [verticesl, ~] = freesurfer_read_surf(fullfile('/project/imco/surfaces/fsaverage5/surf/lh.sphere'));
+     [verticesr, ~] = freesurfer_read_surf(fullfile('/project/imco/surfaces/fsaverage5/surf/rh.sphere'));
+     
+     
+    - does permute distribution need to be in matlab or can I do in R?
+
+20210310
+  [x] doing the spin permutation calculation in R(spin_proportion_calculations_and_plots.R)
+  [x] need to make yeo7 gam sex maps
+  [x] repeat this analysis and do with exec accuracy
+  [x] plot
+  
+
+20210311
+
+  Notes from Ted Meeting
+
+  [o] Table 1 - will be in body of text
+  [] Figure 1 - Make text bigger. Otherwise, good
+  [x] Figure 2 - Switch scatter and figure
+      - A: Scatter
+          - take out panel title
+          - take out outer box
+          [x] plot in visreg to get the gam and confidence interval
+          [x] Do over all vertices, not just significant ones
+      - B: Figure
+          [o] ask Max if he can help with this
+          [x] want grey for values that are 0 (i.e. not corrected)
+          [x] can use this color scheme for the rest
+          - make the upper part the lowest Z
+  [x] Figure 3 - Spins
+      - combine right and left
+      - Maps look great.
+      - To get confidence interval of spin
+          [x] Rank all of the permutations for each network
+          [x] Network is significant if the value is higher than 95% (or 950 or 1900)
+      - Separate out positive and negative for spins
+          - make pos and negative vectors with {r trinarize, eval=FALSE} in IMCO_2021_Project_Age_Sex_Accuracy.Rmd
+          - [x] spin permutations - calc_spinTest_EB.m
+          - [x] proportions
+          - [x] plot 
+      - On the violin plot (as it is now, with all significant stuff)
+        - have a line for the positive direction
+        - have a line for the negative direction
+      [x] Make colors Yeo Colors
+  [x] Figure 4 - Same as above
+  
+  
+
 [] images: 
 
   [x] demographics - nothing new to comment on
     [x] caption
     [o] could just put in methods
     
-  [] coupling schematic
-    [] caption
-    [] try to make prettier, using the maps we have now
+  [x] coupling schematic
+    [x] caption
+    [x] try to make prettier, using the maps we have now
       - red cbf map
       - command: PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('//project/imco/baller/results/mean_maps/lh_cbf_mean.csv','/project/imco/baller/results/mean_maps/rh_cbf_mean.csv','cbf_mean_fdr05')
       - blue alff map
@@ -4449,11 +4571,7 @@ ling_mean_fdr05_grpur')
       
     
     
-  [] mean coupling, alff and cbf
-    [] caption
-    [] should I make blue, red and purple?
-    
-  [] coupling age
+  [x] coupling age
     [x] caption
       - make sure to say there is a tiny dot of positive in the right temporal lobe
     [x] use the gam picture w/parula. Take the direction of the T values (+ or -) with the value of the GAM)
@@ -4461,58 +4579,47 @@ ling_mean_fdr05_grpur')
       - use medial and lateral view. Hack the rest:
       command: PBP_vertWiseEffect_Erica_gam_age_parula_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_with_lm_sign_age_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_with_lm_sign_age_t_fdr05.csv','coupling_gam_with_lm_sign_age_t_fdr05_parula')
       
-    [] For scatterplots, average all vertices that fdr correct and correlate with age - just did all of them. Will need to move this to the bottom and save.
+    [x] For scatterplots, average all vertices that fdr correct and correlate with age - just did all of them. Will need to move this to the bottom and save.
     
-    [] for yeo networks, perhaps pull out avg regression in FP vs Motor or something to show dissociation? 
+    [x] for yeo networks, perhaps pull out avg regression in FP vs Motor or something to show dissociation? 
       - average across fp7 for people?
       
-  [] coupling sex
-    [] caption
-    [] use lm picture, perhaps 1st (medial) and 3rd row (rotated to front)
-      [o] ? yeo mapping - will do DLPFC plot
-      [o] work with adam to try to get better scaling for the color so there is some gradation in the red. Could I use the range 3-6 instead of -2 to 6 or whatever? Should be easy enough - didn't look good. Will just keep as is
-    [] for yeo networks, look at FP males vs females -
+  [x] coupling sex
+    [x] caption
+    [x] use gam picture, perhaps 1st (medial) and 3rd row (rotated to front)
+      [x] ? yeo mapping - will do DLPFC plot
+      [x] work with adam to try to get better scaling for the color so there is some gradation in the red. Could I use the range 3-6 instead of -2 to 6 or whatever? Should be easy enough - didn't look good. Will just keep as is
+    [x] for yeo networks, look at FP males vs females -
       - subset 831x 10242 matrix into 831 x only the vertices with 7s, include sex
       - Males vs females FP7 or some dlpfc value, violin plots
       - (do I want to average FP7 for each person? Probably yes
   
-  [] coupling accuracy
-    [] caption
-    [] lm picture, probably medial and lateral picture (red/blue).
+  [x] coupling accuracy
+    [x] caption
+    [x] lm picture, probably medial and lateral picture (red/blue).
       - may want to change the scale on this as well
       - command: PBP_vertWiseEffect_Erica_exec_acc_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05.csv','coupling_lm_exec_accuracy_fdr05_b2r')
       - look in baller/results/images/pbp/coupling_lm_exec_accuracy_fdr05_*** for other images in different colors.
       
-    [] fp7 vs motor regression
-  
-  [] Overlap with cmrglu map? Would just show everything
-  
-  [] supplements?
-    [] yeo maps?
     
-[] start on abstract and results
+#### 20210317
+[x] git page 
+[x] start on methods/results
 
+#### 20210401
+[x] realized my accuracy should be a gam and that the accuracy gams should not have osex in them. Have changed that and am rerunning the other analyses.
 
+#### 20210401
+- ran coupling accuracy
+[x] trinarize maps
+[x] spin test
+[x] proportions
+[x] violin plots
+[x] make picture
+[x] continue with results
 
-
-[] run the cmrglu idea to detre - poor man's fdg glucose?
 
 -----
-[] really clarify mechanism of aerobic glycolysis
-    - problem. for AG, we actually want places where there is less coupling. May want to split girls and boys separately, because now we only see places girls have more, and places boys have more. AG would be places where they have less
-[] images
-  - demo table
-  - coupling age
-
-  - coupling sex
-  
-
-  - coupling exec accuracy
-  
-
-  - alff, cbf, coupling, aerobic glycolysis map?
-  - coupling algorithm pic
-  
 
 [] Jneurosci specs
   - Abstract (250 words maximum, including citations)

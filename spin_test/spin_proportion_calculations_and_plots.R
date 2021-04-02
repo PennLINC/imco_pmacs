@@ -35,22 +35,22 @@ source(paste0(homedir, "/baller/scripts/imco_functions.R"))
 hemis <- c("lh", "rh")
 permNum <- 1000
 yeo_num <- 7
-models = c("gam_sex", "pos_gam_sex", "neg_gam_sex", "lm_exec_accuracy", "pos_lm_exec_accuracy", "neg_lm_exec_accuracy")
-#models = c("lm_exec_accuracy", "pos_lm_exec_accuracy", "neg_lm_exec_accuracy")
+models = c("gam_sex", "pos_gam_sex", "neg_gam_sex", "lm_exec_accuracy", "pos_lm_exec_accuracy", "neg_lm_exec_accuracy", "gam_exec_accuracy", "pos_gam_exec_accuracy", "neg_gam_exec_accuracy")
+#models = c("gam_exec_accuracy", "pos_gam_exec_accuracy", "neg_gam_exec_accuracy")
 ################
 ### Read in matrices 
 for (model in models) {
   #{lh and rh}_gam_sex_t_fdr05 -> actual results
-  lh_gam_sex_t_fdr05_results <- read.table(paste0(homedir, "/baller/results/coupling_accuracy/lh_", model, "_t_fdr05_Yeo7_1_0_-1.csv"))
-  rh_gam_sex_t_fdr05_results <- read.table(paste0(homedir, "/baller/results/coupling_accuracy/rh_", model, "_t_fdr05_Yeo7_1_0_-1.csv"))
+  lh_t_fdr05_results <- read.table(paste0(homedir, "/baller/results/coupling_accuracy/lh_", model, "_t_fdr05_Yeo7_1_0_-1.csv"))
+  rh_t_fdr05_results <- read.table(paste0(homedir, "/baller/results/coupling_accuracy/rh_", model, "_t_fdr05_Yeo7_1_0_-1.csv"))
   
   #spins
   lh_spin <- t(read.table(paste0(homedir, "/baller/results/coupling_accuracy/spin_test_results/lh_spin_test_", model,"_output.csv"), sep = ","))
   rh_spin <- t(read.table(paste0(homedir, "/baller/results/coupling_accuracy/spin_test_results/rh_spin_test_", model,"_output.csv"), sep = ","))
                                           
   #bring together, with original values as first column
-  lh_act_results_and_spin <- cbind(lh_gam_sex_t_fdr05_results, lh_spin)
-  rh_act_results_and_spin <- cbind(rh_gam_sex_t_fdr05_results, rh_spin)
+  lh_act_results_and_spin <- cbind(lh_t_fdr05_results, lh_spin)
+  rh_act_results_and_spin <- cbind(rh_t_fdr05_results, rh_spin)
   
   #grab list of yeo 7 networks in fsaverage5 space
   yeo_networks <- get_parcel_mapping_yeo(yeo_num)

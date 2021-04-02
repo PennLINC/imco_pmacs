@@ -309,6 +309,40 @@ Demographics summary
 make_demographics_table(finalOrdered)
 ```
 
+Mean Coupling results
+```{r mean_coupling_Ts}
+#set home directory, switch this depending on whether running from PMACS or from home directory
+#homedir <- "/Users/eballer/BBL/imco/pmacs/PMACS_remote/"
+#homedir <- "/project/imco/"
+
+thresh = 3.09
+
+#read in maps
+lh_mean_map <- read.csv(paste0(homedir, "/baller/results/mean_maps/n831_lh.coupling_coef_alff_cbf.fwhm15.fsaverage5.asc"), header = F)
+rh_mean_map <- read.csv(paste0(homedir, "/baller/results/mean_maps/n831_rh.coupling_coef_alff_cbf.fwhm15.fsaverage5.asc"), header = F)
+
+#bind them together
+overall_mean_map <- rbind(lh_mean_map, rh_mean_map)
+
+#take the mean of the T values
+mean_t <- mean(overall_mean_map$V1)
+
+#convert the T to p - one-sided
+p.value = pt(q=mean_t, df=(length(overall_mean_map$V1) - 1), lower.tail = FALSE)
+print(p.value)
+
+#threshold at 3.09 (p < 0.001)
+lh_mean_map_thresh_boolean <- ifelse(abs(lh_mean_map$V1) < thresh, 0, 1)
+lh_mean_map_thresh <- lh_mean_map_thresh_boolean * lh_mean_map$V1
+
+rh_mean_map_thresh_boolean <- ifelse(abs(rh_mean_map$V1) < thresh, 0, 1)
+rh_mean_map_thresh <- rh_mean_map_thresh_boolean * rh_mean_map$V1
+
+#save
+write.table(x=lh_mean_map_thresh, file = paste0(homedir, "/baller/results/mean_maps/n831_lh.coupling_coef_alff_cbf.fwhm15.fsaverage5_THRESH_3.09.csv"), quote = F, row.names = F, col.names = F)
+write.table(x=rh_mean_map_thresh, file = paste0(homedir, "/baller/results/mean_maps/n831_rh.coupling_coef_alff_cbf.fwhm15.fsaverage5_THRESH_3.09.csv"), quote = F, row.names = F, col.names = F)
+```
+
 **Coupling regressions **
 
 This needs to be bsubbed unfortunately, so cannot be run directly from here. As such, it is wrapped.
@@ -352,6 +386,7 @@ Rscript coupling_accuracy_fx_T.R
 #uses: goes vertex by vertex and does regression (coupling by age, sex, cognition, etc), pulls out T and p from these values and sticks it in a vector. The vector can then be used for visualization in matlab
 #dependencies: R (3.6.3 is my current default in pmacs)
 
+## 20210401 - Realized the gam for accuracy should be different. Removed the sex term, and changed the pull of the right values
 ####################
 ###  Libraries   ###
 ####################
@@ -359,6 +394,7 @@ Rscript coupling_accuracy_fx_T.R
 library(mgcv)
 library(dplyr)
 library(ggplot2)
+library(visreg)
 
 #####################################################################################
 ####              Makes the 831x10242 matrices, both left and right              ####
@@ -366,7 +402,7 @@ library(ggplot2)
 
 #set home directory, switch this depending on whether running from PMACS or from home directory
 #homedir <- "/Users/eballer/BBL/imco/pmacs/PMACS_remote/"
-#homedir <- "/project/imco/"
+homedir <- "/project/imco/"
 
 # read in demos
 subjDemos <- read.csv(paste0(homedir, "/baller/subjectLists/n831_alff_cbf_finalSample_imageOrder.csv"))
@@ -458,6 +494,7 @@ subjDemos_with_rh_matrix <- cbind(subjDemos, rh_matrix)
 #write output
 write.table(subjDemos_with_rh_matrix, file = paste0(homedir, "/baller/results/coupling_accuracy/subjDemos_with_rh_", numrows, "x10242.csv"), sep = ",")
 
+
 ####-----------------------------------------------------------------------------####
 ####---------------------------End of Part 1- Making matrices---_----------------####
 ####-----------------------------------------------------------------------------####
@@ -525,16 +562,16 @@ for (i in 1:10242) {
   
   ## accuracy
   accuracy_model <- gam(lh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                          osex + s(ageAtScan1, k = 4, fx = T) + Overall_Accuracy, data=lh_alff)
+                          s(ageAtScan1, k = 4, fx = T) + Overall_Accuracy, data=lh_alff)
   
   exec_accuracy_model <- gam(lh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                               osex + s(ageAtScan1, k = 4, fx = T) + F1_Exec_Comp_Res_Accuracy, data=lh_alff)
+                               s(ageAtScan1, k = 4, fx = T) + F1_Exec_Comp_Res_Accuracy, data=lh_alff)
   
   soc_accuracy_model <- gam(lh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                              osex + s(ageAtScan1, k = 4, fx = T) + F2_Social_Cog_Accuracy, data=lh_alff)
+                              s(ageAtScan1, k = 4, fx = T) + F2_Social_Cog_Accuracy, data=lh_alff)
   
   mem_accuracy_model <- gam(lh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                              osex + s(ageAtScan1, k = 4, fx = T) + F3_Memory_Accuracy, data=lh_alff)
+                              s(ageAtScan1, k = 4, fx = T) + F3_Memory_Accuracy, data=lh_alff)
   
   
   
@@ -562,10 +599,10 @@ for (i in 1:10242) {
   lh_gam_age_p_uncor[i] <- summary(age_sex_model)$s.table[1,4] #smooth term for ageAtScan1
   lh_gam_sex_p_uncor[i] <- summary(age_sex_model)$p.table[4,4] #linear term
   
-  lh_gam_accuracy_p_uncor[i] <- summary(accuracy_model)$p.table[5,4] #accuracy term
-  lh_gam_exec_accuracy_p_uncor[i] <- summary(exec_accuracy_model)$p.table[5,4] #accuracy term
-  lh_gam_soc_accuracy_p_uncor[i] <- summary(soc_accuracy_model)$p.table[5,4] #accuracy term
-  lh_gam_mem_accuracy_p_uncor[i] <- summary(mem_accuracy_model)$p.table[5,4] #accuracy term
+  lh_gam_accuracy_p_uncor[i] <- summary(accuracy_model)$p.table[4,4] #accuracy term
+  lh_gam_exec_accuracy_p_uncor[i] <- summary(exec_accuracy_model)$p.table[4,4] #accuracy term
+  lh_gam_soc_accuracy_p_uncor[i] <- summary(soc_accuracy_model)$p.table[4,4] #accuracy term
+  lh_gam_mem_accuracy_p_uncor[i] <- summary(mem_accuracy_model)$p.table[4,4] #accuracy term
   
   #lm to assess directionality
   lh_lm_age_p_uncor[i] <- summary(age_lm_model)$coeff[4,4]
@@ -580,10 +617,10 @@ for (i in 1:10242) {
   lh_gam_age_t_uncor[i] <- summary(age_sex_model)$s.table[1,3] #smooth term for ageAtScan1
   lh_gam_sex_t_uncor[i] <- summary(age_sex_model)$p.table[4,3] #linear term
   
-  lh_gam_accuracy_t_uncor[i] <- summary(accuracy_model)$p.table[5,3] #accuracy term
-  lh_gam_exec_accuracy_t_uncor[i] <- summary(exec_accuracy_model)$p.table[5,3] #accuracy term
-  lh_gam_soc_accuracy_t_uncor[i] <- summary(soc_accuracy_model)$p.table[5,3] #accuracy term
-  lh_gam_mem_accuracy_t_uncor[i] <- summary(mem_accuracy_model)$p.table[5,3] #accuracy term
+  lh_gam_accuracy_t_uncor[i] <- summary(accuracy_model)$p.table[4,3] #accuracy term
+  lh_gam_exec_accuracy_t_uncor[i] <- summary(exec_accuracy_model)$p.table[4,3] #accuracy term
+  lh_gam_soc_accuracy_t_uncor[i] <- summary(soc_accuracy_model)$p.table[4,3] #accuracy term
+  lh_gam_mem_accuracy_t_uncor[i] <- summary(mem_accuracy_model)$p.table[4,3] #accuracy term
   
   #lm to assess directionality
   lh_lm_age_t_uncor[i] <- summary(age_lm_model)$coeff[4,3]
@@ -609,16 +646,16 @@ for (i in 1:10242) {
   
   ## accuracy
   accuracy_model <- gam(rh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                          osex + s(ageAtScan1, k = 4, fx = T) + Overall_Accuracy, data=rh_alff)
+                          s(ageAtScan1, k = 4, fx = T) + Overall_Accuracy, data=rh_alff)
   
   exec_accuracy_model <- gam(rh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                               osex + s(ageAtScan1, k = 4, fx = T) + F1_Exec_Comp_Res_Accuracy, data=rh_alff)
+                               s(ageAtScan1, k = 4, fx = T) + F1_Exec_Comp_Res_Accuracy, data=rh_alff)
   
   soc_accuracy_model <- gam(rh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                              osex + s(ageAtScan1, k = 4, fx = T) + F2_Social_Cog_Accuracy, data=rh_alff)
+                              s(ageAtScan1, k = 4, fx = T) + F2_Social_Cog_Accuracy, data=rh_alff)
   
   mem_accuracy_model <- gam(rh_alff[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                              osex + s(ageAtScan1, k = 4, fx = T) + F3_Memory_Accuracy, data=rh_alff)
+                              s(ageAtScan1, k = 4, fx = T) + F3_Memory_Accuracy, data=rh_alff)
   
   
   
@@ -646,10 +683,10 @@ for (i in 1:10242) {
   rh_gam_age_p_uncor[i] <- summary(age_sex_model)$s.table[1,4] #smooth term for ageAtScan1
   rh_gam_sex_p_uncor[i] <- summary(age_sex_model)$p.table[4,4] #linear term
   
-  rh_gam_accuracy_p_uncor[i] <- summary(accuracy_model)$p.table[5,4] #accuracy term
-  rh_gam_exec_accuracy_p_uncor[i] <- summary(exec_accuracy_model)$p.table[5,4] #accuracy term
-  rh_gam_soc_accuracy_p_uncor[i] <- summary(soc_accuracy_model)$p.table[5,4] #accuracy term
-  rh_gam_mem_accuracy_p_uncor[i] <- summary(mem_accuracy_model)$p.table[5,4] #accuracy term
+  rh_gam_accuracy_p_uncor[i] <- summary(accuracy_model)$p.table[4,4] #accuracy term
+  rh_gam_exec_accuracy_p_uncor[i] <- summary(exec_accuracy_model)$p.table[4,4] #accuracy term
+  rh_gam_soc_accuracy_p_uncor[i] <- summary(soc_accuracy_model)$p.table[4,4] #accuracy term
+  rh_gam_mem_accuracy_p_uncor[i] <- summary(mem_accuracy_model)$p.table[4,4] #accuracy term
   
   #lm to assess directionality
   rh_lm_age_p_uncor[i] <- summary(age_lm_model)$coeff[4,4]
@@ -664,10 +701,10 @@ for (i in 1:10242) {
   rh_gam_age_t_uncor[i] <- summary(age_sex_model)$s.table[1,3] #smooth term for ageAtScan1
   rh_gam_sex_t_uncor[i] <- summary(age_sex_model)$p.table[4,3] #linear term
   
-  rh_gam_accuracy_t_uncor[i] <- summary(accuracy_model)$p.table[5,3] #accuracy term
-  rh_gam_exec_accuracy_t_uncor[i] <- summary(exec_accuracy_model)$p.table[5,3] #accuracy term
-  rh_gam_soc_accuracy_t_uncor[i] <- summary(soc_accuracy_model)$p.table[5,3] #accuracy term
-  rh_gam_mem_accuracy_t_uncor[i] <- summary(mem_accuracy_model)$p.table[5,3] #accuracy term
+  rh_gam_accuracy_t_uncor[i] <- summary(accuracy_model)$p.table[4,3] #accuracy term
+  rh_gam_exec_accuracy_t_uncor[i] <- summary(exec_accuracy_model)$p.table[4,3] #accuracy term
+  rh_gam_soc_accuracy_t_uncor[i] <- summary(soc_accuracy_model)$p.table[4,3] #accuracy term
+  rh_gam_mem_accuracy_t_uncor[i] <- summary(mem_accuracy_model)$p.table[4,3] #accuracy term
   
   #lm to assess directionality
   rh_lm_age_t_uncor[i] <- summary(age_lm_model)$coeff[4,3]
@@ -814,8 +851,82 @@ for (hemi in hemis) {
   }
 }
 
+###########
+## Plots ##
+###########
+
+
+### Find Gam age FDR corrected
+### just for age
+lh_gam_age_t_fdr05 <- read.csv(paste0(homedir, '/baller/results/coupling_accuracy/lh_gam_age_t_fdr05.csv'), header = F)
+rh_gam_age_t_fdr05 <- read.csv(paste0(homedir, '/baller/results/coupling_accuracy/rh_gam_age_t_fdr05.csv'), header = F)
+
+#turn 0s into na
+lh_gam_to_keep <- lh_gam_age_t_fdr05$V1
+lh_gam_to_keep[lh_gam_to_keep==0] <- NA
+
+rh_gam_to_keep <- rh_gam_age_t_fdr05$V1
+rh_gam_to_keep[rh_gam_to_keep==0] <- NA
+
+#concatenate rows to keep
+lh_and_rh_to_keep <- c(lh_gam_to_keep, rh_gam_to_keep)
+columns_to_drop <- which(is.na(lh_and_rh_to_keep))
+
+# concatenate 831x10242 right and left matrices, and drop the columns with NA
+lh_and_rh_matrix <- data.frame(cbind(lh_matrix, rh_matrix))
+lh_and_rh_matrix_fdr_corrected = subset(lh_and_rh_matrix, select = -(columns_to_drop)) 
+
+lh_and_rh_rowmeans <- rowMeans(lh_and_rh_matrix_fdr_corrected) #make vector of row means
+age = subjDemos$ageAtScan1
+#age_x2_for_plotting <- c(subjDemos$ageAtScan1, subjDemos$ageAtScan1) #make vector of ages
+
+#plot and save
+jpeg(paste0(homedir,'baller/results/images/Mean_coupling_by_age_rplot_fdr.jpg'))
+plot(age, lh_and_rh_rowmeans, ylab = "Coupling (Z)", xlab = "Age (In Years)", main = "Mean Coupling by Age")
+abline(lm(lh_and_rh_rowmeans~age), col = 'red')
+dev.off()
+
+### Find Gam age uncorrected
+### just for age
+lh_gam_age_t_uncor <- read.csv(paste0(homedir, '/baller/results/coupling_accuracy/lh_gam_age_t_uncor.csv'), header = F)
+rh_gam_age_t_uncor <- read.csv(paste0(homedir, '/baller/results/coupling_accuracy/rh_gam_age_t_uncor.csv'), header = F)
+
+#turn 0s into na
+lh_gam_to_keep <- lh_gam_age_t_uncor$V1
+lh_gam_to_keep[lh_gam_to_keep==0] <- NA
+
+rh_gam_to_keep <- rh_gam_age_t_uncor$V1
+rh_gam_to_keep[rh_gam_to_keep==0] <- NA
+
+#concatenate rows to keep
+lh_and_rh_to_keep <- c(lh_gam_to_keep, rh_gam_to_keep)
+columns_to_drop <- which(is.na(lh_and_rh_to_keep))
+
+# concatenate 831x10242 right and left matrices, and drop the columns with NA
+lh_and_rh_matrix <- data.frame(cbind(lh_matrix, rh_matrix))
+lh_and_rh_matrix_uncorrected = subset(lh_and_rh_matrix, select = -(columns_to_drop)) 
+
+lh_and_rh_rowmeans <- rowMeans(lh_and_rh_matrix_uncorrected) #make vector of row means
+age = subjDemos$ageAtScan1
+#age_x2_for_plotting <- c(subjDemos$ageAtScan1, subjDemos$ageAtScan1) #make vector of ages
+
+#plot and save
+jpeg(paste0(homedir,'baller/results/images/Mean_coupling_by_age_rplot_uncor.jpg'))
+plot(age, lh_and_rh_rowmeans, ylab = "Coupling (Z)", xlab = "Age (In Years)", main = "Mean Coupling by Age")
+abline(lm(lh_and_rh_rowmeans~age), col = 'red')
+dev.off()
+
+#visreg
+jpeg(paste0(homedir,'baller/results/images/Mean_coupling_by_age_rplot_uncor_visreg.jpg'))
+df <- data.frame(cbind(lh_and_rh_rowmeans, age))
+names(df) <- c("Means", "Age")
+fit <- lm(Means~Age, data=df)
+visreg(fit, "Age")
+dev.off()
+
 ```
-Plots for Age x Coupling
+
+Plots for Age x Coupling including GAM
 *script: /project/imco/baller/scripts/coupling/scatter_plots.R*
 ```{r scatter_plots, eval=FALSE}
 ###########
@@ -1218,7 +1329,7 @@ The actual code in run_visualization_scripts_from_command_line.sh is below:
 
 
 #set directories
-#homedir='/project/imco'
+#homedir = '/project/imco'
 #set homedir = '/Users/eballer/BBL/imco/pmacs/PMACS_remote/'
 wking_dir='/baller/scripts/PBP_graphics'
 command_file="$homedir/$wking_dir/commands_for_matlab"
@@ -1237,15 +1348,17 @@ done < $command_file
 
 ```
 
-The command files contain paths to the PBP* visualization scripts. At any time, you can run one or all of them by changing the inputs in /project/imco/baller/scripts/PBP_graphics/commands_for_matlab. Currently, these are the commands in that file. Of note, if you ever want to run a command independently, just go into matlab, copy the command, and run it within matlab. This just takes forever. Here are the final commands for visualization that I ran. 
+The command files contain paths to the PBP* visualization scripts. At any time, you can run one or all of them by changing the inputs in /project/imco/baller/scripts/PBP_graphics/commands_for_matlab. Currently, these are the I recommend putting in that file. Of note, if you ever want to run a command independently, just go into matlab, copy the command, and run it within matlab. This just takes forever. Here are the final commands for visualization that I ran. 
 
-```{bash commands_for_matlab, eval=FALSE}
+```{bash commands_for_matlab_pbp, eval=FALSE}
 PBP_vertWiseEffect_Erica_Ts_green_purp_imco_results_outpath('/project/imco/baller/results/mean_maps/n831_lh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv','/project/imco/baller/results/mean_maps/n831_rh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv','coupling_mean_fdr05_grpur')
+PBP_vertWiseEffect_Erica_mean_coupling_plasma_results_outpath('/project/imco/baller/results/mean_maps/n831_lh.coupling_coef_alff_cbf.fwhm15.fsaverage5_THRESH_3.09.csv','/project/imco/baller/results/mean_maps/n831_rh.coupling_coef_alff_cbf.fwhm15.fsaverage5_THRESH_3.09.csv','coupling_mean_thresh_3_09_plasma')
 PBP_vertWiseEffect_Erica_Ts_blue_alff_results_outpath('/project/imco/baller/results/mean_maps/lh_alff_mean.csv','/project/imco/baller/results/mean_maps/rh_alff_mean.csv','alff_mean_fdr05_blue')
 PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/mean_maps/lh_cbf_mean.csv','/project/imco/baller/results/mean_maps/rh_cbf_mean.csv','cbf_mean_fdr05')
 PBP_vertWiseEffect_Erica_gam_age_parula_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_with_lm_sign_age_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_with_lm_sign_age_t_fdr05.csv','coupling_gam_w_lm_sign_age_parula_fdr05_grey_mid')
 PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_sex_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_sex_t_fdr05.csv','coupling_gam_sex_red_and_blue_fdr05')
 PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05.csv','coupling_lm_exec_accuracy_red_and_blue_fdr05')
+PBP_vertWiseEffect_Erica_Ts_pos_and_neg_results_outpath('/project/imco/baller/results/coupling_accuracy/lh_gam_exec_accuracy_t_fdr05.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_exec_accuracy_t_fdr05.csv','coupling_gam_exec_accuracy_red_and_blue_fdr05')
 ```
 
 Final images:
@@ -1253,6 +1366,11 @@ Final images:
 Coupling mean
 
 <img width="100%" src="/project/imco/baller/results/images/pbp/coupling_mean_fdr05_grpur.png"/>
+
+
+Coupling mean with plasma colors
+
+<img width="100%" src="/project/imco/baller/results/images/pbp/coupling_mean_thresh_3_09_plasma.png"/>
 
 Alff mean
 
@@ -1270,7 +1388,12 @@ Coupling gam sex
 <img width="100%" src="/project/imco/baller/results/images/pbp/coupling_gam_sex_red_and_blue_fdr05.png"/>
 
 Coupling lm exec accuracy
+
 <img width="100%" src="/project/imco/baller/results/images/pbp/coupling_lm_exec_accuracy_red_and_blue_fdr05.png"/>
+
+Coupling gam exec accuracy
+
+<img width="100%" src="/project/imco/baller/results/images/pbp/coupling_gam_exec_accuracy_red_and_blue_fdr05.png"/>
 
 
 Sample code (from PBP_vertWiseEffect_Erica_Ts_results_outpath.m)
@@ -1542,10 +1665,11 @@ Unfortunatley, this was another step where we required both matlab and R. Lucky 
 
 First, I made trinarized yeo masks, 1, 0, -1. In order to run permutation analyses on the Yeo networks, I need to trinarize my fdr corrected maps. If a vertex is corrected, it will get a 1. If not, 0. If it is within the medial wall, it will get a -1
 
-```{r trinarize, eval=FALSE}
-####################################
-### Make Yeo Maps for Spin Test  ###
-####################################
+script: /project/imco/baller/scripts/spin_test/make_trinarized_maps_for_spin_test.R
+```{r make_trinarized_maps_for_spin_test, eval=FALSE}
+###########################################
+### Make Trinarzied Maps for Spin Test  ###
+###########################################
 
 ### Author: Erica Baller
 ### Date 3/10/21
@@ -1567,7 +1691,7 @@ input_parcel_array_length = 10242
 
 #will loop through each of these
 analyses <- c("coupling_accuracy") #, "cbf_accuracy", "alff_accuracy") 
-models <- c("gam_age", "gam_sex", "lm_sex", "lm_exec_accuracy") #gam_age", "lm_age", "gam_sex", "lm_sex", "lm_accuracy", "lm_exec_accuracy")
+models <- c("gam_age", "gam_sex", "lm_sex", "lm_exec_accuracy", "gam_exec_accuracy") #gam_age", "lm_age", "gam_sex", "lm_sex", "lm_accuracy", "lm_exec_accuracy")
 corrs <- c("fdr05") #correction
 
 parcel_mapping <- get_parcel_mapping_yeo(7)
@@ -1652,7 +1776,7 @@ for (analysis in analyses) {
 ```
 
 
-** Call matlab **
+** Call matlab wrapper**
 
 ```{bash call_spin_test, eval=FALSE}
 
@@ -1661,42 +1785,74 @@ sh run_spin_test_from_command_line.sh
 
 ```
 
-** Matlab wrapper **
+** Code in matlab wrapper **
 
-```{bash calc_spinTest_EB, eval=FALSE}
-# this is actually matlab code
+/project/imco/baller/scripts/spin_test/run_spin_test_from_command_line.sh
 
-% addpaths
-addpath(genpath('/project/imco/baller/scripts/spin_test/'));
-ProjectFolder = '/project/imco/baller/results/coupling_accuracy/';
-model = 'gam_sex'
+```{bash run_spin_test_from_command_line, eval=FALSE}
+#!/bin/sh
 
-% set outdir
-outdir= '/project/imco/baller/results/coupling_accuracy/spin_test_results/';
-outFn=strcat([outdir, '/', model, '_spin_results_yeo_1_0_-1_output']);
+##################################
+###    Spin Test    Wrapper    ###
+##################################
 
-SpinPermuFS([ProjectFolder, '/lh_', model, '_t_fdr05_Yeo7_1_0_-1.csv'],[ProjectFolder, '/rh_', model, '_t_fdr05_Yeo7_1_0_-1.csv'], 1000, outFn, model);
+###### Author: Erica Baller ######
+######   Date: 2/26/2021    ######
 
+## pre: commands_for_matlab 
+   #- trinarized maps 
+## post: spin results in /project/imco/baller/results/coupling_accuracy/spin_test_results
+## uses: I was getting tired of having to open matlab and run each of these commands manually. This script takes a bunch of commands and just feeds them to matlab, no muss, no fuss
+## dependencies: Matlab 2020b, please run "source /project/imco/baller/scripts/load_matlab before starting this
+
+
+#set directories
+#homedir = '/project/imco'
+#set homedir = '/Users/eballer/BBL/imco/pmacs/PMACS_remote/'
+wking_dir='/baller/scripts/spin_test'
+command_file="$homedir/$wking_dir/commands_for_matlab"
+echo $command_file
+
+#initialize matlab
+
+
+#######
+### loop ###
+while IFS= read -r line; do
+	echo "$line"
+	matlab -nosplash -nodesktop -nodisplay -r "$line; exit"
+
+done < $command_file
 
 ```
 
+** commands for matlab **
+ file: /project/imco/baller/scripts/spin_test/commands_for_matlab
+
+```{bash commands_for_matlab_spin, eval=FALSE}
+SpinPermuFS('/project/imco/baller/results/coupling_accuracy/lh_gam_sex_t_fdr05_Yeo7_1_0_-1.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_sex_t_fdr05_Yeo7_1_0_-1.csv',1000,'/p
+roject/imco/baller/results/coupling_accuracy/spin_test_results/gam_sex_spin_results_yeo_1_0_-1_output','gam_sex')
+SpinPermuFS('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05_Yeo7_1_0_-1.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05_Yeo7_1_
+0_-1.csv',1000,'/project/imco/baller/results/coupling_accuracy/spin_test_results/lm_exec_accuracy_spin_results_yeo_1_0_-1_output','lm_exec_accuracy')
+SpinPermuFS('/project/imco/baller/results/coupling_accuracy/lh_pos_gam_sex_t_fdr05_Yeo7_1_0_-1.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_gam_sex_t_fdr05_Yeo7_1_0_-1.csv',
+1000,'/project/imco/baller/results/coupling_accuracy/spin_test_results/pos_gam_sex_spin_results_yeo_1_0_-1_output','pos_gam_sex')
+SpinPermuFS('/project/imco/baller/results/coupling_accuracy/lh_neg_gam_sex_t_fdr05_Yeo7_1_0_-1.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_gam_sex_t_fdr05_Yeo7_1_0_-1.csv',
+1000,'/project/imco/baller/results/coupling_accuracy/spin_test_results/neg_gam_sex_spin_results_yeo_1_0_-1_output','neg_gam_sex')
+SpinPermuFS('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_t_fdr05_Yeo7_1_0_-1.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05
+_Yeo7_1_0_-1.csv',1000,'/project/imco/baller/results/coupling_accuracy/spin_test_results/pos_lm_exec_accuracy_spin_results_yeo_1_0_-1_output','pos_lm_exec_accuracy')
+SpinPermuFS('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_Yeo7_1_0_-1.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05
+_Yeo7_1_0_-1.csv',1000,'/project/imco/baller/results/coupling_accuracy/spin_test_results/neg_lm_exec_accuracy_spin_results_yeo_1_0_-1_output','neg_lm_exec_accuracy')
+SpinPermuFS('/project/imco/baller/results/coupling_accuracy/lh_gam_exec_accuracy_t_fdr05_Yeo7_1_0_-1.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_exec_accuracy_t_fdr05_Yeo7_1
+_0_-1.csv',1000,'/project/imco/baller/results/coupling_accuracy/spin_test_results/gam_exec_accuracy_spin_results_yeo_1_0_-1_output','gam_exec_accuracy')
+SpinPermuFS('/project/imco/baller/results/coupling_accuracy/lh_pos_gam_exec_accuracy_t_fdr05_Yeo7_1_0_-1.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_gam_exec_accuracy_t_fdr0
+5_Yeo7_1_0_-1.csv',1000,'/project/imco/baller/results/coupling_accuracy/spin_test_results/pos_gam_exec_accuracy_spin_results_yeo_1_0_-1_output','pos_gam_exec_accuracy')
+SpinPermuFS('/project/imco/baller/results/coupling_accuracy/lh_neg_gam_exec_accuracy_t_fdr05_Yeo7_1_0_-1.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_gam_exec_accuracy_t_fdr0
+5_Yeo7_1_0_-1.csv',1000,'/project/imco/baller/results/coupling_accuracy/spin_test_results/neg_gam_exec_accuracy_spin_results_yeo_1_0_-1_output','neg_gam_exec_accuracy')
+```
 
 The contents of SpinPermuFS (of note, I added an extra variable, model, so I could change what is actually called)
 
 ```{bash SpunPermuFS, eval=FALSE}
-### This is MATLAB
-% addpaths
-addpath(genpath('/project/imco/baller/scripts/spin_test/'));
-ProjectFolder = '/project/imco/baller/results/coupling_accuracy/';
-model = 'gam_sex'
-
-% set outdir
-outdir= '/project/imco/baller/results/coupling_accuracy/spin_test_results/';
-outFn=strcat([outdir, '/', model, '_spin_results_yeo_1_0_-1_output']);
-
-SpinPermuFS([ProjectFolder, '/lh_', model, '_t_fdr05_Yeo7_1_0_-1.csv'],[ProjectFolder, '/rh_', model, '_t_fdr05_Yeo7_1_0_-1.csv'], 1000, outFn, model);
-
-[eballer@bellicose spin_test]$ more SpinPermuFS.m 
 function SpinPermuFS(readleft,readright,permno,wsname,model)
 % Compute designated # of permutations/spins of the input surface data
 % in FreeSurfer fsaverage5.
@@ -1818,7 +1974,7 @@ library(tidyr)
 #################
 ### set home directory
 #homedir <- "/Users/eballer/BBL/imco/pmacs/PMACS_remote"
-#homedir <- "/project/imco"
+homedir <- "/project/imco"
 
 source(paste0(homedir, "/baller/scripts/imco_functions.R"))
 
@@ -1826,22 +1982,22 @@ source(paste0(homedir, "/baller/scripts/imco_functions.R"))
 hemis <- c("lh", "rh")
 permNum <- 1000
 yeo_num <- 7
-models = c("gam_sex", "pos_gam_sex", "neg_gam_sex", "lm_exec_accuracy", "pos_lm_exec_accuracy", "neg_lm_exec_accuracy")
+models = c("gam_sex", "pos_gam_sex", "neg_gam_sex", "lm_exec_accuracy", "pos_lm_exec_accuracy", "neg_lm_exec_accuracy", "gam_exec_accuracy", "pos_gam_exec_accuracy", "neg_gam_exec_accuracy")
 #models = c("lm_exec_accuracy", "pos_lm_exec_accuracy", "neg_lm_exec_accuracy")
 ################
 ### Read in matrices 
 for (model in models) {
   #{lh and rh}_gam_sex_t_fdr05 -> actual results
-  lh_gam_sex_t_fdr05_results <- read.table(paste0(homedir, "/baller/results/coupling_accuracy/lh_", model, "_t_fdr05_Yeo7_1_0_-1.csv"))
-  rh_gam_sex_t_fdr05_results <- read.table(paste0(homedir, "/baller/results/coupling_accuracy/rh_", model, "_t_fdr05_Yeo7_1_0_-1.csv"))
+  lh_t_fdr05_results <- read.table(paste0(homedir, "/baller/results/coupling_accuracy/lh_", model, "_t_fdr05_Yeo7_1_0_-1.csv"))
+  rh_t_fdr05_results <- read.table(paste0(homedir, "/baller/results/coupling_accuracy/rh_", model, "_t_fdr05_Yeo7_1_0_-1.csv"))
   
   #spins
   lh_spin <- t(read.table(paste0(homedir, "/baller/results/coupling_accuracy/spin_test_results/lh_spin_test_", model,"_output.csv"), sep = ","))
   rh_spin <- t(read.table(paste0(homedir, "/baller/results/coupling_accuracy/spin_test_results/rh_spin_test_", model,"_output.csv"), sep = ","))
                                           
   #bring together, with original values as first column
-  lh_act_results_and_spin <- cbind(lh_gam_sex_t_fdr05_results, lh_spin)
-  rh_act_results_and_spin <- cbind(rh_gam_sex_t_fdr05_results, rh_spin)
+  lh_act_results_and_spin <- cbind(lh_t_fdr05_results, lh_spin)
+  rh_act_results_and_spin <- cbind(rh_t_fdr05_results, rh_spin)
   
   #grab list of yeo 7 networks in fsaverage5 space
   yeo_networks <- get_parcel_mapping_yeo(yeo_num)
@@ -1939,10 +2095,11 @@ library(reshape)
 #homedir <- "/project/imco"
 #source(paste0(homedir, '/baller/scripts//imco_functions.R'))
 
-outdir_name <- "spin_stats_gam_sex_lm_exec_acc_all_pos_neg"
+#outdir_name <- "spin_stats_gam_sex_lm_exec_acc_all_pos_neg"
+outdir_name <- "spin_stats_gam_sex_gam_lm_exec_acc_all_pos_neg"
 
-models_for_stats = c("gam_sex", "pos_gam_sex", "neg_gam_sex","lm_exec_accuracy", "pos_lm_exec_accuracy", "neg_lm_exec_accuracy")
-models_for_plots = c("gam_sex", "lm_exec_accuracy")
+models_for_stats = c("gam_sex", "pos_gam_sex", "neg_gam_sex","lm_exec_accuracy", "pos_lm_exec_accuracy", "neg_lm_exec_accuracy", "gam_exec_accuracy", "pos_gam_exec_accuracy", "neg_gam_exec_accuracy")
+models_for_plots = c("gam_sex", "lm_exec_accuracy", "gam_exec_accuracy")
 
 network_names <- c("VIS", "MOT", "DA", "VA", "LIM", "FP", "DM")
 num_spins = 2000
@@ -1952,7 +2109,7 @@ num_spins = 2000
 yeo_colors <- get_yeo7_colors()
 
 #for storing statistics at the end
-stats <- data.frame(matrix(nrow = 7, ncol = length(models)))
+stats <- data.frame(matrix(nrow = 7, ncol = length(models_for_stats)))
 names(stats) <- models_for_stats
 row.names(stats) <- network_names
 
@@ -1991,6 +2148,9 @@ Gam sex violin plots
 
 Lm exec accuracy plots
 <img width="100%" src="/project/imco/baller/results/images/spin_lm_exec_accuracy_pos_and_neg_lines_t_fdr05.png"/>
+
+Gam exec accuracy plots
+<img width="100%" src="/project/imco/baller/results/images/spin_gam_exec_accuracy_pos_and_neg_lines_t_fdr05.png"/>
 
 #### Checking to see which of the previously defined maps have the most overlap with our coupling  maps
 
@@ -2671,5 +2831,6 @@ get_yeo7_colors <- function() {
   return(yeo_colors)
 }
 ```
+
 
 

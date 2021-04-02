@@ -5,18 +5,27 @@ function PBP_vertWiseEffect_Erica(LH,RH,name)% pretty picture code, AAB 4/2018 -
 
 %%% SET THRESHOLDS AS DESIRED HERE: only fill in each threshold as needed (no need to set both if you only want to threshold one end)
 % Values at or above this set to gray
-Uthresh=0.005;
+%Uthresh=-2;
 % Values at or below this set to gray
-% LThresh=-x;
+%LThresh=2;
+%general threshold if I want bidirectional
+GThresh=0;
 %%%
 
-addpath(genpath('/cbica/projects/pinesParcels/multiscale/scripts/derive_parcels/Toolbox'));
+
+addpath(genpath('/appl/freesurfer-6.0.0/matlab/'));
+addpath(genpath('/project/imco/baller/scripts/subaxis/'));
+addpath(genpath('/project/imco/baller/scripts/Colormaps/Colormaps (5)/Colormaps/'));
+addpath(genpath('/project/imco/baller/scripts/b2r/'));
+addpath(genpath('/project/imco/baller/scripts/customcolormap'));
+%{
 addpath(genpath('/cbica/projects/alpraz_EI/scripts/tools/'));
 ProjectFolder = '/cbica/projects/pinesParcels/data/SingleParcellation';
 SubjectsFolder = '/cbica/software/external/freesurfer/centos7/5.3.0/subjects/fsaverage5';
+%}
 
 plot_text='';
-[vertices, faces] = freesurfer_read_surf('/cbica/software/external/freesurfer/scientificlinux6/6.0.0/subjects/fsaverage5/surf/lh.inflated');
+[vertices, faces] = freesurfer_read_surf('/project/imco/surfaces/fsaverage5/surf/lh.inflated');
 %using lh.gray will make more anatomical looking plot but harder to see into sulci
 right = readtable(RH,'TreatAsEmpty','NA','ReadVariableNames',false);
 datar = table2array(right);
@@ -38,18 +47,21 @@ datar(indexNaNrh)=0;
 datal(indexNaNlh)=0;
 datalr=[datal; datar];
 %invoke thresholding 1/12/21
-if exist('Uthresh','Var') == 1;
-	AboveThresh= datalr > Uthresh;
-	datalr(AboveThresh)=0;
-end
-if exist('LThresh','Var') ==1;
-	BelowThresh= datalr < Lthresh;
-	datalr(BelowThresh)=0;
-end
+%if exist('Uthresh','Var') == 1;
+%	AboveThresh= datalr > Uthresh;
+%	datalr(AboveThresh)=0;
+%end
+%if exist('LThresh','Var') ==1;
+%	BelowThresh= datalr < LThresh;
+%	datalr(BelowThresh)=0;
+%end
+
+InsigIndex = abs(datalr) < GThresh
+datalr(InsigIndex) = 0
 %%% set color scale
 % 1/12/21 - for p values, visualizing 1/p might be more effective. comment out line below and  uncomment subsequent line to nix this approach.
-datalr=1./datalr;
-%datalr = datalr;
+%datalr=1./datalr;
+
 
 % 12/1/21 tiny bit of code to deal with 1/0 in matlab
 InfIndex=find(datalr==Inf);
@@ -59,12 +71,29 @@ datalr(InfIndex)=0;
 %AP% set to make white zero on all maps
 maxabs=prctile(abs(datalr),88);
 %mincol= minval-.00001 
-maxcol=maxabs
-mincol=-maxabs
+%maxcol=maxabs
+%mincol=-maxabs
+maxcol=max(datalr)
+mincol=min(datalr)
 %change above to set max/min manually or by other means
 %custommap=colormap('plasma'); %or whatever
 % for white at 0
-custommap=colormap(b2r(-1,1));
+%custommap=colormap(customcolormap(min(datalr),max(datalr));
+%custommap=b2r(min(datalr),max(datalr));
+%custommap=colormap('viridis');
+custommap=colormap('plasma');
+%custommap([10190:10242],:)=repmat([.84 .03 0.94],53,1);
+
+
+%this was calculated by finding the 0 point - 182, mapping the ~ of boxes per 1 Z - 16, and multiplying x 3.09, to get the exact values. Range is 182 +/- 50
+custommap([132:231],:)=repmat([0.75 0.75 0.75],100,1);
+custommap=flipud(custommap);
+%custommap = customcolormap(linspace(0,1,11), {'#410149','#762a84','#9b6fac','#c1a5cd','#e7d4e8','#faf6f7','#d7f1d6','#a6db9d','#5aae60','#1c7735','#014419'});
+%custommap = customcolormap([0 .3 .8 1], {'#fbeed7','#ffba5a','#ff7657','#665c84'});
+%custommap=flipud(custommap)
+%custommap = customcolormap(linspace(0,1,11), {'#68011d','#b5172f','#d75f4e','#f7a580','#fedbc9','#f5f9f3','#d5e2f0','#93c5dc','#4295c1','#2265ad','#062e61'});
+
+%custommap(1,:)=[0.75 0.75 0.75];
 
 
 data=datalr(1:10242);
@@ -147,7 +176,7 @@ set(get(gca,'title'),'Position',[332 119 3])
 %%% right hemisphere
 data=datalr(10243:20484);
 
-[vertices, faces] = freesurfer_read_surf('/cbica/software/external/freesurfer/scientificlinux6/6.0.0/subjects/fsaverage5/surf/rh.inflated');
+[vertices, faces] = freesurfer_read_surf('/project/imco/surfaces/fsaverage5/surf/rh.inflated');
 
 asub = subaxis(4,2,2, 'sh', 0.0, 'sv', 0.0, 'padding', 0, 'margin', 0);
 aplot = trisurf(faces, vertices(:,1), vertices(:,2), vertices(:,3),data)
@@ -224,7 +253,8 @@ material metal %shiny %metal;
 shading flat;
 camlight;
 alpha(1)
-set(gcf,'Color',[.2 .2 .2])
+%set(gcf,'Color',[.2 .2 .2])
+set(gcf,'Color',[1,1,1])
  pos = get(asub, 'Position');
  posnew = pos; posnew(2) = posnew(2) + 0.04; set(asub, 'Position', posnew);
  pos = get(asub, 'Position');
@@ -233,8 +263,9 @@ set(gcf,'Color',[.2 .2 .2])
 
 
 acbar = colorbar('EastOutside')
-set(acbar, 'position', [0.40 0.270 0.02 0.20])
+set(acbar, 'position', [0.40 0.270 0.02 0.20])%, 'direction', 'reverse')
 
 
 % going lower rez for now, but giant vector rendering was beaut
-print('-dpng','-r600',['~/' char(name)])
+%print('-dpng','-r600',['~/' char(name)])
+print('-dpng','-r600',['/project/imco/baller/results/images/pbp/' char(name)])

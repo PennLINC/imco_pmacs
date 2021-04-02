@@ -1,6 +1,0 @@
-#!/bin/bash
-BSUB -o /poject/imco/baller/scripts/logfiles/outputlogjob.out #output log
-BSUB -e /project/imco/baller/scripts/logfiles/outputlogjob.error #error log
-BSUB -R "rusage[mem=64G]"
-echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc
-Rscript test_step_by_step.R
