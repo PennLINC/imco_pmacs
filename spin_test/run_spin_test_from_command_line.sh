@@ -1,15 +1,15 @@
 #!/bin/sh
 
 ##################################
-### PBP visualizations Wrapper ###
+###    Spin Test    Wrapper    ###
 ##################################
 
 ###### Author: Erica Baller ######
 ######   Date: 2/26/2021    ######
 
 ## pre: commands_for_matlab 
-   #- contains all the commands we want to pass to matlab to run visualizations automatically
-## post: images in /project/imco/baller/results/coupling_accuracy/spin_test_results
+   #- trinarized maps
+## post: spin results in /project/imco/baller/results/coupling_accuracy/spin_test_results
 ## uses: I was getting tired of having to open matlab and run each of these commands manually. This script takes a bunch of commands and just feeds them to matlab, no muss, no fuss
 ## dependencies: Matlab 2020b, please run "source /project/imco/baller/scripts/load_matlab before starting this
 

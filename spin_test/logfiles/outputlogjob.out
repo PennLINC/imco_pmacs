@@ -131,3 +131,311 @@ PS:
 
 Read file </project/imco/baller/scripts/spin_test/logfiles/outputlogjob.error> for stderr output of this job.
 
+Sender: LSF System <jszostek@galton>
+Subject: Job 8285231: <#!/bin/bash;echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc;Rscript spin_proportion_calculations_and_plots.R> in cluster <PMACS-SCC> Done
+
+Job <#!/bin/bash;echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc;Rscript spin_proportion_calculations_and_plots.R> was submitted from host <bellicose> by user <eballer> in cluster <PMACS-SCC> at Thu Mar 11 09:25:48 2021
+Job was executed on host(s) <galton>, in queue <bbl_normal>, as user <eballer> in cluster <PMACS-SCC> at Thu Mar 11 09:25:50 2021
+</home/eballer> was used as the home directory.
+</project/imco/baller/scripts/spin_test> was used as the working directory.
+Started at Thu Mar 11 09:25:50 2021
+Terminated at Thu Mar 11 09:26:07 2021
+Results reported at Thu Mar 11 09:26:07 2021
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc
+Rscript spin_proportion_calculations_and_plots.R
+
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   16.24 sec.
+    Max Memory :                                 692 MB
+    Average Memory :                             548.25 MB
+    Total Requested Memory :                     131072.00 MB
+    Delta Memory :                               130380.00 MB
+    Max Swap :                                   -
+    Max Processes :                              4
+    Max Threads :                                5
+    Run time :                                   17 sec.
+    Turnaround time :                            19 sec.
+
+The output (if any) follows:
+
+
+
+PS:
+
+Read file </project/imco/baller/scripts/spin_test/logfiles/outputlogjob.error> for stderr output of this job.
+
+Sender: LSF System <jszostek@galton>
+Subject: Job 8285775: <#!/bin/bash;echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc;Rscript spin_proportion_calculations_and_plots.R> in cluster <PMACS-SCC> Exited
+
+Job <#!/bin/bash;echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc;Rscript spin_proportion_calculations_and_plots.R> was submitted from host <bellicose> by user <eballer> in cluster <PMACS-SCC> at Thu Mar 11 14:04:04 2021
+Job was executed on host(s) <galton>, in queue <bbl_normal>, as user <eballer> in cluster <PMACS-SCC> at Thu Mar 11 14:04:05 2021
+</home/eballer> was used as the home directory.
+</project/imco/baller/scripts/spin_test> was used as the working directory.
+Started at Thu Mar 11 14:04:05 2021
+Terminated at Thu Mar 11 14:04:55 2021
+Results reported at Thu Mar 11 14:04:55 2021
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc
+Rscript spin_proportion_calculations_and_plots.R
+
+------------------------------------------------------------
+
+Exited with exit code 1.
+
+Resource usage summary:
+
+    CPU time :                                   49.09 sec.
+    Max Memory :                                 1223 MB
+    Average Memory :                             853.20 MB
+    Total Requested Memory :                     131072.00 MB
+    Delta Memory :                               129849.00 MB
+    Max Swap :                                   -
+    Max Processes :                              4
+    Max Threads :                                5
+    Run time :                                   50 sec.
+    Turnaround time :                            51 sec.
+
+The output (if any) follows:
+
+
+
+PS:
+
+Read file </project/imco/baller/scripts/spin_test/logfiles/outputlogjob.error> for stderr output of this job.
+
+Sender: LSF System <jszostek@galton>
+Subject: Job 8285793: <#!/bin/bash;echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc;Rscript spin_proportion_calculations_and_plots.R> in cluster <PMACS-SCC> Exited
+
+Job <#!/bin/bash;echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc;Rscript spin_proportion_calculations_and_plots.R> was submitted from host <bellicose> by user <eballer> in cluster <PMACS-SCC> at Thu Mar 11 14:18:53 2021
+Job was executed on host(s) <galton>, in queue <bbl_normal>, as user <eballer> in cluster <PMACS-SCC> at Thu Mar 11 14:18:53 2021
+</home/eballer> was used as the home directory.
+</project/imco/baller/scripts/spin_test> was used as the working directory.
+Started at Thu Mar 11 14:18:53 2021
+Terminated at Thu Mar 11 14:18:55 2021
+Results reported at Thu Mar 11 14:18:55 2021
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc
+Rscript spin_proportion_calculations_and_plots.R
+
+------------------------------------------------------------
+
+Exited with exit code 1.
+
+Resource usage summary:
+
+    CPU time :                                   1.56 sec.
+    Max Memory :                                 192 MB
+    Average Memory :                             192.00 MB
+    Total Requested Memory :                     131072.00 MB
+    Delta Memory :                               130880.00 MB
+    Max Swap :                                   -
+    Max Processes :                              4
+    Max Threads :                                5
+    Run time :                                   2 sec.
+    Turnaround time :                            2 sec.
+
+The output (if any) follows:
+
+
+
+PS:
+
+Read file </project/imco/baller/scripts/spin_test/logfiles/outputlogjob.error> for stderr output of this job.
+
+Sender: LSF System <jszostek@galton>
+Subject: Job 8285796: <#!/bin/bash;echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc;Rscript spin_proportion_calculations_and_plots.R> in cluster <PMACS-SCC> Exited
+
+Job <#!/bin/bash;echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc;Rscript spin_proportion_calculations_and_plots.R> was submitted from host <bellicose> by user <eballer> in cluster <PMACS-SCC> at Thu Mar 11 14:20:21 2021
+Job was executed on host(s) <galton>, in queue <bbl_normal>, as user <eballer> in cluster <PMACS-SCC> at Thu Mar 11 14:20:23 2021
+</home/eballer> was used as the home directory.
+</project/imco/baller/scripts/spin_test> was used as the working directory.
+Started at Thu Mar 11 14:20:23 2021
+Terminated at Thu Mar 11 14:20:40 2021
+Results reported at Thu Mar 11 14:20:40 2021
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc
+Rscript spin_proportion_calculations_and_plots.R
+
+------------------------------------------------------------
+
+Exited with exit code 1.
+
+Resource usage summary:
+
+    CPU time :                                   15.83 sec.
+    Max Memory :                                 192 MB
+    Average Memory :                             192.00 MB
+    Total Requested Memory :                     131072.00 MB
+    Delta Memory :                               130880.00 MB
+    Max Swap :                                   -
+    Max Processes :                              4
+    Max Threads :                                5
+    Run time :                                   16 sec.
+    Turnaround time :                            19 sec.
+
+The output (if any) follows:
+
+
+
+PS:
+
+Read file </project/imco/baller/scripts/spin_test/logfiles/outputlogjob.error> for stderr output of this job.
+
+Sender: LSF System <jszostek@galton>
+Subject: Job 8285830: <#!/bin/bash;echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc;Rscript spin_proportion_calculations_and_plots.R> in cluster <PMACS-SCC> Exited
+
+Job <#!/bin/bash;echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc;Rscript spin_proportion_calculations_and_plots.R> was submitted from host <scisub> by user <eballer> in cluster <PMACS-SCC> at Thu Mar 11 14:32:59 2021
+Job was executed on host(s) <galton>, in queue <bbl_normal>, as user <eballer> in cluster <PMACS-SCC> at Thu Mar 11 14:33:00 2021
+</home/eballer> was used as the home directory.
+</project/imco/baller/scripts/spin_test> was used as the working directory.
+Started at Thu Mar 11 14:33:00 2021
+Terminated at Thu Mar 11 14:33:50 2021
+Results reported at Thu Mar 11 14:33:50 2021
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc
+Rscript spin_proportion_calculations_and_plots.R
+
+------------------------------------------------------------
+
+Exited with exit code 1.
+
+Resource usage summary:
+
+    CPU time :                                   48.65 sec.
+    Max Memory :                                 1224 MB
+    Average Memory :                             876.80 MB
+    Total Requested Memory :                     131072.00 MB
+    Delta Memory :                               129848.00 MB
+    Max Swap :                                   -
+    Max Processes :                              4
+    Max Threads :                                5
+    Run time :                                   50 sec.
+    Turnaround time :                            51 sec.
+
+The output (if any) follows:
+
+
+
+PS:
+
+Read file </project/imco/baller/scripts/spin_test/logfiles/outputlogjob.error> for stderr output of this job.
+
+Sender: LSF System <jszostek@galton>
+Subject: Job 8286274: <#!/bin/bash;echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc;Rscript spin_proportion_calculations_and_plots.R> in cluster <PMACS-SCC> Exited
+
+Job <#!/bin/bash;echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc;Rscript spin_proportion_calculations_and_plots.R> was submitted from host <bellicose> by user <eballer> in cluster <PMACS-SCC> at Thu Mar 11 15:25:55 2021
+Job was executed on host(s) <galton>, in queue <bbl_normal>, as user <eballer> in cluster <PMACS-SCC> at Thu Mar 11 15:25:56 2021
+</home/eballer> was used as the home directory.
+</project/imco/baller/scripts/spin_test> was used as the working directory.
+Started at Thu Mar 11 15:25:56 2021
+Terminated at Thu Mar 11 15:26:46 2021
+Results reported at Thu Mar 11 15:26:46 2021
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc
+Rscript spin_proportion_calculations_and_plots.R
+
+------------------------------------------------------------
+
+Exited with exit code 1.
+
+Resource usage summary:
+
+    CPU time :                                   48.82 sec.
+    Max Memory :                                 1386 MB
+    Average Memory :                             928.00 MB
+    Total Requested Memory :                     131072.00 MB
+    Delta Memory :                               129686.00 MB
+    Max Swap :                                   -
+    Max Processes :                              4
+    Max Threads :                                5
+    Run time :                                   50 sec.
+    Turnaround time :                            51 sec.
+
+The output (if any) follows:
+
+
+
+PS:
+
+Read file </project/imco/baller/scripts/spin_test/logfiles/outputlogjob.error> for stderr output of this job.
+
+Sender: LSF System <jszostek@galton>
+Subject: Job 8289383: <#!/bin/bash;echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc;Rscript spin_proportion_calculations_and_plots.R> in cluster <PMACS-SCC> Done
+
+Job <#!/bin/bash;echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc;Rscript spin_proportion_calculations_and_plots.R> was submitted from host <scisub> by user <eballer> in cluster <PMACS-SCC> at Fri Mar 12 16:23:44 2021
+Job was executed on host(s) <galton>, in queue <bbl_normal>, as user <eballer> in cluster <PMACS-SCC> at Fri Mar 12 16:23:44 2021
+</home/eballer> was used as the home directory.
+</project/imco/baller/scripts/spin_test> was used as the working directory.
+Started at Fri Mar 12 16:23:44 2021
+Terminated at Fri Mar 12 16:24:29 2021
+Results reported at Fri Mar 12 16:24:29 2021
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+echo LSB_JOB_REPORT_MAIL=N >> ~/.bashrc
+Rscript spin_proportion_calculations_and_plots.R
+
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   41.30 sec.
+    Max Memory :                                 1135 MB
+    Average Memory :                             827.40 MB
+    Total Requested Memory :                     131072.00 MB
+    Delta Memory :                               129937.00 MB
+    Max Swap :                                   -
+    Max Processes :                              4
+    Max Threads :                                5
+    Run time :                                   45 sec.
+    Turnaround time :                            45 sec.
+
+The output (if any) follows:
+
+
+
+PS:
+
+Read file </project/imco/baller/scripts/spin_test/logfiles/outputlogjob.error> for stderr output of this job.
+

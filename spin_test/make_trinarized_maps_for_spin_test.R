@@ -22,6 +22,8 @@ parcel_type = "Yeo"
 parcel_num = 7 
 input_parcel_array_length = 10242
 
+#if I'd like to make mean maps as well
+mean_maps = 1 
 #will loop through each of these
 analyses <- c("coupling_accuracy") #, "cbf_accuracy", "alff_accuracy") 
 models <- c("gam_age", "gam_sex", "lm_sex", "lm_exec_accuracy", "gam_exec_accuracy") #gam_age", "lm_age", "gam_sex", "lm_sex", "lm_accuracy", "lm_exec_accuracy")
@@ -104,4 +106,22 @@ for (analysis in analyses) {
     }
   }
 }
+###########################
+##### for mean maps #######
+###########################
 
+if (mean_maps == 1){
+  #read in maps
+  
+  lh_map <- read.csv(paste0(homedir, '/baller/results/mean_maps/n831_lh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv'), header = F)
+  rh_map <- read.csv(paste0(homedir, '/baller/results/mean_maps/n831_rh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv'), header = F)
+  #set medial wall to -1
+  lh_medial_wall_nums <- which(lh_numerical_map == 8)
+  rh_medial_wall_nums <- which(rh_numerical_map == 8)
+  lh_map$V1[lh_medial_wall_nums] = -1
+  rh_map$V1[rh_medial_wall_nums] = -1
+ 
+  #save maps
+  write.table(x = lh_map$V1, file = (paste0(homedir, '/baller/results/lh_mean_coupling_med_wall_-1.csv')), quote = F, row.names = F, col.names = F)
+  write.table(x = lh_map$V1, file = (paste0(homedir, '/baller/results/rh_mean_coupling_med_wall_-1.csv')), quote = F, row.names = F, col.names = F)
+}

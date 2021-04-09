@@ -46,3 +46,198 @@ The following objects are masked from ‘package:base’:
 Warning message:
 In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
   there is no package called ‘visreg’
+Loading required package: visreg
+Loading required package: mgcv
+Loading required package: nlme
+This is mgcv 1.8-33. For overview type 'help("mgcv-package")'.
+Loading required package: tableone
+Loading required package: dplyr
+
+Attaching package: ‘dplyr’
+
+The following object is masked from ‘package:nlme’:
+
+    collapse
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Warning message:
+In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘visreg’
+Loading required package: visreg
+Loading required package: mgcv
+Loading required package: nlme
+This is mgcv 1.8-33. For overview type 'help("mgcv-package")'.
+Loading required package: tableone
+Loading required package: dplyr
+
+Attaching package: ‘dplyr’
+
+The following object is masked from ‘package:nlme’:
+
+    collapse
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Warning message:
+In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘visreg’
+Error in file(file, "rt") : cannot open the connection
+Calls: t -> read.table -> file
+In addition: Warning message:
+In file(file, "rt") :
+  cannot open file '/project/imco/baller/results/coupling_accuracy/spin_test_results/lh_spintest_pos_lm_exec_accuracy_output.csv': No such file or directory
+Execution halted
+Loading required package: visreg
+Loading required package: mgcv
+Loading required package: nlme
+This is mgcv 1.8-33. For overview type 'help("mgcv-package")'.
+Loading required package: tableone
+Loading required package: dplyr
+
+Attaching package: ‘dplyr’
+
+The following object is masked from ‘package:nlme’:
+
+    collapse
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Warning message:
+In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘visreg’
+Error in file(file, "rt") : cannot open the connection
+Calls: t -> read.table -> file
+In addition: Warning message:
+In file(file, "rt") :
+  cannot open file '/project/imco/baller/results/coupling_accuracy/spin_test_results/lh_spintest_gam_sex_output.csv': No such file or directory
+Execution halted
+Loading required package: visreg
+Loading required package: mgcv
+Loading required package: nlme
+This is mgcv 1.8-33. For overview type 'help("mgcv-package")'.
+Loading required package: tableone
+Loading required package: dplyr
+
+Attaching package: ‘dplyr’
+
+The following object is masked from ‘package:nlme’:
+
+    collapse
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Warning message:
+In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘visreg’
+Error in file(file, "rt") : cannot open the connection
+Calls: t -> read.table -> file
+In addition: Warning message:
+In file(file, "rt") :
+  cannot open file '/project/imco/baller/results/coupling_accuracy/spin_test_results/lh_spin_test_pos_gam_sex_output.csv': No such file or directory
+Execution halted
+Loading required package: visreg
+Loading required package: mgcv
+Loading required package: nlme
+This is mgcv 1.8-33. For overview type 'help("mgcv-package")'.
+Loading required package: tableone
+Loading required package: dplyr
+
+Attaching package: ‘dplyr’
+
+The following object is masked from ‘package:nlme’:
+
+    collapse
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Warning message:
+In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘visreg’
+Error in file(file, "rt") : cannot open the connection
+Calls: t -> read.table -> file
+In addition: Warning message:
+In file(file, "rt") :
+  cannot open file '/project/imco/baller/results/coupling_accuracy/spin_test_results/lh_spin_test_pos_lm_exec_accuracy_output.csv': No such file or directory
+Execution halted
+Loading required package: visreg
+Loading required package: mgcv
+Loading required package: nlme
+This is mgcv 1.8-33. For overview type 'help("mgcv-package")'.
+Loading required package: tableone
+Loading required package: dplyr
+
+Attaching package: ‘dplyr’
+
+The following object is masked from ‘package:nlme’:
+
+    collapse
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Warning message:
+In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘visreg’
+Error in file(file, "rt") : cannot open the connection
+Calls: t -> read.table -> file
+In addition: Warning message:
+In file(file, "rt") :
+  cannot open file '/project/imco/baller/results/coupling_accuracy/spin_test_results/lh_spin_test_pos_lm_exec_accuracy_output.csv': No such file or directory
+Execution halted
+Loading required package: visreg
+Loading required package: mgcv
+Loading required package: nlme
+This is mgcv 1.8-33. For overview type 'help("mgcv-package")'.
+Loading required package: tableone
+Loading required package: dplyr
+
+Attaching package: ‘dplyr’
+
+The following object is masked from ‘package:nlme’:
+
+    collapse
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+

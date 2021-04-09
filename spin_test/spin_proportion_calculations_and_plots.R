@@ -35,8 +35,11 @@ source(paste0(homedir, "/baller/scripts/imco_functions.R"))
 hemis <- c("lh", "rh")
 permNum <- 1000
 yeo_num <- 7
-models = c("gam_sex", "pos_gam_sex", "neg_gam_sex", "lm_exec_accuracy", "pos_lm_exec_accuracy", "neg_lm_exec_accuracy", "gam_exec_accuracy", "pos_gam_exec_accuracy", "neg_gam_exec_accuracy")
+models = c("gam_age", "pos_gam_age", "neg_gam_age", "gam_sex", "pos_gam_sex", "neg_gam_sex", "lm_exec_accuracy", "pos_lm_exec_accuracy", "neg_lm_exec_accuracy", "gam_exec_accuracy", "pos_gam_exec_accuracy", "neg_gam_exec_accuracy")
 #models = c("gam_exec_accuracy", "pos_gam_exec_accuracy", "neg_gam_exec_accuracy")
+
+#set flag to 1 if you'd like to calculate a spin for a mean map. It uses the means rather than proportions so it is a little wee bit different
+mean_coupling = 1
 ################
 ### Read in matrices 
 for (model in models) {
@@ -114,3 +117,66 @@ for (model in models) {
   write.table(rh_hemi_spin_proportions, file = paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/rh_spin_test_", model, "_proportions.csv"), sep = ",", col.names = F, row.names = F)
 #then plot
 }
+
+####################################
+### save mean coupling spin info ###
+####################################
+if (mean_coupling == 1) {
+  lh_t_results <- read.table(paste0(homedir, "/baller/results/lh_mean_coupling_med_wall_-1.csv"))
+  rh_t_results <- read.table(paste0(homedir, "/baller/results/rh_mean_coupling_med_wall_-1.csv"))
+
+  #spins
+  lh_spin <- t(read.table(paste0(homedir, "/baller/results/coupling_accuracy/spin_test_results/lh_spin_test_mean_coupling_results_med_wall_-1_output.csv"), sep = ","))
+  rh_spin <- t(read.table(paste0(homedir, "/baller/results/coupling_accuracy/spin_test_results/rh_spin_test_mean_coupling_results_med_wall_-1_output.csv"), sep = ","))
+ 
+  #bring together, with original values as first column
+  lh_act_results_and_spin <- cbind(lh_t_results, lh_spin)
+  rh_act_results_and_spin <- cbind(rh_t_results, rh_spin)
+  
+  #grab list of yeo 7 networks in fsaverage5 space
+  yeo_networks <- get_parcel_mapping_yeo(yeo_num)
+  
+  #separate into right and left
+  lh_yeo_network <- yeo_networks[[1]]
+  rh_yeo_network <- yeo_networks[[2]]
+  
+  #proportions
+  #go through each hemisphere, go through each perm, and go through each network
+  
+  lh_hemi_spin_means <- data.frame(matrix(nrow = yeo_num, ncol = (permNum + 1)))
+  rh_hemi_spin_means <- data.frame(matrix(nrow = yeo_num, ncol = (permNum + 1)))
+  
+  for (hemi in hemis){
+    
+    for (perm in 1:(permNum + 1)){
+      
+      for (network in 1:yeo_num){
+        
+        #to evaluate
+        
+        #number of vertices within network that are not medial wall
+        
+        #first, grab all values in the network
+        all_ts_in_network_to_parse <- paste0(hemi, "_act_results_and_spin[which(", hemi,"_yeo_network == ", network, "),", perm, "]")
+        all_ts <- eval(parse(text = as.character(all_ts_in_network_to_parse)))    
+        
+        #remove -1s, i.e. medial wall
+        all_ts_remove_medial_wall <- all_ts[all_ts != -1]
+        
+        #take the mean of the remaining
+        mean_spin <- mean(all_ts_remove_medial_wall)
+        
+        #store in matrix
+        storing_to_parse <- paste0(hemi, "_hemi_spin_means[", network, ",", perm, "] = ", mean_spin)
+        
+        eval(parse(text = as.character(storing_to_parse)))
+      }
+    }
+  }
+  
+  write.table(lh_hemi_spin_means, file = paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/lh_spin_test_mean_coupling.csv"), sep = ",", col.names = F, row.names = F)
+  write.table(rh_hemi_spin_means, file = paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/rh_spin_test_mean_coupling.csv"), sep = ",", col.names = F, row.names = F)
+  #then plot
+
+} 
+

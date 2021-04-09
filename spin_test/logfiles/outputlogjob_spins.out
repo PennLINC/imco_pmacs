@@ -1,0 +1,160 @@
+Sender: LSF System <jszostek@galton>
+Subject: Job 8285722: <#!/bin/sh; ##################################;### PBP visualizations Wrapper ###;##################################; ###### Author: Erica Baller ######;######   Date: 2/26/2021    ######; ## pre: commands_for_matlab ;   #- contains all the commands we want to pass to matlab to run visualizations automatically;## post: images in /project/imco/baller/results/coupling_accuracy/spin_test_results;## uses: I was getting tired of having to open matlab and run each of these commands manually. This script takes a bunch of commands and just feeds them to matlab, no muss, no fuss;## dependencies: Matlab 2020b, please run "source /project/imco/baller/scripts/load_matlab before starting this;  #set directories;homedir='/project/imco';#set homedir = '/Users/eballer/BBL/imco/pmacs/PMACS_remote/';wking_dir='/baller/scripts/spin_test';command_file="$homedir/$wking_dir/commands_for_matlab";echo $command_file; #initialize matlab;  #######;### loop ###;while IFS= read -r line; do;	echo "$line";	matlab -nosplash -nodesktop -nodisplay -r "$line; exit"; done < $command_file> in cluster <PMACS-SCC> Exited
+
+Job <#!/bin/sh; ##################################;### PBP visualizations Wrapper ###;##################################; ###### Author: Erica Baller ######;######   Date: 2/26/2021    ######; ## pre: commands_for_matlab ;   #- contains all the commands we want to pass to matlab to run visualizations automatically;## post: images in /project/imco/baller/results/coupling_accuracy/spin_test_results;## uses: I was getting tired of having to open matlab and run each of these commands manually. This script takes a bunch of commands and just feeds them to matlab, no muss, no fuss;## dependencies: Matlab 2020b, please run "source /project/imco/baller/scripts/load_matlab before starting this;  #set directories;homedir='/project/imco';#set homedir = '/Users/eballer/BBL/imco/pmacs/PMACS_remote/';wking_dir='/baller/scripts/spin_test';command_file="$homedir/$wking_dir/commands_for_matlab";echo $command_file; #initialize matlab;  #######;### loop ###;while IFS= read -r line; do;	echo "$line";	matlab -nosplash -nodesktop -nodisplay -r "$line; exit"; done < $command_file> was submitted from host <bellicose> by user <eballer> in cluster <PMACS-SCC> at Thu Mar 11 13:14:24 2021
+Job was executed on host(s) <galton>, in queue <bbl_normal>, as user <eballer> in cluster <PMACS-SCC> at Thu Mar 11 13:14:24 2021
+</home/eballer> was used as the home directory.
+</project/imco/baller/scripts/spin_test> was used as the working directory.
+Started at Thu Mar 11 13:14:24 2021
+Terminated at Thu Mar 11 13:14:25 2021
+Results reported at Thu Mar 11 13:14:25 2021
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/sh
+
+##################################
+### PBP visualizations Wrapper ###
+##################################
+
+###### Author: Erica Baller ######
+######   Date: 2/26/2021    ######
+
+## pre: commands_for_matlab 
+   #- contains all the commands we want to pass to matlab to run visualizations automatically
+## post: images in /project/imco/baller/results/coupling_accuracy/spin_test_results
+## uses: I was getting tired of having to open matlab and run each of these commands manually. This script takes a bunch of commands and just feeds them to matlab, no muss, no fuss
+## dependencies: Matlab 2020b, please run "source /project/imco/baller/scripts/load_matlab before starting this
+
+
+#set directories
+homedir='/project/imco'
+#set homedir = '/Users/eballer/BBL/imco/pmacs/PMACS_remote/'
+wking_dir='/baller/scripts/spin_test'
+command_file="$homedir/$wking_dir/commands_for_matlab"
+echo $command_file
+
+#initialize matlab
+
+
+#######
+### loop ###
+while IFS= read -r line; do
+	echo "$line"
+	matlab -nosplash -nodesktop -nodisplay -r "$line; exit"
+
+done < $command_file
+
+
+
+------------------------------------------------------------
+
+Exited with exit code 127.
+
+Resource usage summary:
+
+    CPU time :                                   0.08 sec.
+    Max Memory :                                 -
+    Average Memory :                             -
+    Total Requested Memory :                     131072.00 MB
+    Delta Memory :                               -
+    Max Swap :                                   -
+    Max Processes :                              -
+    Max Threads :                                -
+    Run time :                                   1 sec.
+    Turnaround time :                            1 sec.
+
+The output (if any) follows:
+
+/project/imco//baller/scripts/spin_test/commands_for_matlab
+SpinPermuFS('/project/imco/baller/results/coupling_accuracy/lh_pos_gam_sex_t_fdr05_Yeo7_1_0_-1.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_gam_sex_t_fdr05_Yeo7_1_0_-1.csv',1000,'/project/imco/baller/results/coupling_accuracy/spin_test_results/pos_gam_sex_spin_results_yeo_1_0_-1_output','pos_gam_sex')
+SpinPermuFS('/project/imco/baller/results/coupling_accuracy/lh_neg_gam_sex_t_fdr05_Yeo7_1_0_-1.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_gam_sex_t_fdr05_Yeo7_1_0_-1.csv',1000,'/project/imco/baller/results/coupling_accuracy/spin_test_results/neg_gam_sex_spin_results_yeo_1_0_-1_output','neg_gam_sex')
+SpinPermuFS('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_sex_t_fdr05_Yeo7_1_0_-1.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05_Yeo7_1_0_-1.csv',1000,'/project/imco/baller/results/coupling_accuracy/spin_test_results/pos_lm_exec_accuracy_spin_results_yeo_1_0_-1_output','pos_lm_exec_accuracy')
+SpinPermuFS('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_Yeo7_1_0_-1.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05_Yeo7_1_0_-1.csv',1000,'/project/imco/baller/results/coupling_accuracy/spin_test_results/neg_lm_exec_accuracy_spin_results_yeo_1_0_-1_output','neg_lm_exec_accuracy')
+
+
+PS:
+
+Read file </project/imco/baller/scripts/spin_test/logfiles/outputlogjob_spins.error> for stderr output of this job.
+
+Sender: LSF System <jszostek@galton>
+Subject: Job 8286344: <#!/bin/sh; ##################################;### PBP visualizations Wrapper ###;##################################; ###### Author: Erica Baller ######;######   Date: 2/26/2021    ######; ## pre: commands_for_matlab ;   #- contains all the commands we want to pass to matlab to run visualizations automatically;## post: images in /project/imco/baller/results/coupling_accuracy/spin_test_results;## uses: I was getting tired of having to open matlab and run each of these commands manually. This script takes a bunch of commands and just feeds them to matlab, no muss, no fuss;## dependencies: Matlab 2020b, please run "source /project/imco/baller/scripts/load_matlab before starting this;  #set directories;homedir='/project/imco';#set homedir = '/Users/eballer/BBL/imco/pmacs/PMACS_remote/';wking_dir='/baller/scripts/spin_test';command_file="$homedir/$wking_dir/commands_for_matlab";echo $command_file; #initialize matlab;  #######;### loop ###;while IFS= read -r line; do;	echo "$line";	matlab -nosplash -nodesktop -nodisplay -r "$line; exit"; done < $command_file> in cluster <PMACS-SCC> Exited
+
+Job <#!/bin/sh; ##################################;### PBP visualizations Wrapper ###;##################################; ###### Author: Erica Baller ######;######   Date: 2/26/2021    ######; ## pre: commands_for_matlab ;   #- contains all the commands we want to pass to matlab to run visualizations automatically;## post: images in /project/imco/baller/results/coupling_accuracy/spin_test_results;## uses: I was getting tired of having to open matlab and run each of these commands manually. This script takes a bunch of commands and just feeds them to matlab, no muss, no fuss;## dependencies: Matlab 2020b, please run "source /project/imco/baller/scripts/load_matlab before starting this;  #set directories;homedir='/project/imco';#set homedir = '/Users/eballer/BBL/imco/pmacs/PMACS_remote/';wking_dir='/baller/scripts/spin_test';command_file="$homedir/$wking_dir/commands_for_matlab";echo $command_file; #initialize matlab;  #######;### loop ###;while IFS= read -r line; do;	echo "$line";	matlab -nosplash -nodesktop -nodisplay -r "$line; exit"; done < $command_file> was submitted from host <bellicose> by user <eballer> in cluster <PMACS-SCC> at Thu Mar 11 16:05:31 2021
+Job was executed on host(s) <galton>, in queue <bbl_normal>, as user <eballer> in cluster <PMACS-SCC> at Thu Mar 11 16:05:31 2021
+</home/eballer> was used as the home directory.
+</project/imco/baller/scripts/spin_test> was used as the working directory.
+Started at Thu Mar 11 16:05:31 2021
+Terminated at Thu Mar 11 16:05:31 2021
+Results reported at Thu Mar 11 16:05:31 2021
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/sh
+
+##################################
+### PBP visualizations Wrapper ###
+##################################
+
+###### Author: Erica Baller ######
+######   Date: 2/26/2021    ######
+
+## pre: commands_for_matlab 
+   #- contains all the commands we want to pass to matlab to run visualizations automatically
+## post: images in /project/imco/baller/results/coupling_accuracy/spin_test_results
+## uses: I was getting tired of having to open matlab and run each of these commands manually. This script takes a bunch of commands and just feeds them to matlab, no muss, no fuss
+## dependencies: Matlab 2020b, please run "source /project/imco/baller/scripts/load_matlab before starting this
+
+
+#set directories
+homedir='/project/imco'
+#set homedir = '/Users/eballer/BBL/imco/pmacs/PMACS_remote/'
+wking_dir='/baller/scripts/spin_test'
+command_file="$homedir/$wking_dir/commands_for_matlab"
+echo $command_file
+
+#initialize matlab
+
+
+#######
+### loop ###
+while IFS= read -r line; do
+	echo "$line"
+	matlab -nosplash -nodesktop -nodisplay -r "$line; exit"
+
+done < $command_file
+
+
+
+------------------------------------------------------------
+
+Exited with exit code 127.
+
+Resource usage summary:
+
+    CPU time :                                   0.08 sec.
+    Max Memory :                                 -
+    Average Memory :                             -
+    Total Requested Memory :                     131072.00 MB
+    Delta Memory :                               -
+    Max Swap :                                   -
+    Max Processes :                              -
+    Max Threads :                                -
+    Run time :                                   0 sec.
+    Turnaround time :                            0 sec.
+
+The output (if any) follows:
+
+/project/imco//baller/scripts/spin_test/commands_for_matlab
+SpinPermuFS('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_t_fdr05_Yeo7_1_0_-1.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05_Yeo7_1_0_-1.csv',1000,'/project/imco/baller/results/coupling_accuracy/spin_test_results/pos_lm_exec_accuracy_spin_results_yeo_1_0_-1_output','pos_lm_exec_accuracy')
+SpinPermuFS('/project/imco/baller/results/coupling_accuracy/lh_neg_lm_exec_accuracy_t_fdr05_Yeo7_1_0_-1.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_lm_exec_accuracy_t_fdr05_Yeo7_1_0_-1.csv',1000,'/project/imco/baller/results/coupling_accuracy/spin_test_results/neg_lm_exec_accuracy_spin_results_yeo_1_0_-1_output','neg_lm_exec_accuracy')
+
+
+PS:
+
+Read file </project/imco/baller/scripts/spin_test/logfiles/outputlogjob_spins.error> for stderr output of this job.
+

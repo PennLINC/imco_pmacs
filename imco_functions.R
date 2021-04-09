@@ -152,6 +152,80 @@ violin_plot_pos_and_neg_lines <- function (homedir, models, network_names, num_s
       geom_segment(aes(x = 6.5, y = actual_results_neg[7], xend = 7.5, yend = actual_results_neg[7]), color="blue")
     #  ggtitle(paste0("Spin Test Perm: ", model))
     ggsave(plot=plot_violin, filename = paste0(homedir, "/baller/results/images/spin_", model, "_pos_and_neg_lines_t_fdr05.png"), width = 4.81, height = 4.81)
+    ggsave(plot=plot_violin, filename = paste0(homedir, "/baller/results/images/spin_", model, "_pos_and_neg_lines_t_fdr05.pdf"), width = 4.81, height = 4.81)
+   }
+}
+
+violin_plot_pos_and_neg_lines_with_color_gradation <- function (homedir, models, network_names, num_spins){
+  for (model in models) {
+    
+    print(model)
+    #for storing statistics at the end
+    lh_spin_df <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/lh_spin_test_", model, "_proportions.csv"), sep = ",")
+    )
+    lh_spin_pos <-data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/lh_spin_test_pos_", model, "_proportions.csv"), sep = ",")
+    )
+    lh_spin_neg <-data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/lh_spin_test_neg_", model, "_proportions.csv"), sep = ",")
+    )
+    rh_spin_df <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/rh_spin_test_", model, "_proportions.csv"), sep = ",")
+    )
+    rh_spin_pos <-data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/rh_spin_test_pos_", model, "_proportions.csv"), sep = ",")
+    )
+    rh_spin_neg <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/rh_spin_test_neg_", model, "_proportions.csv"), sep = ",")
+    )
+    
+    #take means of left and right
+    actual_results <- (lh_spin_df[,1] + rh_spin_df[,1])/2
+    actual_results_pos <- ((lh_spin_pos[,1] + rh_spin_pos[,1])/2)
+    actual_results_neg <- ((lh_spin_neg[,1] + rh_spin_neg[,1])/2)
+    
+    # print(actual_results)
+    #  print(actual_results_pos)
+    #  print(actual_results_neg)
+    #dataframes for all spins, as well as positive and negative
+    spin_without_target_col <- cbind(lh_spin_df[,2:1001],rh_spin_df[,2:1001])
+    # print(min(spin_without_target_col))
+    #  print(spin_without_target_col[4,5:10])
+    
+    melted_df <- melt_df_for_violin_plot_yeo7(spin_without_target_col, network_names, num_spins)
+    
+    #  print(melted_df[1:4,2:3])
+    #with mean lines, different fonts
+    #save images
+  plot_violin <- ggplot(melted_df, aes(x = factor(network_name, level = network_names), y = spin, fill = network_name)) +  
+      scale_fill_manual(values=yeo_colors) + 
+      geom_violin(trim = TRUE) + 
+      xlab("Yeo 7 Network") + ylab(paste0("Proportion")) +
+      ylim(0,NA) + 
+      theme_classic() + 
+      theme(legend.position = "none",
+            legend.title = element_blank(),
+            axis.text.x = element_text(size = 10, colour = "black"),
+            axis.text.y = element_text(size = 10, colour = "black"),
+            axis.title.y = element_text(size = 10),
+            axis.title.x = element_blank(),
+            plot.title = element_text(size = 10)) +
+      stat_summary(fun.y = mean, geom = "errorbar", 
+                   aes(ymax = ..y.., ymin = ..y.., group = factor(network_name)),
+                   width = 0.5, linetype = "dashed", position = position_dodge(0.9)) + 
+      geom_segment(aes(x = 0.6, y = actual_results_pos[1], xend = 1.4, yend = actual_results_pos[1]), color="red") + 
+      geom_segment(aes(x = 1.6, y = actual_results_pos[2], xend = 2.4, yend = actual_results_pos[2]), color="red") +
+      geom_segment(aes(x = 2.6, y = actual_results_pos[3], xend = 3.4, yend = actual_results_pos[3]), color="red") +
+      geom_segment(aes(x = 3.6, y = actual_results_pos[4], xend = 4.4, yend = actual_results_pos[4]), color="red") +
+      geom_segment(aes(x = 4.6, y = actual_results_pos[5], xend = 5.4, yend = actual_results_pos[5]), color="red") +
+      geom_segment(aes(x = 5.6, y = actual_results_pos[6], xend = 6.4, yend = actual_results_pos[6]), color="red") +
+      geom_segment(aes(x = 6.6, y = actual_results_pos[7], xend = 7.4, yend = actual_results_pos[7]), color="red") +
+      geom_segment(aes(x = 0.6, y = actual_results_neg[1], xend = 1.4, yend = actual_results_neg[1]), color="blue") + 
+      geom_segment(aes(x = 1.6, y = actual_results_neg[2], xend = 2.4, yend = actual_results_neg[2]), color="blue") +
+      geom_segment(aes(x = 2.6, y = actual_results_neg[3], xend = 3.4, yend = actual_results_neg[3]), color="blue") +
+      geom_segment(aes(x = 3.6, y = actual_results_neg[4], xend = 4.4, yend = actual_results_neg[4]), color="blue") +
+      geom_segment(aes(x = 4.6, y = actual_results_neg[5], xend = 5.4, yend = actual_results_neg[5]), color="blue") +
+      geom_segment(aes(x = 5.6, y = actual_results_neg[6], xend = 6.4, yend = actual_results_neg[6]), color="blue") +
+      geom_segment(aes(x = 6.6, y = actual_results_neg[7], xend = 7.4, yend = actual_results_neg[7]), color="blue")
+    #  ggtitle(paste0("Spin Test Perm: ", model))
+    ggsave(plot=plot_violin, filename = paste0(homedir, "/baller/results/images/spin_", model, "_pos_and_neg_lines_t_fdr05_test_gradation.png"), width = 4.81, height = 4.81)
+    ggsave(plot=plot_violin, filename = paste0(homedir, "/baller/results/images/spin_", model, "_pos_and_neg_lines_t_fdr05_test_gradation.pdf"), width = 4.81, height = 4.81)
+    
   }
 }
 
@@ -177,7 +251,53 @@ violin_plot_means <- function (homedir, models, network_names, num_spins){
       scale_fill_manual(values=yeo_colors) + 
       geom_violin(trim = TRUE) + 
       xlab("Yeo 7 Network") + ylab(paste0("Proportion")) +
-      geom_violin(trim=FALSE) + 
+      ylim(0,NA) + 
+      theme_classic() + 
+      theme(legend.position = "none",
+            legend.title = element_blank(),
+            axis.text.x = element_text(size = 10, colour = "black"),
+            axis.text.y = element_text(size = 10, colour = "black"),
+            axis.title.y = element_text(size = 10),
+            axis.title.x = element_blank(),
+            plot.title = element_text(size = 10)) +
+     # stat_summary(fun.y = mean, geom = "errorbar", 
+      #             aes(ymax = ..y.., ymin = ..y.., group = factor(network_name)),
+       #            width = 0.5, linetype = "dashed", position = position_dodge(0.9)) + 
+      #geom_boxplot(width = 0.15, position = position_dodge(0.9)) + 
+        geom_segment(aes(x = 0.6, y = actual_results[1], xend = 1.4, yend = actual_results[1])) + 
+        geom_segment(aes(x = 1.6, y = actual_results[2], xend = 2.4, yend = actual_results[2])) +
+        geom_segment(aes(x = 2.6, y = actual_results[3], xend = 3.4, yend = actual_results[3])) +
+        geom_segment(aes(x = 3.6, y = actual_results[4], xend = 4.4, yend = actual_results[4])) +
+        geom_segment(aes(x = 4.6, y = actual_results[5], xend = 5.4, yend = actual_results[5])) +
+        geom_segment(aes(x = 5.6, y = actual_results[6], xend = 6.4, yend = actual_results[6])) +
+        geom_segment(aes(x = 6.6, y = actual_results[7], xend = 7.4, yend = actual_results[7]))
+  #    ggtitle(paste0("Spin Test Perm: ", model))
+    ggsave(plot=plot_violin, filename = paste0(homedir, "/baller/results/images/spin_", model, "_t_fdr05.png"), width = 4.81, height = 4.81)
+    ggsave(plot=plot_violin, filename = paste0(homedir, "/baller/results/images/spin_", model, "_t_fdr05.pdf"), width = 4.81, height = 4.81)
+    
+  }
+}
+
+violin_plot_means_mean_coupling <- function (homedir, network_names, num_spins){
+ 
+    #for storing statistics at the end
+    lh_spin_df <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/lh_spin_test_mean_coupling.csv"), sep = ","))
+    rh_spin_df <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/rh_spin_test_mean_coupling.csv"), sep = ","))
+    
+    
+    #take means of left and right
+    actual_results <- (lh_spin_df[,1] + rh_spin_df[,1])/2
+    
+    #dataframes for all spins
+    spin_without_target_col <- cbind(lh_spin_df[,2:1001],rh_spin_df[,2:1001])
+    melted_df <- melt_df_for_violin_plot_yeo7(spin_without_target_col, network_names, num_spins)
+    
+    #with mean lines, different fonts
+    #save images
+    plot_violin <- ggplot(melted_df, aes(x = factor(network_name, level = network_names), y = spin, fill = network_name)) +  
+      scale_fill_manual(values=yeo_colors) + 
+      geom_violin(trim = TRUE) + 
+      xlab("Yeo 7 Network") + ylab(paste0("Mean")) +
       ylim(0,NA) + 
       theme_classic() + 
       theme(legend.position = "none",
@@ -191,17 +311,19 @@ violin_plot_means <- function (homedir, models, network_names, num_spins){
                    aes(ymax = ..y.., ymin = ..y.., group = factor(network_name)),
                    width = 0.5, linetype = "dashed", position = position_dodge(0.9)) + 
       #geom_boxplot(width = 0.15, position = position_dodge(0.9)) + 
-        geom_segment(aes(x = 0.5, y = actual_results[1], xend = 1.5, yend = actual_results[1])) + 
-        geom_segment(aes(x = 1.5, y = actual_results[2], xend = 2.5, yend = actual_results[2])) +
-        geom_segment(aes(x = 2.5, y = actual_results[3], xend = 3.5, yend = actual_results[3])) +
-        geom_segment(aes(x = 3.5, y = actual_results[4], xend = 4.5, yend = actual_results[4])) +
-        geom_segment(aes(x = 4.5, y = actual_results[5], xend = 5.5, yend = actual_results[5])) +
-        geom_segment(aes(x = 5.5, y = actual_results[6], xend = 6.5, yend = actual_results[6])) +
-        geom_segment(aes(x = 6.5, y = actual_results[7], xend = 7.5, yend = actual_results[7])) +
-  #    ggtitle(paste0("Spin Test Perm: ", model))
-    ggsave(plot=plot_violin, filename = paste0(homedir, "/baller/results/images/spin_", model, "_t_fdr05.png"), width = 4.81, height = 4.81)
-  }
+      geom_segment(aes(x = 0.6, y = actual_results[1], xend = 1.4, yend = actual_results[1])) + 
+      geom_segment(aes(x = 1.6, y = actual_results[2], xend = 2.4, yend = actual_results[2])) +
+      geom_segment(aes(x = 2.6, y = actual_results[3], xend = 3.4, yend = actual_results[3])) +
+      geom_segment(aes(x = 3.6, y = actual_results[4], xend = 4.4, yend = actual_results[4])) +
+      geom_segment(aes(x = 4.6, y = actual_results[5], xend = 5.4, yend = actual_results[5])) +
+      geom_segment(aes(x = 5.6, y = actual_results[6], xend = 6.4, yend = actual_results[6])) +
+      geom_segment(aes(x = 6.6, y = actual_results[7], xend = 7.4, yend = actual_results[7]))
+      #    ggtitle(paste0("Spin Test Perm: ", model))
+      ggsave(plot=plot_violin, filename = paste0(homedir, "/baller/results/images/spin_mean_coupling_unc.png"), width = 4.81, height = 4.81)
+      ggsave(plot=plot_violin, filename = paste0(homedir, "/baller/results/images/spin_mean_coupling_unc.pdf"), width = 4.81, height = 4.81)
+      
 }
+
 
 get_yeo7_colors <- function() {
   yeo_colors <- c(
@@ -213,4 +335,36 @@ get_yeo7_colors <- function() {
     `FP` = "#e69422",
     `DM` = "#cd3e56")
   return(yeo_colors)
+}
+
+get_yeo7_colors_faded <- function() {
+  yeo_colors <- c(
+    `VIS` = "#b870c2",
+    `MOT` = "#709dc2",
+    `DA` = "#70c27a",
+    `VA` = "#ab70c2",
+    `LIM` = "#eff8de",
+    `FP` = "#e6be85",
+    `DM` = "#c2707e")
+  return(yeo_colors)
+}
+
+get_yeo_illustrator_colors <- function(){
+  yeo_colors <- c(
+    `VIS` = "#781286",
+    `MOT` = "#709dc2",
+    `DA` = "#70c27a",
+    `VA` = "#ab70c2",
+    `LIM` = "#eff8de",
+    `FP` = "#e6be85",
+    `DM` = "#c2707e")
+  return(yeo_colors)
+   781286
+}
+get_network_colors_with_stats_yeo7 <- function(stats){
+  #takes the statistics for a yeo7 matrix and returns a color palatte for plotting
+  #white for non-significant
+  #dark color for significant
+  #faded color for trend
+  
 }
