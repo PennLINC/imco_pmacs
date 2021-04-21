@@ -372,7 +372,7 @@ Rscript coupling_accuracy_fx_T.R
 ```
 
  *script: /project/imco/baller/scripts/coupling/coupling_accuracy_fx_T.R* 
-```{r coupling_analysis, eval=FALSE}
+```{r coupling_accuracy_fx_T, eval=FALSE}
 ##################################################
 ### Accuracy Scripts 02/09/2021 ###
 ##################################################
@@ -923,6 +923,15 @@ names(df) <- c("Means", "Age")
 fit <- lm(Means~Age, data=df)
 visreg(fit, "Age")
 dev.off()
+
+  ###################################
+### Histogram of Executive Accuracy ###
+#######################################
+subjDemos <- subjDemos(which(!is.na(subjDemos$F1_Exec_Comp_Res_Accuracy))) #remove NA's
+pdf(paste0(homedir, "/baller/results/supplementary_figures/Executive_Accuracy_histo.pdf"))
+  hist(subjDemos$F1_Exec_Comp_Res_Accuracy, xlab = "Z-score", col = "lightblue", main = "Executive Accuracy Distribution")
+dev.off()
+
 
 ```
 
