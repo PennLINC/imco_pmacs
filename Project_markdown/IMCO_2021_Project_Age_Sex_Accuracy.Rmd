@@ -2256,6 +2256,12 @@ print(correlations)
 
 print(correlations_nonzero)
 
+cbf_cmr_cor <- cor.test(meancbf_map$V1, cmrglu_map$V1, method = "pearson")
+cbf_gi_cor <- cor.test(meancbf_map$V1, gi_map$V1, method = "pearson")
+print(paste0("correlation to verify CBF good measure of metabolism: cbf x cmr -> R =  ", cbf_cmr_cor$estimate, "; p = ", cbf_cmr_cor$p.value))
+print(paste0("correlation to verify CBF good measure of metabolism: cbf x gi -> R =  ", cbf_gi_cor$estimate, "; p = ", cbf_gi_cor$p.value))
+
+
 ####### write output
 write.csv(correlations, file = paste0(homedir, "/baller/results/mean_coupling_x_mask_correlations/mean_coupling_map_x_mask_correlations.csv"), quote = F)
 
