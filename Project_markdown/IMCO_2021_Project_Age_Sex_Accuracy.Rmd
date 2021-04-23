@@ -372,7 +372,7 @@ Rscript coupling_accuracy_fx_T.R
 ```
 
  *script: /project/imco/baller/scripts/coupling/coupling_accuracy_fx_T.R* 
-```{r coupling_accuracy_fx_T, eval=FALSE}
+```{r coupling_analysis, eval=FALSE}
 ##################################################
 ### Accuracy Scripts 02/09/2021 ###
 ##################################################
@@ -924,15 +924,6 @@ fit <- lm(Means~Age, data=df)
 visreg(fit, "Age")
 dev.off()
 
-  ###################################
-### Histogram of Executive Accuracy ###
-#######################################
-subjDemos <- subjDemos(which(!is.na(subjDemos$F1_Exec_Comp_Res_Accuracy))) #remove NA's
-pdf(paste0(homedir, "/baller/results/supplementary_figures/Executive_Accuracy_histo.pdf"))
-  hist(subjDemos$F1_Exec_Comp_Res_Accuracy, xlab = "Z-score", col = "lightblue", main = "Executive Accuracy Distribution")
-dev.off()
-
-
 ```
 
 Plots for Age x Coupling including GAM
@@ -1360,7 +1351,6 @@ done < $command_file
 The command files contain paths to the PBP* visualization scripts. At any time, you can run one or all of them by changing the inputs in /project/imco/baller/scripts/PBP_graphics/commands_for_matlab. Currently, these are the I recommend putting in that file. Of note, if you ever want to run a command independently, just go into matlab, copy the command, and run it within matlab. This just takes forever. Here are the final commands for visualization that I ran. 
 
 ```{bash commands_for_matlab_pbp, eval=FALSE}
-PBP_vertWiseEffect_Erica_mean_coupl_plasma_unc('/project/imco/baller/results/mean_maps/n831_lh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv','/project/imco/baller/results/mean_maps/n831_rh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv','coupling_mean_plasma_uncor_just_pos')
 PBP_vertWiseEffect_Erica_Ts_green_purp_imco_results_outpath('/project/imco/baller/results/mean_maps/n831_lh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv','/project/imco/baller/results/mean_maps/n831_rh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv','coupling_mean_fdr05_grpur')
 PBP_vertWiseEffect_Erica_mean_coupling_plasma_results_outpath('/project/imco/baller/results/mean_maps/n831_lh.coupling_coef_alff_cbf.fwhm15.fsaverage5_THRESH_3.09.csv','/project/imco/baller/results/mean_maps/n831_rh.coupling_coef_alff_cbf.fwhm15.fsaverage5_THRESH_3.09.csv','coupling_mean_thresh_3_09_plasma')
 PBP_vertWiseEffect_Erica_Ts_blue_alff_results_outpath('/project/imco/baller/results/mean_maps/lh_alff_mean.csv','/project/imco/baller/results/mean_maps/rh_alff_mean.csv','alff_mean_fdr05_blue')
@@ -1678,7 +1668,7 @@ First, I made trinarized yeo masks, 1, 0, -1. In order to run permutation analys
 script: /project/imco/baller/scripts/spin_test/make_trinarized_maps_for_spin_test.R
 ```{r make_trinarized_maps_for_spin_test, eval=FALSE}
 ###########################################
-### Make Trinarized Maps for Spin Test  ###
+### Make Trinarzied Maps for Spin Test  ###
 ###########################################
 
 ### Author: Erica Baller
@@ -1686,23 +1676,19 @@ script: /project/imco/baller/scripts/spin_test/make_trinarized_maps_for_spin_tes
 
 ### pre: statistical maps (l and r), each 10242 vertices
 ### post: 6 matrices with 1s if value fdr corrected, 0 if not, and -1 if vertex in medial wall of yeo map
-# lh and rh pos and neg together, positive alone, and negative alone
+    # lh and rh pos and neg together, positive alone, and negative alone
 ### uses: In order to spin my vertices in a way that allows me to later assess their yeo membership, I need all of my fdr values indicated, as well as which values are in the medial wall.  This script takes lh and rh fdr corrected vectors generated in previous scripts, booleanizes them into in/out of fdr map. Then, -1s are added for vertices in the medial wall. 
 ### dependencis: and R will do. I used 3.2.5
 
 ## set abs and relative paths. Must toggle before running locally/on cluster
 #homedir = "/Users/eballer/BBL/imco/pmacs/PMACS_remote"
-homedir = "/project/imco"
-
-source(paste0(homedir, mydirec, scriptsPath, '/imco_functions.R'))
+#homedir = "/project/imco"
 
 #### set # parcels in case I want to do 7 or 17 or something else in the future
 parcel_type = "Yeo" 
 parcel_num = 7 
 input_parcel_array_length = 10242
 
-#if I'd like to make mean maps as well
-mean_maps = 1 
 #will loop through each of these
 analyses <- c("coupling_accuracy") #, "cbf_accuracy", "alff_accuracy") 
 models <- c("gam_age", "gam_sex", "lm_sex", "lm_exec_accuracy", "gam_exec_accuracy") #gam_age", "lm_age", "gam_sex", "lm_sex", "lm_accuracy", "lm_exec_accuracy")
@@ -1771,7 +1757,7 @@ for (analysis in analyses) {
       lh_stat_boolean_neg[lh_medial_wall_nums] <- -1
       rh_stat_boolean_neg[rh_medial_wall_nums] <- -1
       
-      
+    
       #write output
       write.table(x = lh_stat_boolean, file = lh_outdir, quote = F, row.names = F, col.names = F)
       write.table(x = rh_stat_boolean, file = rh_outdir, quote = F, row.names = F, col.names = F)
@@ -1785,25 +1771,8 @@ for (analysis in analyses) {
     }
   }
 }
-###########################
-##### for mean maps #######
-###########################
 
-if (mean_maps == 1){
-  #read in maps
-  
-  lh_map <- read.csv(paste0(homedir, '/baller/results/mean_maps/n831_lh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv'), header = F)
-  rh_map <- read.csv(paste0(homedir, '/baller/results/mean_maps/n831_rh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv'), header = F)
-  #set medial wall to -1
-  lh_medial_wall_nums <- which(lh_numerical_map == 8)
-  rh_medial_wall_nums <- which(rh_numerical_map == 8)
-  lh_map$V1[lh_medial_wall_nums] = -1
-  rh_map$V1[rh_medial_wall_nums] = -1
- 
-  #save maps
-  write.table(x = lh_map$V1, file = (paste0(homedir, '/baller/results/lh_mean_coupling_med_wall_-1.csv')), quote = F, row.names = F, col.names = F)
-  write.table(x = lh_map$V1, file = (paste0(homedir, '/baller/results/rh_mean_coupling_med_wall_-1.csv')), quote = F, row.names = F, col.names = F)
-}  
+      
 ```
 
 
@@ -1861,11 +1830,6 @@ done < $command_file
  file: /project/imco/baller/scripts/spin_test/commands_for_matlab
 
 ```{bash commands_for_matlab_spin, eval=FALSE}
-SpinPermuFS('/project/imco/baller/results/coupling_accuracy/lh_gam_age_t_fdr05_Yeo7_1_0_-1.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_age_t_fdr05_Yeo7_1_0_-1.csv',1000,'/project/imco/baller/results/coupling_accuracy/spin_test_results/gam_age_spin_results_yeo_1_0_-1_output','gam_age')
-SpinPermuFS('/project/imco/baller/results/coupling_accuracy/lh_pos_gam_age_t_fdr05_Yeo7_1_0_-1.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_gam_age_t_fdr05_Yeo7_1_0_-1.csv',1000,'/project/imco/baller/results/coupling_accuracy/spin_test_results/pos_gam_age_spin_results_yeo_1_0_-1_output','pos_gam_age')
-SpinPermuFS('/project/imco/baller/results/coupling_accuracy/lh_neg_gam_age_t_fdr05_Yeo7_1_0_-1.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_gam_age_t_fdr05_Yeo7_1_0_-1.csv',1000,'/project/imco/baller/results/coupling_accuracy/spin_test_results/neg_gam_age_spin_results_yeo_1_0_-1_output','neg_gam_age')
-SpinPermuFS('/project/imco/baller/results/coupling_accuracy/lh_pos_lm_exec_accuracy_t_fdr05_Yeo7_1_0_-1.csv','/project/imco/baller/results/coupling_accuracy/rh_pos_lm_exec_accuracy_t_fdr05
-_Yeo7_1_0_-1.csv',1000,'/project/imco/baller/results/coupling_accuracy/spin_test_results/pos_lm_exec_accuracy_spin_results_yeo_1_0_-1_output','pos_lm_exec_accuracy')
 SpinPermuFS('/project/imco/baller/results/coupling_accuracy/lh_gam_sex_t_fdr05_Yeo7_1_0_-1.csv','/project/imco/baller/results/coupling_accuracy/rh_gam_sex_t_fdr05_Yeo7_1_0_-1.csv',1000,'/p
 roject/imco/baller/results/coupling_accuracy/spin_test_results/gam_sex_spin_results_yeo_1_0_-1_output','gam_sex')
 SpinPermuFS('/project/imco/baller/results/coupling_accuracy/lh_lm_exec_accuracy_t_fdr05_Yeo7_1_0_-1.csv','/project/imco/baller/results/coupling_accuracy/rh_lm_exec_accuracy_t_fdr05_Yeo7_1_
@@ -1884,8 +1848,6 @@ SpinPermuFS('/project/imco/baller/results/coupling_accuracy/lh_pos_gam_exec_accu
 5_Yeo7_1_0_-1.csv',1000,'/project/imco/baller/results/coupling_accuracy/spin_test_results/pos_gam_exec_accuracy_spin_results_yeo_1_0_-1_output','pos_gam_exec_accuracy')
 SpinPermuFS('/project/imco/baller/results/coupling_accuracy/lh_neg_gam_exec_accuracy_t_fdr05_Yeo7_1_0_-1.csv','/project/imco/baller/results/coupling_accuracy/rh_neg_gam_exec_accuracy_t_fdr0
 5_Yeo7_1_0_-1.csv',1000,'/project/imco/baller/results/coupling_accuracy/spin_test_results/neg_gam_exec_accuracy_spin_results_yeo_1_0_-1_output','neg_gam_exec_accuracy')
-SpinPermuFS('/project/imco/baller/results/mean_maps/n831_lh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv','/project/imco/baller/results/mean_maps/n831_rh.coupling_coef_alff_cbf.fwhm15.fsaverage5.csv',1000,'/project/imco/baller/results/coupling_accuracy/spin_test_results/mean_coupling_spin_results_output','mean_coupling_results')
-SpinPermuFS('/project/imco/baller/results/lh_mean_coupling_med_wall_-1.csv','/project/imco/baller/results/rh_mean_coupling_med_wall_-1.csv',1000,'/project/imco/baller/results/coupling_accuracy/spin_test_results/mean_coupling_spin_results_med_wall_-1_output','mean_coupling_results_med_wall_-1')
 ```
 
 The contents of SpinPermuFS (of note, I added an extra variable, model, so I could change what is actually called)
@@ -2020,7 +1982,7 @@ source(paste0(homedir, "/baller/scripts/imco_functions.R"))
 hemis <- c("lh", "rh")
 permNum <- 1000
 yeo_num <- 7
-models = c("gam_age", "pos_gam_age", "neg_gam_age", "gam_sex", "pos_gam_sex", "neg_gam_sex", "lm_exec_accuracy", "pos_lm_exec_accuracy", "neg_lm_exec_accuracy", "gam_exec_accuracy", "pos_gam_exec_accuracy", "neg_gam_exec_accuracy")
+models = c("gam_sex", "pos_gam_sex", "neg_gam_sex", "lm_exec_accuracy", "pos_lm_exec_accuracy", "neg_lm_exec_accuracy", "gam_exec_accuracy", "pos_gam_exec_accuracy", "neg_gam_exec_accuracy")
 #models = c("lm_exec_accuracy", "pos_lm_exec_accuracy", "neg_lm_exec_accuracy")
 ################
 ### Read in matrices 
@@ -2117,27 +2079,27 @@ From /project/imco/baller/scripts/spin_test/violin_plots.R . This provides a pla
 ###post: 2 violin plots per model. Violin plot x axis - yeo networks, y axis - proportion of vertices within networks. dotted lines - mean from permutations
    #### plot 1 will contain a thick black line for the *actual values from your analysis so you can compare how far above or below your value is from permuted
    #### plot 2 will contain red lines detailing where the actual values from your analysis from the POSITIVE domain, blue for NEGATIVE
-   #### You will also get a table that tells you the p value (uncorrected) for each network within each model.
+   #### plots are saved in /project/imco/baller/results/images
+   #### You will also get a table that tells you the p value (uncorrected) for each network within each model. Stats saved in /baller/results/coupling_accuracy/spin_test_results/spin_stats_gam_sex_lm_exec_acc_all_pos_neg. Change the outdir name at the top of the script.
    #### for my final plot, I added a * to these manually
 ### uses: Creates violin plots and analyses to help make sense of the results from permutation spin tests. The question we are asking is:
     ### what is the likelihood that the number of vertices within a network is significant rather than due to chance
-### dependencies: Using R 3.6.3 but any R will do. Libraries to include listed below
+### dependencies: Using R 3.6.3 but any R will do. Libraries to include listed below. You must source imco_functions.R -> it is commented out here but you can uncomment if running this section separately.
 
 library(tidyr)
 library(ggplot2)
 library(reshape)
-
 #################
 ### set home directory
-homedir <- "/Users/eballer/BBL/imco/pmacs/PMACS_remote"
+#homedir <- "/Users/eballer/BBL/imco/pmacs/PMACS_remote"
 #homedir <- "/project/imco"
-source(paste0(homedir, '/baller/scripts//imco_functions.R'))
+#source(paste0(homedir, '/baller/scripts//imco_functions.R'))
 
 #outdir_name <- "spin_stats_gam_sex_lm_exec_acc_all_pos_neg"
 outdir_name <- "spin_stats_gam_sex_gam_lm_exec_acc_all_pos_neg"
 
-models_for_stats = c("gam_age", "pos_gam_age", "neg_gam_age", "gam_sex", "pos_gam_sex", "neg_gam_sex","lm_exec_accuracy", "pos_lm_exec_accuracy", "neg_lm_exec_accuracy", "gam_exec_accuracy", "pos_gam_exec_accuracy", "neg_gam_exec_accuracy", "mean_coupling")
-models_for_plots = c("gam_age", "gam_sex", "lm_exec_accuracy", "gam_exec_accuracy")
+models_for_stats = c("gam_sex", "pos_gam_sex", "neg_gam_sex","lm_exec_accuracy", "pos_lm_exec_accuracy", "neg_lm_exec_accuracy", "gam_exec_accuracy", "pos_gam_exec_accuracy", "neg_gam_exec_accuracy")
+models_for_plots = c("gam_sex", "lm_exec_accuracy", "gam_exec_accuracy")
 
 network_names <- c("VIS", "MOT", "DA", "VA", "LIM", "FP", "DM")
 num_spins = 2000
@@ -2153,13 +2115,10 @@ row.names(stats) <- network_names
 
 for (model in models_for_stats) {
   
-  if (model == "mean_coupling") {
-    lh_spin_df <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/lh_spin_test_mean_coupling.csv"), sep = ","))
-    rh_spin_df <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/rh_spin_test_mean_coupling.csv"), sep = ","))
-  } else {
-    lh_spin_df <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/lh_spin_test_", model, "_proportions.csv"), sep = ","))
-    rh_spin_df <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/rh_spin_test_", model, "_proportions.csv"), sep = ","))
-  }
+  lh_spin_df <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/lh_spin_test_", model, "_proportions.csv"), sep = ",")
+  )
+  rh_spin_df <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/rh_spin_test_", model, "_proportions.csv"), sep = ",")
+  )
   
   
   #take means of left and right
@@ -2179,7 +2138,7 @@ for (model in models_for_stats) {
 print(stats)
 write.csv(stats, paste0(homedir, "/baller/results/coupling_accuracy/spin_test_results/", outdir_name, ".csv"))
 
-violin_plot_means_mean_coupling(homedir = homedir, network_names = network_names, num_spins = num_spins)
+violin_plot_means(homedir = homedir, models = models, network_names = network_names, num_spins = num_spins)
 violin_plot_pos_and_neg_lines(homedir = homedir, models = models_for_plots, network_names = network_names, num_spins = num_spins)
 
 ```
@@ -2854,57 +2813,11 @@ violin_plot_means <- function (homedir, models, network_names, num_spins){
         geom_segment(aes(x = 3.5, y = actual_results[4], xend = 4.5, yend = actual_results[4])) +
         geom_segment(aes(x = 4.5, y = actual_results[5], xend = 5.5, yend = actual_results[5])) +
         geom_segment(aes(x = 5.5, y = actual_results[6], xend = 6.5, yend = actual_results[6])) +
-        geom_segment(aes(x = 6.5, y = actual_results[7], xend = 7.5, yend = actual_results[7]))
+        geom_segment(aes(x = 6.5, y = actual_results[7], xend = 7.5, yend = actual_results[7])) +
   #    ggtitle(paste0("Spin Test Perm: ", model))
     ggsave(plot=plot_violin, filename = paste0(homedir, "/baller/results/images/spin_", model, "_t_fdr05.png"), width = 4.81, height = 4.81)
   }
 }
-
-violin_plot_means_mean_coupling <- function (homedir, network_names, num_spins){
- 
-    #for storing statistics at the end
-    lh_spin_df <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/lh_spin_test_mean_coupling.csv"), sep = ","))
-    rh_spin_df <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/rh_spin_test_mean_coupling.csv"), sep = ","))
-    
-    
-    #take means of left and right
-    actual_results <- (lh_spin_df[,1] + rh_spin_df[,1])/2
-    
-    #dataframes for all spins
-    spin_without_target_col <- cbind(lh_spin_df[,2:1001],rh_spin_df[,2:1001])
-    melted_df <- melt_df_for_violin_plot_yeo7(spin_without_target_col, network_names, num_spins)
-    
-    #with mean lines, different fonts
-    #save images
-    plot_violin <- ggplot(melted_df, aes(x = factor(network_name, level = network_names), y = spin, fill = network_name)) +  
-      scale_fill_manual(values=yeo_colors) + 
-      geom_violin(trim = TRUE) + 
-      xlab("Yeo 7 Network") + ylab(paste0("Mean")) +
-      geom_violin(trim=FALSE) + 
-      ylim(0,NA) + 
-      theme_classic() + 
-      theme(legend.position = "none",
-            legend.title = element_blank(),
-            axis.text.x = element_text(size = 10, colour = "black"),
-            axis.text.y = element_text(size = 10, colour = "black"),
-            axis.title.y = element_text(size = 10),
-            axis.title.x = element_blank(),
-            plot.title = element_text(size = 10)) +
-      stat_summary(fun.y = mean, geom = "errorbar", 
-                   aes(ymax = ..y.., ymin = ..y.., group = factor(network_name)),
-                   width = 0.5, linetype = "dashed", position = position_dodge(0.9)) + 
-      #geom_boxplot(width = 0.15, position = position_dodge(0.9)) + 
-      geom_segment(aes(x = 0.5, y = actual_results[1], xend = 1.5, yend = actual_results[1])) + 
-      geom_segment(aes(x = 1.5, y = actual_results[2], xend = 2.5, yend = actual_results[2])) +
-      geom_segment(aes(x = 2.5, y = actual_results[3], xend = 3.5, yend = actual_results[3])) +
-      geom_segment(aes(x = 3.5, y = actual_results[4], xend = 4.5, yend = actual_results[4])) +
-      geom_segment(aes(x = 4.5, y = actual_results[5], xend = 5.5, yend = actual_results[5])) +
-      geom_segment(aes(x = 5.5, y = actual_results[6], xend = 6.5, yend = actual_results[6])) +
-      geom_segment(aes(x = 6.5, y = actual_results[7], xend = 7.5, yend = actual_results[7]))
-      #    ggtitle(paste0("Spin Test Perm: ", model))
-      ggsave(plot=plot_violin, filename = paste0(homedir, "/baller/results/images/spin_mean_coupling_unc.png"), width = 4.81, height = 4.81)
-}
-
 
 get_yeo7_colors <- function() {
   yeo_colors <- c(
