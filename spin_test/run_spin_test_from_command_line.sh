@@ -28,6 +28,7 @@ echo $command_file
 ### loop ###
 while IFS= read -r line; do
 	echo "$line"
+	echo "here"
 	matlab -nosplash -nodesktop -nodisplay -r "$line; exit"
 
 done < $command_file

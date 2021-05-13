@@ -26,7 +26,7 @@ homedir <- "/Users/eballer/BBL/imco/pmacs/PMACS_remote"
 source(paste0(homedir, '/baller/scripts//imco_functions.R'))
 
 #outdir_name <- "spin_stats_gam_sex_lm_exec_acc_all_pos_neg"
-outdir_name <- "spin_stats_gam_sex_gam_lm_exec_acc_all_pos_neg"
+outdir_name <- "spin_stats_gam_sex_gam_exec_acc_all_pos_neg"
 
 models_for_stats = c("gam_age", "pos_gam_age", "neg_gam_age", "gam_sex", "pos_gam_sex", "neg_gam_sex","lm_exec_accuracy", "pos_lm_exec_accuracy", "neg_lm_exec_accuracy", "gam_exec_accuracy", "pos_gam_exec_accuracy", "neg_gam_exec_accuracy", "mean_coupling")
 models_for_plots = c("gam_age", "gam_sex", "lm_exec_accuracy", "gam_exec_accuracy")

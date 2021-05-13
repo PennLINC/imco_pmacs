@@ -35,8 +35,10 @@ datar=importdata(readright);
 
 %%extract the correspoding sphere surface coordinates for rotation
 % AP changed the filepath 10/26/20, i don't know how cubic managed to set up a fshome path not amenable to this
-[verticesl, ~] = freesurfer_read_surf(fullfile('/project/imco/surfaces/fsaverage5/surf/lh.sphere'));
-[verticesr, ~] = freesurfer_read_surf(fullfile('/project/imco/surfaces/fsaverage5/surf/rh.sphere'));
+%[verticesl, ~] = freesurfer_read_surf(fullfile('/project/imco/surfaces/fsaverage5/surf/lh.sphere'));
+%[verticesr, ~] = freesurfer_read_surf(fullfile('/project/imco/surfaces/fsaverage5/surf/rh.sphere'));
+[verticesl, ~] = freesurfer_read_surf(fullfile('/appl/freesurfer-7.1.1/subjects/fsaverage5/surf/lh.sphere'));
+[verticesr, ~] = freesurfer_read_surf(fullfile('/appl/freesurfer-7.1.1/subjects/fsaverage5/surf/rh.sphere'));
 
 
 rng(0);
