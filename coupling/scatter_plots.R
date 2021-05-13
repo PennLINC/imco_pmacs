@@ -4,7 +4,7 @@
 
 
 ###pre: gam age results, both fdr and uncorrected. rh and lh matrices
-###post: jpegs of linear and gam modesl
+###post: jpegs of linear and gam models, and derivatives 
 ###uses: makes the scatter plot of age by couping means for Figure 2
 ### dependencies: R 3.6.3
 
@@ -12,6 +12,8 @@ library(mgcv)
 library(dplyr)
 library(ggplot2)
 library(visreg)
+library(gratia)
+library(regclass)
 
 
 #set home directory, switch this depending on whether running from PMACS or from home directory
@@ -73,6 +75,24 @@ visreg(fit_gam, "Age", ylab = "Mean Coupling (Z)", xlab = "Age (in Years)",
        points=list(col="black"))
 dev.off()
 
+#################
+## Derivatives ##
+#################
+d<-derivatives(fit_gam,n=1000)
+d_plot <- draw(d)
+print(d_plot)
+ggsave(plot = d_plot,filename = paste0(homedir, "baller/results/images/derivative_plot_age_gam_fdr_corrected.png"),device = "png",width = 180,height = 120,units = "mm")
+
+d<- d %>%
+  mutate(sig = !(0 >lower & 0 < upper)) #Ages where the CI does not include zero
+cat(sprintf("\nSignificant change: %1.2f - %1.2f\n",min(d$data[d$sig==T]),max(d$data[d$sig==T]))) 
+
+d_plot <- ggplot(data = d,aes(x=data,y = derivative,color=sig, ymin=lower,ymax=upper)) + 
+  geom_ribbon(fill="black",alpha=.3,color=NA) +
+  geom_line(size=1,show.legend = F) +
+  scale_color_manual(values = c("TRUE" = "firebrick","FALSE" = "black")) +
+  geom_hline(yintercept = 0,linetype=2)
+
 
 ### Find Gam age uncorrected
 ### just for age
@@ -121,3 +141,13 @@ visreg(fit_gam, "Age", ylab = "Mean Coupling (Z)", xlab = "Age (in Years)",
        line=list(col="red"),
        points=list(col="black"))
 dev.off()
+
+######## Deriatives ########
+d<-derivatives(fit_gam,n=1000)
+d_plot <- draw(d)
+print(d_plot)
+ggsave(plot = d_plot,filename = paste0(homedir, "baller/results/images/derivative_plot_age_gam_uncorrected.png"),device = "png",width = 180,height = 120,units = "mm")
+
+d<- d %>%
+  mutate(sig = !(0 >lower & 0 < upper)) #Ages where the CI does not include zero
+cat(sprintf("\nSignificant change: %1.2f - %1.2f\n",min(d$data[d$sig==T]),max(d$data[d$sig==T])))
