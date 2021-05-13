@@ -24,7 +24,7 @@ SubjectsFolder = '/cbica/software/external/freesurfer/centos7/5.3.0/subjects/fsa
 %}
 
 plot_text='';
-[vertices, faces] = freesurfer_read_surf('/project/imco/surfaces/fsaverage5/surf/lh.inflated');
+[vertices, faces] = freesurfer_read_surf('/appl/freesurfer-7.1.1/subjects/fsaverage5/surf/lh.inflated');
 %using lh.gray will make more anatomical looking plot but harder to see into sulci
 right = readtable(RH,'TreatAsEmpty','NA','ReadVariableNames',false);
 datar = table2array(right);
@@ -164,7 +164,7 @@ set(get(gca,'title'),'Position',[332 119 3])
 %%% right hemisphere
 data=datalr(10243:20484);
 
-[vertices, faces] = freesurfer_read_surf('/project/imco/surfaces/fsaverage5/surf/rh.inflated');
+[vertices, faces] = freesurfer_read_surf('/appl/freesurfer-7.1.1/subjects/fsaverage5/surf/rh.inflated');
 
 asub = subaxis(4,2,2, 'sh', 0.0, 'sv', 0.0, 'padding', 0, 'margin', 0);
 aplot = trisurf(faces, vertices(:,1), vertices(:,2), vertices(:,3),data)
