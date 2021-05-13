@@ -2,7 +2,9 @@
 title: "IMCO 2021 Project - Age, Sex, and Accuracy"
 author: "Erica Baller"
 date: "3/16/2021"
-output: html_document
+output:
+  word_document: default
+ # html_document: default
 params:
   args: myarg
 ---
@@ -254,54 +256,40 @@ demos <- read.csv(paste0(homedir, "/pnc/demographics/n1601_demographics_go1_2016
 datexscan <- read.csv(paste0(homedir, mydirec, subListPath, "/n1601_bblid_datexscanid.csv"))
 order <- read.csv(paste0(homedir, mydirec, subListPath, "/n831_imageOrder.csv"))
 
-# T1 and LTN subsets
-t1QA <- subset(t1QA, select = c("bblid","scanid","t1Exclude"))
-healthQA <- subset(healthQA, select = c("bblid","scanid","ltnExcludev2"))
+#merge
+df <- merge(t1QA, healthQA, by = "bblid")
+df <- merge(df, pcaslQA, by = c("bblid"))
+df <- merge(df, restQA, by = c("bblid", "scanid"))
+df <- merge(df, demos, by = "bblid")
+df <- merge(df, datexscan, by = "bblid")
 
-# CBF sample
-## Merge all CBF QA files
-pcaslQA <- subset(pcaslQA, select = c("bblid","scanid","pcaslVoxelwiseExclude","pcaslRelMeanRMSMotion"))
-pcaslQa_t1 <- merge(pcaslQA, t1QA, by=c("bblid","scanid"))
-pcaslQa_t1_health <- merge(pcaslQa_t1, healthQA, by=c("bblid","scanid"))
+#do excludions
+df_exclude <- df[which(df$t1Exclude == 0),] #n=1540, lost 61
+df_exclude <- df_exclude[which(df_exclude$restExcludeVoxelwise == 0),] #n = 1090, lost 450
+df_exclude <- df_exclude[which(df_exclude$pcaslVoxelwiseExclude == 0),] #n = 1036, lost 54
+final <- df_exclude[which(df_exclude$ltnExcludev2 == 0),] #n = 831, lost 205
 
-## Apply exclusions to CBF
-pcasl_exclude <- pcaslQa_t1_health[!grepl("1", pcaslQa_t1_health$pcaslVoxelwiseExclude),]
-pcasl_t1_exclude <- pcasl_exclude[!grepl("1", pcasl_exclude$t1Exclude),]
-pcasl_t1_health_exclude <- pcasl_t1_exclude[!grepl("1", pcasl_t1_exclude$ltnExcludev2),]
-pcasl_final <- subset(pcasl_t1_health_exclude, select = c("bblid","scanid","pcaslRelMeanRMSMotion"))
-
-# Rest sample
-## Merge all rest QA files
-restQA <- subset(restQA, select = c("bblid","scanid","restExcludeVoxelwise","restRelMeanRMSMotion"))
-restQa_t1 <- merge(restQA, t1QA, by=c("bblid","scanid"))
-restQa_t1_health <- merge(restQa_t1, healthQA, by=c("bblid","scanid"))
-
-## Apply exclusions to rest
-rest_exclude <- restQa_t1_health[!grepl("1", restQa_t1_health$restExcludeVoxelwise),]
-rest_t1_exclude <- rest_exclude[!grepl("1", rest_exclude$t1Exclude),]
-rest_t1_health_exclude <- rest_t1_exclude[!grepl("1", rest_t1_exclude$ltnExcludev2),]
-rest_final <- subset(rest_t1_health_exclude, select = c("bblid","scanid","restRelMeanRMSMotion"))
-
-# Get final overall sample
-final_sample <- merge(rest_final, pcasl_final, by=c("bblid","scanid"))
-
-# Merge with demographics
-final <- merge(demos, final_sample, by = c("bblid","scanid"))
-final <- merge(datexscan, final, by="bblid") 
 
 ## Clean demos
 final$ageAtScan1 <- (final$ageAtScan1)/12
 final$sex <- as.factor(final$sex)
 final$race <- as.factor(final$race)
 final$race2 <- as.factor(final$race2)
+final <- subset(final, select = -(scanid.y))
+names(final)[names(final) == "scanid.x"] <- "scanid"
 
 # Get correct image order for GLM
 finalOrdered <- merge(order,final,by=c("bblid","datexscanid")) #only if you want to do this
 
 # Write out final demos for sample
-write.csv(final, paste0(homedir, mydirec, subListPath, "/n831_alff_cbf_finalSample.csv"), row.names=FALSE, quote = FALSE) #added
-write.csv(finalOrdered,paste0(homedir, mydirec, subListPath, "/n831_alff_cbf_finalSample_imageOrder.csv"),row.names=FALSE, quote = FALSE)
+write.csv(final, paste0(homedir, mydirec, subListPath, "/n831_alff_cbf_finalSample_erica_sampling.csv"), row.names=FALSE, quote = FALSE) #added
+write.csv(finalOrdered,paste0(homedir, mydirec, subListPath, "/n831_alff_cbf_finalSample_imageOrder_erica_sampling.csv"),row.names=FALSE, quote = FALSE)
 
+#LB's initial exclusions were a little more involved (more lines, but still accurate). I redid these for simplicity's sake, and for the ability to know how many we lost at each step. The original version is still present in the R script /project/imco/baller/scripts/from_chead/n831_alff_cbf_makeSample.R
+
+#for the analysis, we used the following subject lists - 
+#/n831_alff_cbf_finalSample_sampling.csv"
+#n831_alff_cbf_finalSample_imageOrder_sampling.csv
 ```
 
 Demographics summary 
@@ -928,6 +916,9 @@ dev.off()
 
 Plots for Age x Coupling including GAM
 *script: /project/imco/baller/scripts/coupling/scatter_plots.R*
+
+*make sure you install.packages("devtools")
+
 ```{r scatter_plots, eval=FALSE}
 ###########
 ## Plots ##
@@ -1004,6 +995,21 @@ visreg(fit_gam, "Age", ylab = "Mean Coupling (Z)", xlab = "Age (in Years)",
        points=list(col="black"))
 dev.off()
 
+#################
+## Derivatives ##
+#################
+d<-derivatives(fit_gam,n=1000)
+d_plot <- draw(d)
+print(d_plot)
+ggsave(plot = d_plot,filename = paste0(homedir, "baller/results/images/derivative_plot_age_gam_fdr_corrected.png"),device = "png",width = 180,height = 120,units = "mm")
+
+d<- d %>%
+  mutate(sig = !(0 >lower & 0 < upper)) #Ages where the CI does not include zero
+cat(sprintf("\nSignificant change: %1.2f - %1.2f\n",min(d$data[d$sig==T]),max(d$data[d$sig==T]))) #this only work
+
+######
+
+
 
 ### Find Gam age uncorrected
 ### just for age
@@ -1053,8 +1059,21 @@ visreg(fit_gam, "Age", ylab = "Mean Coupling (Z)", xlab = "Age (in Years)",
        points=list(col="black"))
 dev.off()
 
+######## Deriatives ########
+d<-derivatives(fit_gam,n=1000)
+d_plot <- draw(d)
+print(d_plot)
+ggsave(plot = d_plot,filename = paste0(homedir, "baller/results/images/derivative_plot_age_gam_uncorrected.png"),device = "png",width = 180,height = 120,units = "mm")
+
+d<- d %>%
+  mutate(sig = !(0 >lower & 0 < upper)) #Ages where the CI does not include zero
+cat(sprintf("\nSignificant change: %1.2f - %1.2f\n",min(d$data[d$sig==T]),max(d$data[d$sig==T])))
+
 
 ```
+First derivative spline (fdr corrected): 
+
+<img width="100%" src="/project/imco/baller/results/images/derivative_plot_age_gam_fdr_corrected.png"/>
 
 
 ##### Extra- Part 3- repeating these analyses for CBF and ALFF alone 
@@ -2079,27 +2098,27 @@ From /project/imco/baller/scripts/spin_test/violin_plots.R . This provides a pla
 ###post: 2 violin plots per model. Violin plot x axis - yeo networks, y axis - proportion of vertices within networks. dotted lines - mean from permutations
    #### plot 1 will contain a thick black line for the *actual values from your analysis so you can compare how far above or below your value is from permuted
    #### plot 2 will contain red lines detailing where the actual values from your analysis from the POSITIVE domain, blue for NEGATIVE
-   #### plots are saved in /project/imco/baller/results/images
-   #### You will also get a table that tells you the p value (uncorrected) for each network within each model. Stats saved in /baller/results/coupling_accuracy/spin_test_results/spin_stats_gam_sex_lm_exec_acc_all_pos_neg. Change the outdir name at the top of the script.
+   #### You will also get a table that tells you the p value (uncorrected) for each network within each model.
    #### for my final plot, I added a * to these manually
 ### uses: Creates violin plots and analyses to help make sense of the results from permutation spin tests. The question we are asking is:
     ### what is the likelihood that the number of vertices within a network is significant rather than due to chance
-### dependencies: Using R 3.6.3 but any R will do. Libraries to include listed below. You must source imco_functions.R -> it is commented out here but you can uncomment if running this section separately.
+### dependencies: Using R 3.6.3 but any R will do. Libraries to include listed below
 
 library(tidyr)
 library(ggplot2)
 library(reshape)
+
 #################
 ### set home directory
-#homedir <- "/Users/eballer/BBL/imco/pmacs/PMACS_remote"
+homedir <- "/Users/eballer/BBL/imco/pmacs/PMACS_remote"
 #homedir <- "/project/imco"
-#source(paste0(homedir, '/baller/scripts//imco_functions.R'))
+source(paste0(homedir, '/baller/scripts//imco_functions.R'))
 
 #outdir_name <- "spin_stats_gam_sex_lm_exec_acc_all_pos_neg"
-outdir_name <- "spin_stats_gam_sex_gam_lm_exec_acc_all_pos_neg"
+outdir_name <- "spin_stats_gam_sex_gam_exec_acc_all_pos_neg"
 
-models_for_stats = c("gam_sex", "pos_gam_sex", "neg_gam_sex","lm_exec_accuracy", "pos_lm_exec_accuracy", "neg_lm_exec_accuracy", "gam_exec_accuracy", "pos_gam_exec_accuracy", "neg_gam_exec_accuracy")
-models_for_plots = c("gam_sex", "lm_exec_accuracy", "gam_exec_accuracy")
+models_for_stats = c("gam_age", "pos_gam_age", "neg_gam_age", "gam_sex", "pos_gam_sex", "neg_gam_sex","lm_exec_accuracy", "pos_lm_exec_accuracy", "neg_lm_exec_accuracy", "gam_exec_accuracy", "pos_gam_exec_accuracy", "neg_gam_exec_accuracy", "mean_coupling")
+models_for_plots = c("gam_age", "gam_sex", "lm_exec_accuracy", "gam_exec_accuracy")
 
 network_names <- c("VIS", "MOT", "DA", "VA", "LIM", "FP", "DM")
 num_spins = 2000
@@ -2115,10 +2134,13 @@ row.names(stats) <- network_names
 
 for (model in models_for_stats) {
   
-  lh_spin_df <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/lh_spin_test_", model, "_proportions.csv"), sep = ",")
-  )
-  rh_spin_df <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/rh_spin_test_", model, "_proportions.csv"), sep = ",")
-  )
+  if (model == "mean_coupling") {
+    lh_spin_df <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/lh_spin_test_mean_coupling.csv"), sep = ","))
+    rh_spin_df <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/rh_spin_test_mean_coupling.csv"), sep = ","))
+  } else {
+    lh_spin_df <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/lh_spin_test_", model, "_proportions.csv"), sep = ","))
+    rh_spin_df <- data.frame(read.table(paste0(homedir, "/baller/results/coupling_accuracy//spin_test_results/rh_spin_test_", model, "_proportions.csv"), sep = ","))
+  }
   
   
   #take means of left and right
@@ -2138,8 +2160,10 @@ for (model in models_for_stats) {
 print(stats)
 write.csv(stats, paste0(homedir, "/baller/results/coupling_accuracy/spin_test_results/", outdir_name, ".csv"))
 
-violin_plot_means(homedir = homedir, models = models, network_names = network_names, num_spins = num_spins)
+violin_plot_means_mean_coupling(homedir = homedir, network_names = network_names, num_spins = num_spins)
 violin_plot_pos_and_neg_lines(homedir = homedir, models = models_for_plots, network_names = network_names, num_spins = num_spins)
+violin_plot_means(homedir = homedir, models = models_for_plots, network_names = network_names, num_spins = num_spins)
+
 
 ```
 
@@ -2267,6 +2291,42 @@ write.csv(correlations, file = paste0(homedir, "/baller/results/mean_coupling_x_
 
 write.csv(correlations_nonzero, file = paste0(homedir, "/baller/results/mean_coupling_x_mask_correlations/mean_coupling_map_non_zeros_x_mask_correlations.csv"), quote = F)
 ```
+
+Lastly, finding a way to match vertices with MNI coordinates
+```{r coordinates_to_mni}
+
+#### takes trinarized masks, matches them to MNI coordinates from fsGLM script on chead, and takes out uncorrected data
+#### This allows for manually mapping the significant vertices to brain
+
+lh_coordinates <- read.table(paste0(homedir, "/baller/processed_data/map_of_mni_coordinates/lh_coordinates.csv"), header = F)
+rh_coordinates <- read.table(paste0(homedir, "/baller/processed_data/map_of_mni_coordinates/rh_coordinates.csv"), header = F)
+
+
+#initialize
+models = c("gam_age", "gam_sex", "gam_exec_accuracy")
+
+
+################
+### Read in matrices 
+for (model in models) {
+  #{lh and rh}_gam_sex_t_fdr05 -> actual results
+  lh_t_fdr05_results <- read.table(paste0(homedir, "/baller/results/coupling_accuracy/lh_", model, "_t_fdr05_Yeo7_1_0_-1.csv"))
+  rh_t_fdr05_results <- read.table(paste0(homedir, "/baller/results/coupling_accuracy/rh_", model, "_t_fdr05_Yeo7_1_0_-1.csv"))
+  
+  lh_results_with_coors <- cbind(lh_coordinates, lh_t_fdr05_results)
+  lh_results_with_coors <- lh_results_with_coors[which(lh_results_with_coors$V5 == 1),]
+  write.table(x=lh_results_with_coors, file = paste0(homedir, "/baller/results/coupling_accuracy/lh_", model, "_t_fdr05_mni_coordinates.csv"))
+  
+  rh_results_with_coors <- cbind(rh_coordinates, rh_t_fdr05_results)
+  rh_results_with_coors <- rh_results_with_coors[which(rh_results_with_coors$V5 == 1),]
+  write.table(x = rh_results_with_coors, file = paste0(homedir, "/baller/results/coupling_accuracy/rh_", model, "_t_fdr05_mni_coordinates.csv"))
+  
+}
+
+```
+
+For tomorrow: https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI#Relationshipbetweensegmentation.2CparcellationandLookUpTable.28LUT.29
+
 
 New images made on PMACS:/project/imco/baller/scripts/PBP_graphics
 
