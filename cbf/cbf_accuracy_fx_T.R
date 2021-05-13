@@ -176,23 +176,24 @@ for (hemi in hemis) {
 #get # of items in df for calculation of column)
 numcolumns <- dim(lh_cbf)[2]
 #run gams models and store info in respective vectors
-for (i in 1:10242) {
+#for (i in 1:10242) {
+for (i in 1:1) {
   curcol = (numcolumns - 10242 + i) # will start you counting at the right part of the df
   age_sex_model <- gam(lh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
                          osex + s(ageAtScan1, k = 4, fx = T), data=lh_cbf)
   
   ## accuracy
   accuracy_model <- gam(lh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                          osex + s(ageAtScan1, k = 4, fx = T) + Overall_Accuracy, data=lh_cbf)
+                            s(ageAtScan1, k = 4, fx = T) + Overall_Accuracy, data=lh_cbf)
   
   exec_accuracy_model <- gam(lh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                               osex + s(ageAtScan1, k = 4, fx = T) + F1_Exec_Comp_Res_Accuracy, data=lh_cbf)
+                            s(ageAtScan1, k = 4, fx = T) + F1_Exec_Comp_Res_Accuracy, data=lh_cbf)
   
   soc_accuracy_model <- gam(lh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                              osex + s(ageAtScan1, k = 4, fx = T) + F2_Social_Cog_Accuracy, data=lh_cbf)
+                            s(ageAtScan1, k = 4, fx = T) + F2_Social_Cog_Accuracy, data=lh_cbf)
   
   mem_accuracy_model <- gam(lh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                              osex + s(ageAtScan1, k = 4, fx = T) + F3_Memory_Accuracy, data=lh_cbf)
+                            s(ageAtScan1, k = 4, fx = T) + F3_Memory_Accuracy, data=lh_cbf)
   
   
   
@@ -220,11 +221,12 @@ for (i in 1:10242) {
   lh_gam_age_p_uncor[i] <- summary(age_sex_model)$s.table[1,4] #smooth term for ageAtScan1
   lh_gam_sex_p_uncor[i] <- summary(age_sex_model)$p.table[4,4] #linear term
   
-  lh_gam_accuracy_p_uncor[i] <- summary(accuracy_model)$p.table[5,4] #accuracy term
-  lh_gam_exec_accuracy_p_uncor[i] <- summary(exec_accuracy_model)$p.table[5,4] #accuracy term
-  lh_gam_soc_accuracy_p_uncor[i] <- summary(soc_accuracy_model)$p.table[5,4] #accuracy term
-  lh_gam_mem_accuracy_p_uncor[i] <- summary(mem_accuracy_model)$p.table[5,4] #accuracy term
+  lh_gam_accuracy_p_uncor[i] <- summary(accuracy_model)$p.table[4,4] #accuracy term
+  lh_gam_exec_accuracy_p_uncor[i] <- summary(exec_accuracy_model)$p.table[4,4] #accuracy term
+  lh_gam_soc_accuracy_p_uncor[i] <- summary(soc_accuracy_model)$p.table[4,4] #accuracy term
+  lh_gam_mem_accuracy_p_uncor[i] <- summary(mem_accuracy_model)$p.table[4,4] #accuracy term
   
+  #lm to assess directionality
   #lm to assess directionality
   lh_lm_age_p_uncor[i] <- summary(age_lm_model)$coeff[4,4]
   lh_lm_sex_p_uncor[i] <- summary(sex_lm_model)$coeff[4,4]
@@ -238,10 +240,10 @@ for (i in 1:10242) {
   lh_gam_age_t_uncor[i] <- summary(age_sex_model)$s.table[1,3] #smooth term for ageAtScan1
   lh_gam_sex_t_uncor[i] <- summary(age_sex_model)$p.table[4,3] #linear term
   
-  lh_gam_accuracy_t_uncor[i] <- summary(accuracy_model)$p.table[5,3] #accuracy term
-  lh_gam_exec_accuracy_t_uncor[i] <- summary(exec_accuracy_model)$p.table[5,3] #accuracy term
-  lh_gam_soc_accuracy_t_uncor[i] <- summary(soc_accuracy_model)$p.table[5,3] #accuracy term
-  lh_gam_mem_accuracy_t_uncor[i] <- summary(mem_accuracy_model)$p.table[5,3] #accuracy term
+  lh_gam_accuracy_t_uncor[i] <- summary(accuracy_model)$p.table[4,3] #accuracy term
+  lh_gam_exec_accuracy_t_uncor[i] <- summary(exec_accuracy_model)$p.table[4,3] #accuracy term
+  lh_gam_soc_accuracy_t_uncor[i] <- summary(soc_accuracy_model)$p.table[4,3] #accuracy term
+  lh_gam_mem_accuracy_t_uncor[i] <- summary(mem_accuracy_model)$p.table[4,3] #accuracy term
   
   #lm to assess directionality
   lh_lm_age_t_uncor[i] <- summary(age_lm_model)$coeff[4,3]
@@ -267,16 +269,16 @@ for (i in 1:10242) {
   
   ## accuracy
   accuracy_model <- gam(rh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                          osex + s(ageAtScan1, k = 4, fx = T) + Overall_Accuracy, data=rh_cbf)
+                            s(ageAtScan1, k = 4, fx = T) + Overall_Accuracy, data=rh_cbf)
   
   exec_accuracy_model <- gam(rh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                               osex + s(ageAtScan1, k = 4, fx = T) + F1_Exec_Comp_Res_Accuracy, data=rh_cbf)
+                            s(ageAtScan1, k = 4, fx = T) + F1_Exec_Comp_Res_Accuracy, data=rh_cbf)
   
   soc_accuracy_model <- gam(rh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                              osex + s(ageAtScan1, k = 4, fx = T) + F2_Social_Cog_Accuracy, data=rh_cbf)
+                            s(ageAtScan1, k = 4, fx = T) + F2_Social_Cog_Accuracy, data=rh_cbf)
   
   mem_accuracy_model <- gam(rh_cbf[,curcol] ~ pcaslRelMeanRMSMotion + restRelMeanRMSMotion +
-                              osex + s(ageAtScan1, k = 4, fx = T) + F3_Memory_Accuracy, data=rh_cbf)
+                            s(ageAtScan1, k = 4, fx = T) + F3_Memory_Accuracy, data=rh_cbf)
   
   
   
@@ -304,10 +306,10 @@ for (i in 1:10242) {
   rh_gam_age_p_uncor[i] <- summary(age_sex_model)$s.table[1,4] #smooth term for ageAtScan1
   rh_gam_sex_p_uncor[i] <- summary(age_sex_model)$p.table[4,4] #linear term
   
-  rh_gam_accuracy_p_uncor[i] <- summary(accuracy_model)$p.table[5,4] #accuracy term
-  rh_gam_exec_accuracy_p_uncor[i] <- summary(exec_accuracy_model)$p.table[5,4] #accuracy term
-  rh_gam_soc_accuracy_p_uncor[i] <- summary(soc_accuracy_model)$p.table[5,4] #accuracy term
-  rh_gam_mem_accuracy_p_uncor[i] <- summary(mem_accuracy_model)$p.table[5,4] #accuracy term
+  rh_gam_accuracy_p_uncor[i] <- summary(accuracy_model)$p.table[4,4] #accuracy term
+  rh_gam_exec_accuracy_p_uncor[i] <- summary(exec_accuracy_model)$p.table[4,4] #accuracy term
+  rh_gam_soc_accuracy_p_uncor[i] <- summary(soc_accuracy_model)$p.table[4,4] #accuracy term
+  rh_gam_mem_accuracy_p_uncor[i] <- summary(mem_accuracy_model)$p.table[4,4] #accuracy term
   
   #lm to assess directionality
   rh_lm_age_p_uncor[i] <- summary(age_lm_model)$coeff[4,4]
@@ -322,10 +324,10 @@ for (i in 1:10242) {
   rh_gam_age_t_uncor[i] <- summary(age_sex_model)$s.table[1,3] #smooth term for ageAtScan1
   rh_gam_sex_t_uncor[i] <- summary(age_sex_model)$p.table[4,3] #linear term
   
-  rh_gam_accuracy_t_uncor[i] <- summary(accuracy_model)$p.table[5,3] #accuracy term
-  rh_gam_exec_accuracy_t_uncor[i] <- summary(exec_accuracy_model)$p.table[5,3] #accuracy term
-  rh_gam_soc_accuracy_t_uncor[i] <- summary(soc_accuracy_model)$p.table[5,3] #accuracy term
-  rh_gam_mem_accuracy_t_uncor[i] <- summary(mem_accuracy_model)$p.table[5,3] #accuracy term
+  rh_gam_accuracy_t_uncor[i] <- summary(accuracy_model)$p.table[4,3] #accuracy term
+  rh_gam_exec_accuracy_t_uncor[i] <- summary(exec_accuracy_model)$p.table[4,3] #accuracy term
+  rh_gam_soc_accuracy_t_uncor[i] <- summary(soc_accuracy_model)$p.table[4,3] #accuracy term
+  rh_gam_mem_accuracy_t_uncor[i] <- summary(mem_accuracy_model)$p.table[4,3] #accuracy term
   
   #lm to assess directionality
   rh_lm_age_t_uncor[i] <- summary(age_lm_model)$coeff[4,3]
