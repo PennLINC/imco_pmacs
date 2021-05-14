@@ -21,8 +21,8 @@ library(reshape)
 
 #################
 ### set home directory
-homedir <- "/Users/eballer/BBL/imco/pmacs/PMACS_remote"
-#homedir <- "/project/imco"
+#homedir <- "/Users/eballer/BBL/imco/pmacs/PMACS_remote"
+homedir <- "/project/imco"
 source(paste0(homedir, '/baller/scripts//imco_functions.R'))
 
 #outdir_name <- "spin_stats_gam_sex_lm_exec_acc_all_pos_neg"
