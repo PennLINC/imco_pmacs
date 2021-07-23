@@ -14,7 +14,8 @@ Ted Satterthwaite and Taki Shinohara
 Azeez Adebimpe
 
 ### Collaborators:
-Alessandra M. Valcarcel, Ph.D.b, Aaron Alexander-Bloch, M.D., Ph.D.a , Zaixu Cui, Ph.D.a, John A. Detre, M.D.c, Ruben C. Gur, Ph.D.a c, Raquel E. Gur, M.D., Ph.D.a,c, Bart L. Larsen, Ph.D.a, Kristin A. Linn, Ph.D.b, Carly C. O’Donnell, B.S.b, Adam R. Pines, B.A.a, Armin Raznahan, Ph.D.d, David. R. Roalf, Ph.D.a, Tinashe M. Tapera, M.S.a, Simon Vandekar, Ph.D.b,e, Cedric H. Xia, Ph.D.a
+Erica B. Baller, M.D., M.S.a,b, Alessandra M. Valcarcel, Ph.D.c,⟊, Azeez Adebimpe, Ph.D.a,b, Aaron Alexander-Bloch, M.D., Ph.D.b, Zaixu Cui, Ph.D.a,b, Ruben C. Gur, Ph.D.b,d,f, Raquel E. Gur, M.D., Ph.D.b,d,f, Bart L. Larsen, Ph.D.a,b, Kristin A. Linn, Ph.D.c, Carly M. O’Donnell, B.A.c, Adam R. Pines, B.A.a,b, Armin Raznahan, Ph.D.e, David. R. Roalf, Ph.D.b, Valerie J. Sydnor, B.A.a,b, Tinashe M. Tapera, M.S.a,b, M. Dylan Tisdall, Ph.D.f, Simon Vandekar, Ph.D.g, Cedric H. Xia, M.D., Ph.D.a,b, John A. Detre, M.D.d, Russell T. Shinohara, Ph.D.c*, Theodore D. Satterthwaite, M.D., M.A.a,b*
+
 
 ### Project Start Date:
 My version - 10/2020
